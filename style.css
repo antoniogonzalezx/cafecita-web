@@ -102,6 +102,20 @@ html, body {
 .pill:hover { background: var(--papel); }
 .pill:active { transform: scale(.97); }
 
+.hint {
+  position: fixed;
+  left: 16px; right: 16px;
+  bottom: calc(max(28px, env(safe-area-inset-bottom)) + 92px);
+  z-index: 2;
+  margin: 0;
+  text-align: center;
+  font: 500 14px/1.3 var(--sans);
+  color: rgba(255, 255, 255, .78);
+  pointer-events: none;
+  transition: opacity .4s;
+}
+.hint.gone { opacity: 0; }
+
 /* ---------- Revelado ---------- */
 .reveal {
   position: fixed;

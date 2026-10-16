@@ -1,16 +1,21 @@
 import * as THREE from 'three';
-import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { gsap } from 'gsap';
 
-// ---------- Medidas (cm aprox.) ----------
-const W = 8.6;      // ancho de la cara abierta
-const H = 11;       // alto
-const D = 9;        // fondo (entre las dos caras con servilletas)
-const T = 0.08;     // grosor de chapa
-const LIFT = 0.16;  // patitas
-const BASE_ROT = 0.5;
-const NAPKIN_Z = D / 2 - 0.42;
+// ---------- Medidas (cm, iguales que tools/blender_servilletero.py) ----------
+const W = 8.6;      // ancho
+const H = 12.6;     // alto de la carcasa
+const D = 8.4;      // fondo (entre las dos ventanas)
+const T = 0.1;      // grosor de chapa
+const LIFT = 0.35;  // gomas
+const TOP = LIFT + H;
+const WIN = { x: W / 2 - 0.45, bottom: LIFT + 1.05, top: TOP - 2.05 };
+const PLATE_IN = D / 2 - T;        // cara interior de la chapa con ventana
+const PLATE_OUT = D / 2 + 0.06;    // cara exterior (con el borde enrollado)
+const NAPKIN_Z = PLATE_IN - 0.05;  // el muelle aprieta el taco contra la ventana
+const NW = 7.5, NH = 11.4;         // servilleta (la de la imagen, algo más estrecha)
+const N_BOTTOM = LIFT + 0.3, N_TOP = N_BOTTOM + NH;
+const BASE_ROT = 0.55;
 const PAPER = '#FBF9F4';
 
 // ---------- Estado diario ----------
@@ -45,7 +50,15 @@ const todays = {
   A: NAPKINS[(dayNumber * 2) % NAPKINS.length],
   B: NAPKINS[(dayNumber * 2 + 1) % NAPKINS.length],
 };
-for (const n of Object.values(todays)) new Image().src = n.napkin;
+const loadImage = (src) => new Promise((ok) => {
+  const img = new Image();
+  img.onload = () => ok(img);
+  img.onerror = () => ok(null);
+  img.src = src;
+});
+const napkinImages = Object.fromEntries(await Promise.all(
+  Object.entries(todays).map(async ([k, n]) => [k, await loadImage(n.napkin)])
+));
 
 // ---------- Render ----------
 const canvas = document.getElementById('scene');
@@ -57,7 +70,7 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 const scene = new THREE.Scene();
 const pmrem = new THREE.PMREMGenerator(renderer);
-// estudio fotográfico claro: degradado + softboxes, para que el inox se vea satinado
+// estudio: suelo azul, techo blanco y softboxes alargados, para que el cromo tenga qué reflejar
 function studioEnv() {
   const env = new THREE.Scene();
   env.add(new THREE.Mesh(
@@ -65,7 +78,7 @@ function studioEnv() {
     new THREE.ShaderMaterial({
       side: THREE.BackSide,
       vertexShader: 'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-      fragmentShader: 'varying vec3 vP; void main(){ float h = vP.y * 0.5 + 0.5; vec3 floorC = vec3(0.16, 0.19, 0.75); gl_FragColor = vec4(mix(floorC, vec3(0.9), smoothstep(0.25, 0.9, h)), 1.0); }',
+      fragmentShader: 'varying vec3 vP; void main(){ float h = vP.y * 0.5 + 0.5; vec3 floorC = vec3(0.13, 0.16, 0.78); vec3 c = mix(floorC, vec3(0.55, 0.57, 0.66), smoothstep(0.42, 0.52, h)); c = mix(c, vec3(0.97), smoothstep(0.6, 0.95, h)); gl_FragColor = vec4(c, 1.0); }',
     })
   ));
   const box = (w, h, x, y, z, k) => {
@@ -75,26 +88,28 @@ function studioEnv() {
     m.lookAt(0, 0, 0);
     env.add(m);
   };
-  box(10, 40, -26, 8, 14, 1.6);
-  box(8, 30, 24, 6, 18, 1.1);
-  box(24, 24, 0, 34, 0, 1.3);
-  box(12, 20, 4, 6, 30, 0.8);
+  box(7, 44, -26, 6, 16, 2.4);
+  box(5, 36, 25, 4, 16, 1.8);
+  box(30, 10, 0, 32, -6, 1.6);
+  box(14, 4, 0, 4, 34, 1.2);
+  box(4, 30, -6, 2, -30, 1.4);
   return env;
 }
-scene.environment = pmrem.fromScene(studioEnv(), 0.03).texture;
+scene.environment = pmrem.fromScene(studioEnv(), 0.02).texture;
 
 const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 200);
-const target = new THREE.Vector3(0, H * 0.4, 0);
+const target = new THREE.Vector3(0, TOP * 0.47, 0);
 
-const key = new THREE.DirectionalLight(0xffffff, 1.4);
-key.position.set(-9, 20, 12);
+const key = new THREE.DirectionalLight(0xffffff, 1.5);
+key.position.set(-9, 22, 12);
 key.castShadow = true;
 key.shadow.mapSize.set(2048, 2048);
-Object.assign(key.shadow.camera, { left: -14, right: 14, top: 14, bottom: -14, near: 1, far: 60 });
+Object.assign(key.shadow.camera, { left: -16, right: 16, top: 18, bottom: -14, near: 1, far: 70 });
 key.shadow.bias = -0.0004;
+key.shadow.normalBias = 0.02;
 key.shadow.radius = 6;
 scene.add(key);
-scene.add(new THREE.HemisphereLight(0xffffff, 0xdfe1fb, 0.7));
+scene.add(new THREE.HemisphereLight(0xffffff, 0xdfe1fb, 0.75));
 
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), new THREE.ShadowMaterial({ color: 0x0c0e2e, opacity: 0.22 }));
 ground.rotation.x = -Math.PI / 2;
@@ -102,22 +117,6 @@ ground.receiveShadow = true;
 scene.add(ground);
 
 // ---------- Texturas ----------
-function brushedTexture() {
-  const c = document.createElement('canvas');
-  c.width = c.height = 512;
-  const g = c.getContext('2d');
-  g.fillStyle = '#6e6e6e';
-  g.fillRect(0, 0, 512, 512);
-  for (let i = 0; i < 1600; i++) {
-    const v = (90 + Math.random() * 40) | 0;
-    g.fillStyle = `rgba(${v},${v},${v},${Math.random() * 0.18})`;
-    g.fillRect(Math.random() * 512, 0, Math.random() * 1.4 + 0.3, 512);
-  }
-  const t = new THREE.CanvasTexture(c);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  return t;
-}
-
 function contactShadowTexture() {
   const c = document.createElement('canvas');
   c.width = c.height = 256;
@@ -152,62 +151,131 @@ function grain(g, w, h, amount) {
   g.putImageData(img, 0, 0);
 }
 
-// Cara visible de la servilleta doblada dentro del servilletero
-function foldedNapkinTexture() {
-  const w = 512, h = 664;
-  const c = document.createElement('canvas');
-  c.width = w; c.height = h;
-  const g = c.getContext('2d');
-  g.fillStyle = PAPER;
-  g.fillRect(0, 0, w, h);
-  fibers(g, w, h, 900, 0.06);
-  grain(g, w, h, 7);
-  // pliegue horizontal
-  const fy = h * 0.66;
-  const fold = g.createLinearGradient(0, fy - 8, 0, fy + 8);
-  fold.addColorStop(0, 'rgba(0,0,0,0)');
-  fold.addColorStop(0.45, 'rgba(90,80,60,0.07)');
-  fold.addColorStop(0.55, 'rgba(255,255,255,0.6)');
-  fold.addColorStop(1, 'rgba(0,0,0,0)');
-  g.fillStyle = fold;
-  g.fillRect(0, fy - 8, w, 16);
+const TEX_W = 512, TEX_H = Math.round(512 * NH / NW);
+const FOLD_V = 0.36; // pliegue de la solapa, desde abajo (como en la imagen)
+
+function canvasTexture(c) {
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
   t.anisotropy = 8;
   return t;
 }
 
+// Cara que se ve dentro del servilletero: el dorso, con la tinta transparentándose
+function backSideTexture(img) {
+  const c = document.createElement('canvas');
+  c.width = TEX_W; c.height = TEX_H;
+  const g = c.getContext('2d');
+  g.fillStyle = PAPER;
+  g.fillRect(0, 0, TEX_W, TEX_H);
+  if (img) {
+    g.save();
+    g.globalAlpha = 0.07;
+    g.translate(TEX_W, 0);
+    g.scale(-1, 1);
+    g.filter = 'blur(1.2px) grayscale(0.4)';
+    g.drawImage(img, 0, 0, TEX_W, TEX_H);
+    g.restore();
+  }
+  fibers(g, TEX_W, TEX_H, 900, 0.06);
+  grain(g, TEX_W, TEX_H, 7);
+  return canvasTexture(c);
+}
+
+// Cara impresa (la que da al taco): retrato y frase
+function printedTexture(img) {
+  const c = document.createElement('canvas');
+  c.width = TEX_W; c.height = TEX_H;
+  const g = c.getContext('2d');
+  g.fillStyle = PAPER;
+  g.fillRect(0, 0, TEX_W, TEX_H);
+  if (img) g.drawImage(img, 0, 0, TEX_W, TEX_H);
+  fibers(g, TEX_W, TEX_H, 500, 0.04);
+  grain(g, TEX_W, TEX_H, 5);
+  return canvasTexture(c);
+}
+
+// Relieve del papel: arrugas finas + los dos pliegues de la servilleta de bar
+function paperNormalMap() {
+  const w = 256, h = Math.round(256 * NH / NW);
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const g = c.getContext('2d');
+  g.fillStyle = '#808080';
+  g.fillRect(0, 0, w, h);
+  g.filter = 'blur(1.5px)';
+  for (let i = 0; i < 70; i++) {
+    const x = Math.random() * w, y = Math.random() * h, a = Math.random() * Math.PI, l = 10 + Math.random() * 60;
+    const v = Math.random() < 0.5 ? 150 : 100;
+    g.strokeStyle = `rgba(${v},${v},${v},${0.15 + Math.random() * 0.35})`;
+    g.lineWidth = 0.6 + Math.random() * 1.6;
+    g.beginPath();
+    g.moveTo(x, y);
+    g.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l);
+    g.stroke();
+  }
+  g.filter = 'blur(2px)';
+  g.fillStyle = 'rgba(210,210,210,0.9)';
+  g.fillRect(0, h * (1 - FOLD_V) - 1.5, w, 3);
+  g.fillStyle = 'rgba(120,120,120,0.5)';
+  g.fillRect(w / 2 - 1, 0, 2, h);
+  g.filter = 'none';
+  const src = g.getImageData(0, 0, w, h).data;
+  const out = g.createImageData(w, h);
+  const hgt = (x, y) => src[(((y + h) % h) * w + ((x + w) % w)) * 4] / 255;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const dx = (hgt(x + 1, y) - hgt(x - 1, y)) * 3;
+      const dy = (hgt(x, y + 1) - hgt(x, y - 1)) * 3;
+      const inv = 1 / Math.hypot(dx, dy, 1);
+      const i = (y * w + x) * 4;
+      out.data[i] = (-dx * inv * 0.5 + 0.5) * 255;
+      out.data[i + 1] = (dy * inv * 0.5 + 0.5) * 255;
+      out.data[i + 2] = (inv * 0.5 + 0.5) * 255;
+      out.data[i + 3] = 255;
+    }
+  }
+  g.putImageData(out, 0, 0);
+  return new THREE.CanvasTexture(c);
+}
+
+// Canto del taco: muchas hojas apiladas
+function stackEdgeTexture() {
+  const c = document.createElement('canvas');
+  c.width = 64; c.height = 256;
+  const g = c.getContext('2d');
+  g.fillStyle = PAPER;
+  g.fillRect(0, 0, 64, 256);
+  for (let x = 0; x < 64; x += 2) {
+    g.fillStyle = `rgba(110,100,80,${0.05 + Math.random() * 0.1})`;
+    g.fillRect(x, 0, 1, 256);
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
 // ---------- Materiales ----------
-const brushed = brushedTexture();
-const metal = new THREE.MeshPhysicalMaterial({
-  color: '#e4e7eb',
-  metalness: 1,
-  roughness: 0.4,
-  roughnessMap: brushed,
-  anisotropy: 0.5,
-  anisotropyRotation: Math.PI / 2,
-  envMapIntensity: 1,
+const chrome = new THREE.MeshPhysicalMaterial({
+  color: '#eef0f3', metalness: 1, roughness: 0.09, envMapIntensity: 1.15,
+  clearcoat: 0.4, clearcoatRoughness: 0.05,
 });
-const paperFlat = new THREE.MeshStandardMaterial({ color: PAPER, roughness: 0.95, emissive: '#ffffff', emissiveIntensity: 0.34 });
-const foldedTex = foldedNapkinTexture();
+const rubber = new THREE.MeshStandardMaterial({ color: '#111114', roughness: 0.6 });
+const paperNormal = paperNormalMap();
+const edgeTex = stackEdgeTexture();
+const stackFront = new THREE.MeshStandardMaterial({ color: PAPER, roughness: 0.95, envMapIntensity: 0.35, emissive: '#ffffff', emissiveIntensity: 0.3 });
+const stackEdge = new THREE.MeshStandardMaterial({ map: edgeTex, roughness: 0.95, emissive: '#ffffff', emissiveIntensity: 0.18 });
+function paperMaterial(map, side) {
+  return new THREE.MeshStandardMaterial({
+    map, side, roughness: 0.88, envMapIntensity: 0.35,
+    normalMap: paperNormal, normalScale: new THREE.Vector2(0.35, 0.35),
+    emissive: '#ffffff', emissiveIntensity: 0.3, emissiveMap: map,
+  });
+}
 
 // ---------- Servilletero ----------
 const dispenser = new THREE.Group();
 scene.add(dispenser);
-const body = new THREE.Group();
-body.position.y = LIFT;
-dispenser.add(body);
-
-const proceduralMetal = [];
-function add(geo, mat, x, y, z, parent = body) {
-  const m = new THREE.Mesh(geo, mat);
-  if (mat === metal) proceduralMetal.push(m);
-  m.position.set(x, y, z);
-  m.castShadow = true;
-  m.receiveShadow = true;
-  parent.add(m);
-  return m;
-}
 
 // sombra de contacto
 const contact = new THREE.Mesh(
@@ -218,109 +286,274 @@ contact.rotation.x = -Math.PI / 2;
 contact.position.y = 0.01;
 dispenser.add(contact);
 
-// laterales cerrados, techo y base
-add(new RoundedBoxGeometry(T * 2, H, D, 2, 0.04), metal, -W / 2 + T, H / 2, 0);
-add(new RoundedBoxGeometry(T * 2, H, D, 2, 0.04), metal, W / 2 - T, H / 2, 0);
-add(new RoundedBoxGeometry(W, T * 2, D, 2, 0.04), metal, 0, H - T, 0);
-add(new RoundedBoxGeometry(W, T * 2, D, 2, 0.04), metal, 0, T, 0);
-// chapa central
-add(new THREE.BoxGeometry(W - 0.3, H - 0.3, 0.05), metal, 0, H / 2, 0);
-// patitas
-const footGeo = new THREE.CylinderGeometry(0.22, 0.26, LIFT, 16);
-for (const sx of [-1, 1]) for (const sz of [-1, 1]) add(footGeo, metal, sx * (W / 2 - 0.7), -LIFT / 2, sz * (D / 2 - 0.7));
-
-function makeTab() {
-  const h = 1.15, wOut = W - 1.25, wIn = W - 3.4;
-  const shape = new THREE.Shape();
-  shape.moveTo(-wOut / 2, 0);
-  shape.lineTo(wOut / 2, 0);
-  shape.lineTo(wIn / 2, -h);
-  shape.lineTo(-wIn / 2, -h);
-  shape.closePath();
-  return new THREE.ExtrudeGeometry(shape, { depth: 0.05, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.03, bevelSegments: 2 });
-}
-const tabGeo = makeTab();
-const lipGeo = new RoundedBoxGeometry(0.62, H - 0.1, T * 2, 2, 0.04);
-
-const faces = {};
 const pickables = [];
-
-for (const [id, s] of [['A', 1], ['B', -1]]) {
-  const face = new THREE.Group();
-  face.rotation.y = s > 0 ? 0 : Math.PI;
-  body.add(face);
-
-  // pestañas laterales
-  for (const sx of [-1, 1]) add(lipGeo, metal, sx * (W / 2 - 0.31), H / 2, D / 2 - T, face);
-
-  // pestañas superior e inferior, dobladas hacia dentro
-  for (const sy of [1, -1]) {
-    const tilt = new THREE.Group();
-    tilt.position.set(0, sy > 0 ? H - 0.02 : 0.02, D / 2 - 0.03);
-    tilt.rotation.x = sy * 0.25;
-    face.add(tilt);
-    const tab = add(tabGeo, metal, 0, 0, 0, tilt);
-    tab.rotation.z = sy > 0 ? 0 : Math.PI;
-  }
-
-  // taco de servilletas (crece desde la chapa central)
-  const stackDepth = NAPKIN_Z - 0.06;
-  const stackGeo = new THREE.BoxGeometry(W - 0.45, H - 0.5, stackDepth);
-  stackGeo.translate(0, 0, stackDepth / 2);
-  const stack = add(stackGeo, paperFlat, 0, H / 2, 0.04, face);
-
-  // servilleta que se puede sacar
-  const geo = new THREE.PlaneGeometry(W - 0.5, H - 0.5, 30, 40);
-  const mat = new THREE.MeshStandardMaterial({ map: foldedTex, roughness: 0.92, side: THREE.DoubleSide, emissive: '#ffffff', emissiveIntensity: 0.34 });
-  const napkin = add(geo, mat, 0, H / 2, NAPKIN_Z, face);
-  pickables.push(napkin);
-
-  faces[id] = { id, s, group: face, napkin, stack, base: Float32Array.from(geo.attributes.position.array) };
-
-  if (state.taken[id]) {
-    napkin.visible = false;
-    stack.visible = false;
-  }
-}
-body.traverse((o) => { if (o.isMesh && !pickables.includes(o)) pickables.push(o); });
-
-// Deforma la servilleta: p = cuánto se ha tirado, (gx, gy) = punto agarrado
-function deform(face, p, gx, gy, dirX = 0, dirY = 0, free = 0) {
-  const pos = face.napkin.geometry.attributes.position;
-  const base = face.base;
-  const sigma = 1.1 + p * 1.6;
-  const hw = (W - 0.5) / 2, hh = (H - 0.5) / 2;
-  for (let i = 0; i < pos.count; i++) {
-    const x0 = base[i * 3], y0 = base[i * 3 + 1];
-    const dx = x0 - gx, dy = y0 - gy;
-    // los bordes quedan sujetos por las pestañas
-    const pin = Math.min(1, (hw - Math.abs(x0)) / 1.1) * Math.min(1, (hh - Math.abs(y0)) / 1.6);
-    let w = Math.exp(-(dx * dx + dy * dy) / (2 * sigma * sigma)) * pin;
-    w += (1 - w) * free;
-    const pinch = p * 0.35 * w * (1 - free);
-    const crumple = Math.sin(x0 * 3.1 + y0 * 1.7) * Math.sin(y0 * 2.3 - x0 * 1.1) * 0.14 * p * w;
-    pos.setXYZ(
-      i,
-      x0 - dx * pinch * 0.5 + dirX * p * 1.5 * w,
-      y0 - dy * pinch * 0.5 + dirY * p * 1.5 * w,
-      p * 5.5 * w + free * 6 + crumple
-    );
-  }
-  pos.needsUpdate = true;
-  face.napkin.geometry.computeVertexNormals();
-}
-
-// ---------- Modelo de Blender ----------
 new GLTFLoader().load('models/servilletero.glb', (gltf) => {
-  for (const m of proceduralMetal) m.parent.remove(m);
   gltf.scene.traverse((o) => {
     if (!o.isMesh) return;
-    o.material = metal;
+    o.material = o.material?.name === 'Goma' ? rubber : chrome;
     o.castShadow = o.receiveShadow = true;
     pickables.push(o);
   });
   dispenser.add(gltf.scene);
-}, undefined, () => { /* sin modelo: se queda el procedural */ });
+});
+
+// ---------- Servilleta: hoja de papel simulada ----------
+// Rejilla de partículas (verlet) con distancias fijas: el papel se dobla pero no se estira.
+// La parte de arriba queda pillada bajo el marco y solo desliza si se tira hacia abajo;
+// la de abajo (la solapa) se suelta en cuanto se agarra.
+const NX = 16, NY = 24;
+const N = NX * NY;
+const DX = NW / (NX - 1), DY = NH / (NY - 1);
+const GRAVITY = -650;   // cm/s², el papel cae "frenado" por el aire
+const DRAG = 0.992;
+const ITER = 14;
+const FREE = 0, HELD_TOP = 1, HELD_BOTTOM = 2, GRABBED = 3;
+
+class Sheet {
+  constructor() {
+    this.pos = new Float32Array(N * 3);
+    this.prev = new Float32Array(N * 3);
+    this.rest = new Float32Array(N * 3);
+    this.mode = new Uint8Array(N);
+    this.inside = new Uint8Array(N);   // 1 = dentro del servilletero
+    this.offset = new Float32Array(N * 3);
+    const c = [];
+    const idx = (ix, iy) => iy * NX + ix;
+    const link = (a, b, k) => c.push(a, b, k);
+    for (let iy = 0; iy < NY; iy++) {
+      for (let ix = 0; ix < NX; ix++) {
+        const i = idx(ix, iy);
+        this.rest.set([-NW / 2 + ix * DX, N_TOP - iy * DY, NAPKIN_Z], i * 3);
+        if (ix < NX - 1) link(i, idx(ix + 1, iy), 1);
+        if (iy < NY - 1) link(i, idx(ix, iy + 1), 1);
+        if (ix < NX - 1 && iy < NY - 1) { link(i, idx(ix + 1, iy + 1), 0.9); link(idx(ix + 1, iy), idx(ix, iy + 1), 0.9); }
+        // rigidez a flexión: el papel de bar es fino pero tieso
+        if (ix < NX - 2) link(i, idx(ix + 2, iy), 0.7);
+        if (iy < NY - 2) link(i, idx(ix, iy + 2), 0.7);
+        if (ix < NX - 3) link(i, idx(ix + 3, iy), 0.12);
+        if (iy < NY - 3) link(i, idx(ix, iy + 3), 0.12);
+      }
+    }
+    this.pairs = Int32Array.from(c.filter((_, j) => j % 3 !== 2));
+    this.stiff = Float32Array.from(c.filter((_, j) => j % 3 === 2));
+    this.len = new Float32Array(this.stiff.length);
+    for (let k = 0; k < this.len.length; k++) {
+      const a = this.pairs[k * 2] * 3, b = this.pairs[k * 2 + 1] * 3;
+      this.len[k] = Math.hypot(this.rest[a] - this.rest[b], this.rest[a + 1] - this.rest[b + 1]);
+    }
+    this.reset();
+  }
+
+  reset() {
+    this.pos.set(this.rest);
+    this.prev.set(this.rest);
+    this.slide = 0;
+    this.grabTarget = null;
+    this.inside.fill(1);
+    for (let i = 0; i < N; i++) {
+      const y = this.rest[i * 3 + 1];
+      this.mode[i] = y > WIN.top ? HELD_TOP : y < WIN.bottom ? HELD_BOTTOM : FREE;
+    }
+  }
+
+  get heldTop() {
+    for (let i = 0; i < N; i++) if (this.mode[i] === HELD_TOP) return true;
+    return false;
+  }
+
+  // Abre la solapa y pellizca las partículas cercanas a (x, y)
+  grab(x, y) {
+    for (let i = 0; i < N; i++) if (this.mode[i] === HELD_BOTTOM) this.mode[i] = FREE;
+    let best = 0, bd = Infinity;
+    for (let i = 0; i < N; i++) {
+      if (this.mode[i] !== FREE) continue;
+      const d = Math.hypot(this.pos[i * 3] - x, this.pos[i * 3 + 1] - y);
+      if (d < bd) { bd = d; best = i; }
+    }
+    const cx = this.pos[best * 3], cy = this.pos[best * 3 + 1], cz = this.pos[best * 3 + 2];
+    this.grabRestY = this.rest[best * 3 + 1];
+    this.grabbed = [];
+    for (let i = 0; i < N; i++) {
+      if (this.mode[i] !== FREE) continue;
+      const ox = this.pos[i * 3] - cx, oy = this.pos[i * 3 + 1] - cy;
+      if (Math.abs(ox) > 1.6 || Math.abs(oy) > 0.6) continue;
+      this.mode[i] = GRABBED;
+      this.offset.set([ox, oy, this.pos[i * 3 + 2] - cz], i * 3);
+      this.grabbed.push(i);
+    }
+    this.grabTarget = new THREE.Vector3(cx, cy, cz);
+  }
+
+  release() {
+    for (const i of this.grabbed || []) this.mode[i] = FREE;
+    this.grabbed = [];
+    this.grabTarget = null;
+  }
+
+  // Tirar hacia abajo saca lo que estaba pillado bajo el marco de arriba;
+  // hacia arriba solo llega hasta donde da el papel que ya está fuera.
+  pull(t) {
+    const hinge = new THREE.Vector3(t.x, WIN.top, PLATE_OUT);
+    const dist = t.distanceTo(hinge);
+    const base = WIN.top - this.grabRestY;
+    if (t.y < WIN.top) this.slide = Math.max(this.slide, dist * 0.97 - base);
+    const hidden = Math.max(0, N_TOP - this.slide - WIN.top);
+    const reach = N_TOP - this.grabRestY - hidden + 0.3;
+    if (dist > reach) t.copy(hinge.add(t.clone().sub(hinge).setLength(reach)));
+    t.y = Math.max(t.y, 0.3);
+    return t;
+  }
+
+  step(dt, pressure) {
+    const p = this.pos, q = this.prev;
+    const g = GRAVITY * dt * dt;
+    for (let i = 0; i < N; i++) {
+      const j = i * 3;
+      const m = this.mode[i];
+      if (m === FREE) {
+        const vx = (p[j] - q[j]) * DRAG, vy = (p[j + 1] - q[j + 1]) * DRAG, vz = (p[j + 2] - q[j + 2]) * DRAG;
+        q[j] = p[j]; q[j + 1] = p[j + 1]; q[j + 2] = p[j + 2];
+        p[j] += vx;
+        p[j + 1] += vy + g;
+        // el muelle del servilletero aprieta lo que sigue dentro contra el taco
+        p[j + 2] += vz - (this.inside[i] ? pressure * dt * dt : 0);
+      } else {
+        q[j] = p[j]; q[j + 1] = p[j + 1]; q[j + 2] = p[j + 2];
+        if (m === HELD_TOP) {
+          p[j] = this.rest[j]; p[j + 1] = this.rest[j + 1] - this.slide; p[j + 2] = NAPKIN_Z;
+        } else if (m === HELD_BOTTOM) {
+          p[j] = this.rest[j]; p[j + 1] = this.rest[j + 1]; p[j + 2] = NAPKIN_Z;
+        } else if (this.grabTarget) {
+          p[j] = this.grabTarget.x + this.offset[j];
+          p[j + 1] = this.grabTarget.y + this.offset[j + 1];
+          p[j + 2] = this.grabTarget.z + this.offset[j + 2];
+        }
+      }
+    }
+
+    const { pairs, len, stiff, mode } = this;
+    for (let it = 0; it < ITER; it++) {
+      for (let k = 0; k < len.length; k++) {
+        const a = pairs[k * 2], b = pairs[k * 2 + 1];
+        const fa = mode[a] === FREE, fb = mode[b] === FREE;
+        if (!fa && !fb) continue;
+        const ja = a * 3, jb = b * 3;
+        const dx = p[jb] - p[ja], dy = p[jb + 1] - p[ja + 1], dz = p[jb + 2] - p[ja + 2];
+        const d = Math.hypot(dx, dy, dz) || 1e-6;
+        const diff = (d - len[k]) / d;
+        const s = stiff[k];
+        const wa = fa ? (fb ? 0.5 : 1) : 0, wb = fb ? (fa ? 0.5 : 1) : 0;
+        p[ja] += dx * diff * s * wa; p[ja + 1] += dy * diff * s * wa; p[ja + 2] += dz * diff * s * wa;
+        p[jb] -= dx * diff * s * wb; p[jb + 1] -= dy * diff * s * wb; p[jb + 2] -= dz * diff * s * wb;
+      }
+      this.collide();
+      if (it === ITER - 4) this.selfCollide();
+    }
+
+    for (let i = 0; i < N; i++) {
+      if (this.mode[i] === HELD_TOP && this.rest[i * 3 + 1] - this.slide < WIN.top - 0.05) {
+        this.mode[i] = FREE;
+      }
+    }
+  }
+
+  // Al doblarse, una capa de papel no atraviesa la otra
+  selfCollide() {
+    const p = this.pos, R = 0.3, cell = 0.5;
+    const grid = new Map();
+    const cellKey = (x, y, z) => ((x + 64) * 256 + (y + 64)) * 256 + (z + 64);
+    for (let i = 0; i < N; i++) {
+      const k = cellKey(Math.floor(p[i * 3] / cell), Math.floor(p[i * 3 + 1] / cell), Math.floor(p[i * 3 + 2] / cell));
+      const list = grid.get(k);
+      if (list) list.push(i); else grid.set(k, [i]);
+    }
+    for (let i = 0; i < N; i++) {
+      const ix = i % NX, iy = (i / NX) | 0;
+      const cx = Math.floor(p[i * 3] / cell), cy = Math.floor(p[i * 3 + 1] / cell), cz = Math.floor(p[i * 3 + 2] / cell);
+      for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) for (let c = -1; c <= 1; c++) {
+        const list = grid.get(cellKey(cx + a, cy + b, cz + c));
+        if (!list) continue;
+        for (const j of list) {
+          if (j <= i) continue;
+          const jx = j % NX, jy = (j / NX) | 0;
+          if (Math.abs(ix - jx) + Math.abs(iy - jy) < 3) continue;
+          const dx = p[j * 3] - p[i * 3], dy = p[j * 3 + 1] - p[i * 3 + 1], dz = p[j * 3 + 2] - p[i * 3 + 2];
+          const d2 = dx * dx + dy * dy + dz * dz;
+          if (d2 >= R * R || d2 < 1e-10) continue;
+          const d = Math.sqrt(d2), push = (R - d) / d * 0.5;
+          const fi = this.mode[i] === FREE, fj = this.mode[j] === FREE;
+          const wi = fi ? (fj ? 1 : 2) : 0, wj = fj ? (fi ? 1 : 2) : 0;
+          p[i * 3] -= dx * push * wi; p[i * 3 + 1] -= dy * push * wi; p[i * 3 + 2] -= dz * push * wi;
+          p[j * 3] += dx * push * wj; p[j * 3 + 1] += dy * push * wj; p[j * 3 + 2] += dz * push * wj;
+        }
+      }
+    }
+  }
+
+  collide() {
+    const p = this.pos;
+    for (let i = 0; i < N; i++) {
+      if (this.mode[i] !== FREE) continue;
+      const j = i * 3;
+      let x = p[j], y = p[j + 1], z = p[j + 2];
+      const inWindow = Math.abs(x) < WIN.x - 0.06 && y > WIN.bottom + 0.06 && y < WIN.top - 0.06;
+      const inFootprint = Math.abs(x) < W / 2 + 0.1 && y < TOP + 0.1;
+      // la chapa con ventana: fuera del hueco, el papel se queda del lado en que está
+      if (!inWindow && inFootprint && z > PLATE_IN - 0.02 && z < PLATE_OUT + 0.03) {
+        z = z < (PLATE_IN + PLATE_OUT) / 2 ? PLATE_IN - 0.02 : PLATE_OUT + 0.03;
+      }
+      this.inside[i] = inFootprint && z < (PLATE_IN + PLATE_OUT) / 2 ? 1 : 0;
+      if (this.inside[i]) {
+        z = Math.max(z, NAPKIN_Z);           // el taco
+        y = Math.min(y, N_TOP);              // el techo
+        x = THREE.MathUtils.clamp(x, -W / 2 + T + 0.05, W / 2 - T - 0.05);
+      }
+      y = Math.max(y, 0.03);                 // la mesa
+      p[j] = x; p[j + 1] = y; p[j + 2] = z;
+    }
+  }
+}
+
+// ---------- Caras ----------
+const faces = {};
+const stackGeo = new THREE.BoxGeometry(NW, NH, NAPKIN_Z - 0.06);
+stackGeo.translate(0, N_BOTTOM + NH / 2, (NAPKIN_Z - 0.06) / 2 + 0.03);
+
+for (const [id, s] of [['A', 1], ['B', -1]]) {
+  const group = new THREE.Group();
+  group.rotation.y = s > 0 ? 0 : Math.PI;
+  dispenser.add(group);
+
+  const stack = new THREE.Mesh(stackGeo, [stackEdge, stackEdge, stackEdge, stackEdge, stackFront, stackFront]);
+  stack.receiveShadow = true;
+  group.add(stack);
+
+  const sheet = new Sheet();
+  const geo = new THREE.PlaneGeometry(NW, NH, NX - 1, NY - 1);
+  geo.attributes.position.array.set(sheet.pos);
+  const printed = printedTexture(napkinImages[id]);
+  // visto por detrás, la imagen se invierte: la volvemos a invertir para que se lea
+  printed.wrapS = THREE.RepeatWrapping;
+  printed.repeat.x = -1;
+  const front = new THREE.Mesh(geo, paperMaterial(backSideTexture(napkinImages[id]), THREE.FrontSide));
+  const back = new THREE.Mesh(geo, paperMaterial(printed, THREE.BackSide));
+  for (const m of [front, back]) { m.castShadow = true; m.receiveShadow = true; group.add(m); }
+
+  faces[id] = { id, s, group, stack, sheet, geo, front, back, settled: true };
+  if (state.taken[id]) setTaken(faces[id]);
+}
+
+function setTaken(face) {
+  face.front.visible = face.back.visible = false;
+  face.stack.visible = false;
+}
+
+function syncGeometry(face) {
+  face.geo.attributes.position.array.set(face.sheet.pos);
+  face.geo.attributes.position.needsUpdate = true;
+  face.geo.computeVertexNormals();
+  face.geo.computeBoundingSphere();
+}
 
 // ---------- Cámara ----------
 function resize() {
@@ -328,10 +561,10 @@ function resize() {
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
   const half = THREE.MathUtils.degToRad(camera.fov / 2);
-  const distV = (H * 2.15) / 2 / Math.tan(half);
-  const distH = (W * 1.75) / 2 / (Math.tan(half) * camera.aspect);
+  const distV = (TOP * 2.1) / 2 / Math.tan(half);
+  const distH = (W * 2.2) / 2 / (Math.tan(half) * camera.aspect);
   const dist = Math.max(distV, distH);
-  const el = THREE.MathUtils.degToRad(15);
+  const el = THREE.MathUtils.degToRad(13);
   camera.position.set(0, target.y + Math.sin(el) * dist, Math.cos(el) * dist);
   camera.lookAt(target);
   camera.updateProjectionMatrix();
@@ -354,17 +587,34 @@ function updateUI() {
   const left = ['A', 'B'].filter((k) => !state.taken[k]).length;
   document.querySelectorAll('.dots i').forEach((el) => el.classList.toggle('taken', state.taken[el.dataset.side]));
   $('turn').hidden = left === 0;
+  $('hint').classList.toggle('gone', state.taken[facingFace().id] || !!drag || busy);
 }
 
 const raycaster = new THREE.Raycaster();
 const ndc = new THREE.Vector2();
-function pick(e) {
+function setRay(e) {
   ndc.set((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
   raycaster.setFromCamera(ndc, camera);
-  const hit = raycaster.intersectObjects(pickables, false).find((h) => h.object.visible);
+}
+function pick(e) {
+  setRay(e);
   const face = facingFace();
-  if (hit && (hit.object === face.napkin || hit.object === face.stack) && !state.taken[face.id]) return { face, point: hit.point };
+  if (state.taken[face.id] || !face.front.visible) return null;
+  const hits = raycaster.intersectObjects([face.front, face.back, face.stack, ...pickables], false);
+  const hit = hits[0];
+  if (hit && (hit.object === face.front || hit.object === face.back || hit.object === face.stack)) return { face, point: hit.point };
   return null;
+}
+
+// Punto bajo el dedo en un plano paralelo a la ventana, a `z` delante (coords de la cara)
+const plane = new THREE.Plane();
+function pointerOnPlane(face, z) {
+  const n = new THREE.Vector3(0, 0, 1).applyQuaternion(face.group.getWorldQuaternion(new THREE.Quaternion()));
+  const p0 = face.group.localToWorld(new THREE.Vector3(0, 0, z));
+  plane.setFromNormalAndCoplanarPoint(n, p0);
+  const out = new THREE.Vector3();
+  if (!raycaster.ray.intersectPlane(plane, out)) return null;
+  return face.group.worldToLocal(out);
 }
 
 canvas.addEventListener('pointerdown', (e) => {
@@ -372,20 +622,23 @@ canvas.addEventListener('pointerdown', (e) => {
   const hit = pick(e);
   try { canvas.setPointerCapture(e.pointerId); } catch {}
   if (hit) {
-    const local = hit.face.napkin.worldToLocal(hit.point.clone());
-    gsap.killTweensOf(hit.face.springObj || {});
-    drag = { mode: 'pull', face: hit.face, gx: local.x, gy: local.y, sx: e.clientX, sy: e.clientY, p: 0, dirX: 0, dirY: 0 };
+    const local = hit.face.group.worldToLocal(hit.point.clone());
+    gsap.killTweensOf(hit.face);
+    hit.face.sheet.grab(local.x, local.y);
+    hit.face.settled = false;
+    drag = { mode: 'pull', face: hit.face, sx: e.clientX, sy: e.clientY, z0: hit.face.sheet.grabTarget.z, out: 0 };
     canvas.style.cursor = 'grabbing';
   } else {
     drag = { mode: 'rotate', lastX: e.clientX };
   }
+  updateUI();
 });
 
 canvas.addEventListener('pointermove', (e) => {
   if (!drag) {
     if (e.pointerType === 'mouse') {
       canvas.style.cursor = !busy && pick(e) ? 'grab' : 'default';
-      parallax = ((e.clientX / window.innerWidth) - 0.5) * 0.12;
+      parallax = ((e.clientX / window.innerWidth) - 0.5) * 0.1;
     }
     return;
   }
@@ -396,54 +649,70 @@ canvas.addEventListener('pointermove', (e) => {
     updateUI();
     return;
   }
-  const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
-  const dist = Math.hypot(dx, dy);
-  drag.p = dist / (0.26 * Math.min(window.innerWidth, window.innerHeight));
-  if (dist > 0) { drag.dirX = dx / dist; drag.dirY = -dy / dist; }
-  deform(drag.face, Math.min(drag.p, 1), drag.gx, drag.gy, drag.dirX, drag.dirY);
-  if (drag.p >= 1) extract(drag);
+  // al empezar a tirar, la solapa se despega y viene hacia ti
+  const moved = Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy);
+  drag.out = Math.max(drag.out, Math.min(1, moved / 40));
+  setRay(e);
+  const z = drag.z0 + (PLATE_OUT + 1.4 - drag.z0) * drag.out;
+  const p = pointerOnPlane(drag.face, z);
+  if (p) drag.face.sheet.grabTarget.copy(drag.face.sheet.pull(p));
 });
 
 function endDrag() {
   if (!drag) return;
   if (drag.mode === 'rotate') {
     rotTarget = BASE_ROT + Math.round((rot - BASE_ROT) / Math.PI) * Math.PI;
-  } else {
-    // vuelve a su sitio con efecto muelle
-    const d = drag;
-    const o = (d.face.springObj = { p: Math.min(d.p, 1) });
-    gsap.to(o, {
-      p: 0, duration: 0.8, ease: 'elastic.out(1, 0.35)',
-      onUpdate: () => deform(d.face, o.p, d.gx, d.gy, d.dirX, d.dirY),
-    });
+  } else if (!busy) {
+    // se suelta a medias: el papel cae y vuelve a meterse en el servilletero
+    const face = drag.face;
+    face.sheet.release();
+    gsap.delayedCall(0.45, () => tuckBack(face));
   }
   drag = null;
   canvas.style.cursor = 'default';
+  updateUI();
 }
 canvas.addEventListener('pointerup', endDrag);
 canvas.addEventListener('pointercancel', endDrag);
 
-function extract(d) {
-  drag = null;
+function tuckBack(face) {
+  if (drag && drag.face === face) return;
+  const sheet = face.sheet;
+  const from = Float32Array.from(sheet.pos);
+  const slide0 = sheet.slide;
+  const o = { t: 0 };
+  face.tween = gsap.to(o, {
+    t: 1, duration: 0.7, ease: 'power2.inOut',
+    onStart: () => { sheet.mode.fill(GRABBED); sheet.grabTarget = null; },
+    onUpdate: () => {
+      for (let i = 0; i < N * 3; i++) sheet.pos[i] = from[i] + (sheet.rest[i] - from[i]) * o.t;
+      sheet.prev.set(sheet.pos);
+      sheet.slide = slide0 * (1 - o.t);
+    },
+    onComplete: () => { sheet.reset(); face.settled = true; },
+  });
+}
+
+function extract(face) {
   busy = true;
-  canvas.style.cursor = 'default';
-  const { face } = d;
   state.taken[face.id] = true;
   saveState();
   if (navigator.vibrate) navigator.vibrate(18);
-
-  face.napkin.material.transparent = true;
-  const o = { p: 1, free: 0 };
-  gsap.to(o, {
-    p: 1.4, free: 1, duration: 0.5, ease: 'power2.in',
-    onUpdate: () => deform(face, o.p, d.gx, d.gy, d.dirX, d.dirY, o.free),
+  updateUI();
+  // la servilleta cuelga un momento de los dedos y se la lleva la cámara
+  gsap.delayedCall(0.45, () => {
+    face.sheet.release();
+    if (drag && drag.face === face) drag = null;
+    for (const m of [face.front, face.back]) {
+      m.material.transparent = true;
+      gsap.to(m.material, { opacity: 0, duration: 0.25, delay: 0.1 });
+    }
+    gsap.to(face.stack.scale, {
+      z: 0.001, duration: 0.6, ease: 'power3.inOut',
+      onComplete: () => setTaken(face),
+    });
+    showReveal(face.id);
   });
-  gsap.to(face.napkin.material, { opacity: 0, duration: 0.2, delay: 0.32 });
-  gsap.to(face.stack.scale, {
-    z: 0.001, duration: 0.7, delay: 0.25, ease: 'power3.inOut',
-    onComplete: () => { face.stack.visible = false; face.napkin.visible = false; },
-  });
-  gsap.delayedCall(0.38, () => showReveal(face.id));
 }
 
 function turn() {
@@ -466,8 +735,8 @@ async function showReveal(id) {
   reveal.hidden = false;
   gsap.fromTo('#revealBg', { opacity: 0 }, { opacity: 1, duration: 0.4 });
   gsap.fromTo('#napkinCard',
-    { opacity: 0, scale: 0.45, rotateX: 65, rotateZ: -10, y: 80 },
-    { opacity: 1, scale: 1, rotateX: 0, rotateZ: -1.5, y: 0, duration: 1, ease: 'back.out(1.3)' });
+    { opacity: 0, scale: 0.6, rotateX: 40, rotateZ: 8, y: 120 },
+    { opacity: 1, scale: 1, rotateX: 0, rotateZ: -1.5, y: 0, duration: 0.9, ease: 'back.out(1.2)' });
   gsap.fromTo(['.actions', '#close'], { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, stagger: 0.08, delay: 0.5 });
 }
 
@@ -490,7 +759,7 @@ $('revealBg').addEventListener('click', hideReveal);
 window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !reveal.hidden) hideReveal(); });
 
 // Lo que se descarga y se comparte es la story (servilleta sobre azul + @cafecita.app)
-const slug = (t) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+const slug = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
 const fileName = () => `cafecita-${state.date}-${slug(todays[currentSide].author)}.jpg`;
 const storyBlob = () => fetch(todays[currentSide].story).then((r) => r.blob());
 
@@ -516,23 +785,47 @@ if (navigator.share) {
 
 // ---------- Bucle ----------
 const clock = new THREE.Clock();
-let lastFacing = null;
-function tick() {
-  const dt = Math.min(clock.getDelta(), 0.1);
-  const t = clock.elapsedTime;
+const SUB = 1 / 120;
+let acc = 0, lastFacing = null, nextHint = 2.5;
+let t = 0;
+function frame(dt) {
+  t += dt;
   if (!drag || drag.mode !== 'rotate') rot += (rotTarget - rot) * (1 - Math.exp(-dt * 7));
   dispenser.rotation.y = rot + parallax;
 
   const face = facingFace();
   if (face !== lastFacing) { lastFacing = face; updateUI(); }
 
-  // invita a tirar: la servilleta "respira" un poco
-  if (!drag && !busy && !state.taken[face.id] && !gsap.isTweening(face.springObj || {})) {
-    const breath = Math.max(0, Math.sin(t * 2.4)) ** 3 * 0.05;
-    deform(face, breath, 0, 0.4);
+  // invita a tirar: de vez en cuando la solapa de abajo se despega un poco
+  if (!drag && !busy && face.settled && !state.taken[face.id] && t > nextHint) {
+    nextHint = t + 3.2;
+    face.settled = false;
+    const sheet = face.sheet;
+    for (let i = 0; i < N; i++) {
+      const y = sheet.rest[i * 3 + 1];
+      if (sheet.mode[i] === FREE && y < WIN.bottom + 2.2) sheet.prev[i * 3 + 2] -= 0.05 * (1 - (y - WIN.bottom) / 2.2);
+    }
+    gsap.delayedCall(1.6, () => { if (!drag || drag.face !== face) face.settled = true; });
+  }
+
+  acc += dt;
+  while (acc >= SUB) {
+    acc -= SUB;
+    for (const f of Object.values(faces)) {
+      if (f.settled || !f.front.visible || f.tween?.isActive()) continue;
+      f.sheet.step(SUB, f.sheet.grabTarget ? 0 : 160);
+    }
+  }
+  for (const f of Object.values(faces)) {
+    if (!f.front.visible) continue;
+    syncGeometry(f);
+    if (drag?.face === f && !busy && !f.sheet.heldTop) extract(f);
   }
 
   renderer.render(scene, camera);
+}
+function tick() {
+  frame(Math.min(clock.getDelta(), 0.05));
   requestAnimationFrame(tick);
 }
 updateUI();
