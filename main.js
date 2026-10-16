@@ -17,7 +17,6 @@ const NAPKIN_Z = PLATE_IN - 0.05;  // el muelle aprieta el taco contra la ventan
 // la servilleta cabe entera dentro: el borde de arriba queda escondido bajo el marco
 const N_BOTTOM = LIFT + T + 0.2, N_TOP = TOP - T - 0.25;
 const NW = 2 * WIN.x - 0.2, NH = N_TOP - N_BOTTOM;
-const INK = '#4A6789';
 const BASE_ROT = 0.55;
 const PAPER = '#FBF9F4';
 
@@ -54,11 +53,17 @@ const todays = {
   B: NAPKINS[(dayNumber * 2 + 1) % NAPKINS.length],
 };
 for (const n of Object.values(todays)) new Image().src = n.napkin;
-// la solapa se rotula con la tipografía de la marca
-await Promise.all([
-  document.fonts.load('italic 400 80px Fraunces'),
-  document.fonts.load('700 40px "Bricolage Grotesque"'),
-]).catch(() => {});
+// la solapa se rotula con la tipografía de la marca y el logo en tinta
+const INK = '#4A6789';
+const [inkLogo] = await Promise.all([
+  fetch('logo.svg').then((r) => r.text()).then(async (svg) => {
+    const img = new Image();
+    img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg.replace('currentColor', INK))}`;
+    await img.decode();
+    return img;
+  }).catch(() => null),
+  document.fonts.load('italic 400 80px Fraunces').catch(() => {}),
+]);
 
 // ---------- Render ----------
 const canvas = document.getElementById('scene');
@@ -198,13 +203,12 @@ function flapTexture() {
   g.filter = 'blur(0.4px)';
   g.font = `italic 400 ${Math.round(TEX_W * 0.082)}px Fraunces, Georgia, serif`;
   g.fillText('Gracias por su visita', TEX_W / 2, cy);
-  g.font = `700 ${Math.round(TEX_W * 0.026)}px "Bricolage Grotesque", system-ui, sans-serif`;
-  g.letterSpacing = `${Math.round(TEX_W * 0.012)}px`;
-  g.fillText('CAFECITA', TEX_W / 2, cy + TEX_W * 0.085);
-  g.letterSpacing = '0px';
-  const rule = TEX_W * 0.09;
-  g.fillRect(TEX_W / 2 - TEX_W * 0.14 - rule, cy + TEX_W * 0.085 - 1, rule, 2);
-  g.fillRect(TEX_W / 2 + TEX_W * 0.14, cy + TEX_W * 0.085 - 1, rule, 2);
+  const ly = cy + TEX_W * 0.085, lh = TEX_W * 0.032;
+  const lw = inkLogo ? lh * inkLogo.naturalWidth / inkLogo.naturalHeight : 0;
+  if (inkLogo) g.drawImage(inkLogo, TEX_W / 2 - lw / 2, ly - lh / 2, lw, lh);
+  const rule = TEX_W * 0.08, gap = lw / 2 + TEX_W * 0.025;
+  g.fillRect(TEX_W / 2 - gap - rule, ly - 1, rule, 2);
+  g.fillRect(TEX_W / 2 + gap, ly - 1, rule, 2);
   g.filter = 'none';
   g.globalAlpha = 1;
   grain(g, TEX_W, TEX_H, 7);

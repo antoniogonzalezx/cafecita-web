@@ -41,15 +41,11 @@ html, body {
 
 .logo {
   margin: 0;
-  font-family: var(--sans);
-  font-weight: 800;
-  font-stretch: 75%;
-  font-variation-settings: 'wdth' 75, 'opsz' 96;
-  font-size: 34px;
-  line-height: 1;
-  letter-spacing: 0.02em;
+  height: 36px;
+  line-height: 0;
   color: #fff;
 }
+.logo svg { height: 100%; width: auto; display: block; }
 
 .bottom {
   position: fixed;
@@ -158,5 +154,5 @@ html, body {
 .actions { display: flex; gap: 10px; align-items: center; justify-content: center; }
 
 @media (max-width: 600px) {
-  .logo { font-size: 30px; }
+  .logo { height: 30px; }
 }
