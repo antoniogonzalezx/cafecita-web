@@ -4,19 +4,18 @@ import { gsap } from 'gsap';
 
 // ---------- Medidas (cm, iguales que tools/blender_servilletero.py) ----------
 const W = 9.0;      // ancho
-const H = 12.6;     // alto, con la tapa
-const D = 8.0;      // fondo (entre las dos ventanas)
+const H = 11.8;     // alto
+const D = 8.4;      // fondo (entre las dos bocas)
 const T = 0.1;      // grosor de chapa
-const LIFT = 0.35;  // gomas
-const LID = 0.55, GAP = 0.05;          // tapa pulida y junta
+const LIFT = 0.25;  // gomas
+const FLANGE = 0.3; // la chapa de la boca se dobla hacia dentro
 const TOP = LIFT + H;
-const BODY_TOP = TOP - LID - GAP;      // techo del cuerpo, por dentro de la tapa
-const WIN = { x: W / 2 - 0.55, bottom: LIFT + 1.1, top: BODY_TOP - 1.2 };
-const PLATE_IN = D / 2 - T;        // cara interior de la chapa con ventana
-const PLATE_OUT = D / 2 + 0.06;    // cara exterior (con el borde enrollado)
+const WIN = { x: W / 2 - 0.6, bottom: LIFT + 1.0, top: TOP - 1.1 };
+const PLATE_IN = D / 2 - T - FLANGE; // donde acaba la pestaña, por dentro
+const PLATE_OUT = D / 2 + 0.03;    // cara exterior
 const NAPKIN_Z = PLATE_IN - 0.05;  // el muelle aprieta el taco contra la ventana
 // la servilleta cabe entera dentro: el borde de arriba queda escondido bajo el marco
-const N_BOTTOM = LIFT + T + 0.2, N_TOP = BODY_TOP - 0.35;
+const N_BOTTOM = LIFT + T + 0.2, N_TOP = TOP - T - 0.25;
 const NW = 2 * WIN.x - 0.2, NH = N_TOP - N_BOTTOM;
 const INK = '#4A6789';
 const BASE_ROT = 0.55;
@@ -71,7 +70,7 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 const scene = new THREE.Scene();
 const pmrem = new THREE.PMREMGenerator(renderer);
-// estudio: suelo azul, paredes grises y tiras de luz muy intensas.
+// estudio neutro (el inox se ve plata, no azul) con tiras de luz muy intensas.
 // El metal necesita contraste (claros y oscuros) que reflejar, o parece plástico.
 function studioEnv() {
   const env = new THREE.Scene();
@@ -80,7 +79,7 @@ function studioEnv() {
     new THREE.ShaderMaterial({
       side: THREE.BackSide,
       vertexShader: 'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-      fragmentShader: 'varying vec3 vP; void main(){ float h = vP.y * 0.5 + 0.5; vec3 c = mix(vec3(0.09, 0.11, 0.62), vec3(0.34, 0.35, 0.38), smoothstep(0.4, 0.5, h)); c = mix(c, vec3(1.1), smoothstep(0.6, 0.95, h)); gl_FragColor = vec4(c, 1.0); }',
+      fragmentShader: 'varying vec3 vP; void main(){ float h = vP.y * 0.5 + 0.5; vec3 c = mix(vec3(0.24, 0.25, 0.29), vec3(0.5, 0.51, 0.53), smoothstep(0.4, 0.5, h)); c = mix(c, vec3(1.15), smoothstep(0.6, 0.95, h)); gl_FragColor = vec4(c, 1.0); }',
     })
   ));
   const box = (w, h, x, y, z, k) => {
@@ -96,6 +95,8 @@ function studioEnv() {
   box(12, 26, 12, 4, -28, 3);   // detrás
   box(26, 3, 0, 6, 30, 2.2);    // reflejo bajo en la cara
   box(6, 20, -30, 2, -12, 1.5);
+  box(34, 30, -34, 10, 22, 1.6); // ventanal grande y suave: degradado en los laterales cepillados
+  box(24, 22, 30, 6, 26, 0.9);
   return env;
 }
 scene.environment = pmrem.fromScene(studioEnv(), 0.02).texture;
@@ -310,8 +311,6 @@ const MATERIALS = {
     color: '#eceef1', map: brushed.color, metalness: 1, roughness: 0.34, roughnessMap: brushed.rough,
     anisotropy: 0.8, anisotropyRotation: 0,
   }),
-  Cromo: new THREE.MeshPhysicalMaterial({ color: '#f5f7f9', metalness: 1, roughness: 0.04, envMapIntensity: 1.15 }),
-  Grabado: new THREE.MeshPhysicalMaterial({ color: '#7d8288', metalness: 1, roughness: 0.6 }),
   Goma: new THREE.MeshStandardMaterial({ color: '#111114', roughness: 0.6 }),
 };
 const paperNormal = paperNormalMap();

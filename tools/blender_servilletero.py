@@ -1,13 +1,12 @@
 """
-Modela el servilletero de bar (acero inoxidable, doble cara) y lo exporta a GLB para la web.
+Modela el servilletero de bar (cubo de acero inoxidable cepillado, doble cara) y lo exporta a GLB.
 
 Uso (sin abrir Blender):
   blender -b -P servilletero/tools/blender_servilletero.py -- servilletero/models/servilletero.glb [preview.png]
 
-Medidas en cm, iguales que las constantes de main.js (W, H, D, T, LIFT, LID, GAP, WIN_*).
+Medidas en cm, iguales que las constantes de main.js (W, H, D, T, LIFT, FLANGE, WIN_*).
 En Blender: X = ancho, Y = fondo (caras abiertas en ±Y), Z = alto.
-Materiales (main.js los sustituye por nombre): Inox = cepillado, Cromo = pulido,
-Grabado = logo al ácido, Goma = patas.
+Materiales (main.js los sustituye por nombre): Inox = cepillado, Goma = patas.
 Solo se modela el metal: las servilletas las pone la web porque se deforman.
 """
 import math
@@ -22,13 +21,12 @@ argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.abspath(argv[0]) if argv else os.path.join(HERE, "..", "models", "servilletero.glb")
 PREVIEW = os.path.abspath(argv[1]) if len(argv) > 1 else None
-FONT = os.path.join(HERE, "..", "..", "PRODUCT", "fonts", "BricolageGrotesque-Bold.ttf")
 
-W, H, D, T, LIFT = 9.0, 12.6, 8.0, 0.1, 0.35
-LID, GAP = 0.55, 0.05                     # tapa pulida y la junta que la separa del cuerpo
-R_BODY, R_LID = 0.4, 0.28
-WIN_SIDE, WIN_BOT, WIN_TOP, WIN_R = 0.55, 1.1, 1.2, 0.3
-BODY_TOP = LIFT + H - LID - GAP
+W, H, D, T, LIFT = 9.0, 11.8, 8.4, 0.1, 0.25
+R_BODY = 0.14                              # cantos casi vivos, de chapa doblada
+FLANGE = 0.3                               # la chapa de la boca se dobla hacia dentro
+WIN_SIDE, WIN_BOT, WIN_TOP, WIN_R = 0.6, 1.0, 1.1, 0.06
+BODY_TOP = LIFT + H
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scene = bpy.context.scene
@@ -47,8 +45,6 @@ def material(name, color, metallic, roughness):
 
 
 inox = material("Inox", (0.78, 0.79, 0.80), 1.0, 0.24)
-cromo = material("Cromo", (0.92, 0.93, 0.94), 1.0, 0.04)
-grabado = material("Grabado", (0.45, 0.46, 0.48), 1.0, 0.5)
 goma = material("Goma", (0.02, 0.02, 0.022), 0.0, 0.6)
 
 
@@ -115,10 +111,32 @@ sol.thickness = T
 sol.offset = -1
 apply_all(body)
 
-# ventanas: un solo cortador atraviesa las dos caras
 win_w, win_h = W - 2 * WIN_SIDE, body_h - WIN_BOT - WIN_TOP
 win_zc = LIFT + WIN_BOT + win_h / 2
 wpts = rounded_rect(win_w, win_h, WIN_R)
+
+
+def prism(name, pts, y0, y1):
+    bm = bmesh.new()
+    f = bm.faces.new([bm.verts.new((x, y0, win_zc + z)) for x, z in pts])
+    ext = bmesh.ops.extrude_face_region(bm, geom=[f])
+    bmesh.ops.translate(bm, vec=(0, y1 - y0, 0), verts=[v for v in ext["geom"] if isinstance(v, bmesh.types.BMVert)])
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    return link(name, bm, inox)
+
+
+# pestaña: la chapa de la boca se dobla hacia dentro (se une y luego se vacía con la ventana)
+fpts = rounded_rect(win_w + 2 * T, win_h + 2 * T, WIN_R + T)
+for s in (1, -1):
+    fl = prism("Pestana", fpts, s * (D / 2 - T / 2), s * (D / 2 - T - FLANGE))
+    uni = body.modifiers.new("Pestana", "BOOLEAN")
+    uni.operation = "UNION"
+    uni.solver = "EXACT"
+    uni.object = fl
+    apply_all(body)
+    bpy.data.objects.remove(fl)
+
+# ventanas: un solo cortador atraviesa las dos caras
 bm = bmesh.new()
 wf = bm.faces.new([bm.verts.new((x, -D, win_zc + z)) for x, z in wpts])
 ext = bmesh.ops.extrude_face_region(bm, geom=[wf])
@@ -131,33 +149,20 @@ boo.solver = "EXACT"
 boo.object = cutter
 apply_all(body)
 bpy.data.objects.remove(cutter)
-smooth(body)
+# canto fino y brillante en el borde de la boca
+bev = body.modifiers.new("Canto", "BEVEL")
+bev.width = 0.02
+bev.segments = 2
+bev.limit_method = "ANGLE"
+bev.angle_limit = math.radians(50)
+apply_all(body)
+smooth(body, 30)
+# normales ponderadas: las caras planas grandes se ven planas aunque el corte deje n-gonos
+wn = body.modifiers.new("Normales", "WEIGHTED_NORMAL")
+wn.keep_sharp = True
+wn.weight = 100
+apply_all(body)
 cube_uv(body)
-
-# ---------- Tapa pulida, un pelo más ancha que el cuerpo ----------
-lid = rounded_box("Tapa", W + 0.12, D + 0.12, LID, (0, 0, LIFT + H - LID / 2), R_LID, cromo)
-smooth(lid)
-
-# ---------- Junta oscura entre cuerpo y tapa ----------
-junta = rounded_box("Junta", W - 0.3, D - 0.3, GAP + 0.1, (0, 0, BODY_TOP + GAP / 2), 0.2, grabado, seg=3)
-
-# ---------- Borde enrollado y pulido alrededor de cada ventana ----------
-for s in (1, -1):
-    cu = bpy.data.curves.new(f"Borde{s:+d}", "CURVE")
-    cu.dimensions = "3D"
-    sp = cu.splines.new("POLY")
-    sp.points.add(len(wpts) - 1)
-    for p, (x, z) in zip(sp.points, wpts):
-        p.co = (x, s * (D / 2 - T / 2), win_zc + z, 1)
-    sp.use_cyclic_u = True
-    cu.bevel_depth = 0.08
-    cu.bevel_resolution = 4
-    ob = bpy.data.objects.new(f"Borde{'A' if s > 0 else 'B'}", cu)
-    scene.collection.objects.link(ob)
-    select_only(ob)
-    bpy.ops.object.convert(target="MESH")
-    ob.data.materials.append(cromo)
-    smooth(ob, 60)
 
 # ---------- Chapa central (el muelle que empuja los tacos) ----------
 bm = bmesh.new()
@@ -166,34 +171,15 @@ bmesh.ops.scale(bm, vec=(W - 0.5, 0.05, body_h - 0.4), verts=bm.verts)
 bmesh.ops.translate(bm, vec=(0, 0, LIFT + body_h / 2), verts=bm.verts)
 link("Central", bm, inox)
 
-# ---------- Logo grabado en los laterales ----------
-font = bpy.data.fonts.load(os.path.abspath(FONT)) if os.path.exists(FONT) else None
-for sx in (1, -1):
-    tc = bpy.data.curves.new(f"Logo{sx:+d}", "FONT")
-    tc.body = "CAFECITA"
-    if font:
-        tc.font = font
-    tc.size = 0.78
-    tc.space_character = 1.12
-    tc.align_x = "CENTER"
-    tc.align_y = "CENTER"
-    ob = bpy.data.objects.new(f"Logo{'D' if sx > 0 else 'I'}", tc)
-    scene.collection.objects.link(ob)
-    ob.location = (sx * (W / 2 + 0.003), 0, LIFT + body_h * 0.5)
-    ob.rotation_euler = (math.radians(90), 0, math.radians(90 * sx))
-    select_only(ob)
-    bpy.ops.object.convert(target="MESH")
-    ob.data.materials.append(grabado)
-
 # ---------- Patas de goma ----------
 for i, (sx, sy) in enumerate([(-1, -1), (-1, 1), (1, -1), (1, 1)]):
-    bpy.ops.mesh.primitive_cylinder_add(vertices=32, radius=0.4, depth=LIFT + 0.05,
-                                        location=(sx * (W / 2 - 0.9), sy * (D / 2 - 0.9), (LIFT + 0.05) / 2))
+    bpy.ops.mesh.primitive_cylinder_add(vertices=32, radius=0.32, depth=LIFT + 0.05,
+                                        location=(sx * (W / 2 - 0.8), sy * (D / 2 - 0.8), (LIFT + 0.05) / 2))
     pata = bpy.context.active_object
     pata.name = f"Goma{i}"
     pata.data.materials.append(goma)
     bev = pata.modifiers.new("Bevel", "BEVEL")
-    bev.width = 0.12
+    bev.width = 0.08
     bev.segments = 4
     apply_all(pata)
     smooth(pata, 50)
