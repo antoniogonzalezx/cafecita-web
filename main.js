@@ -3,18 +3,22 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { gsap } from 'gsap';
 
 // ---------- Medidas (cm, iguales que tools/blender_servilletero.py) ----------
-const W = 8.6;      // ancho
-const H = 12.6;     // alto de la carcasa
-const D = 8.4;      // fondo (entre las dos ventanas)
+const W = 9.0;      // ancho
+const H = 12.6;     // alto, con la tapa
+const D = 8.0;      // fondo (entre las dos ventanas)
 const T = 0.1;      // grosor de chapa
 const LIFT = 0.35;  // gomas
+const LID = 0.55, GAP = 0.05;          // tapa pulida y junta
 const TOP = LIFT + H;
-const WIN = { x: W / 2 - 0.45, bottom: LIFT + 1.05, top: TOP - 2.05 };
+const BODY_TOP = TOP - LID - GAP;      // techo del cuerpo, por dentro de la tapa
+const WIN = { x: W / 2 - 0.55, bottom: LIFT + 1.1, top: BODY_TOP - 1.2 };
 const PLATE_IN = D / 2 - T;        // cara interior de la chapa con ventana
 const PLATE_OUT = D / 2 + 0.06;    // cara exterior (con el borde enrollado)
 const NAPKIN_Z = PLATE_IN - 0.05;  // el muelle aprieta el taco contra la ventana
-const NW = 7.5, NH = 11.4;         // servilleta (la de la imagen, algo más estrecha)
-const N_BOTTOM = LIFT + 0.3, N_TOP = N_BOTTOM + NH;
+// la servilleta cabe entera dentro: el borde de arriba queda escondido bajo el marco
+const N_BOTTOM = LIFT + T + 0.2, N_TOP = BODY_TOP - 0.35;
+const NW = 2 * WIN.x - 0.2, NH = N_TOP - N_BOTTOM;
+const INK = '#4A6789';
 const BASE_ROT = 0.55;
 const PAPER = '#FBF9F4';
 
@@ -50,15 +54,12 @@ const todays = {
   A: NAPKINS[(dayNumber * 2) % NAPKINS.length],
   B: NAPKINS[(dayNumber * 2 + 1) % NAPKINS.length],
 };
-const loadImage = (src) => new Promise((ok) => {
-  const img = new Image();
-  img.onload = () => ok(img);
-  img.onerror = () => ok(null);
-  img.src = src;
-});
-const napkinImages = Object.fromEntries(await Promise.all(
-  Object.entries(todays).map(async ([k, n]) => [k, await loadImage(n.napkin)])
-));
+for (const n of Object.values(todays)) new Image().src = n.napkin;
+// la solapa se rotula con la tipografía de la marca
+await Promise.all([
+  document.fonts.load('italic 400 80px Fraunces'),
+  document.fonts.load('700 40px "Bricolage Grotesque"'),
+]).catch(() => {});
 
 // ---------- Render ----------
 const canvas = document.getElementById('scene');
@@ -70,7 +71,8 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 const scene = new THREE.Scene();
 const pmrem = new THREE.PMREMGenerator(renderer);
-// estudio: suelo azul, techo blanco y softboxes alargados, para que el cromo tenga qué reflejar
+// estudio: suelo azul, paredes grises y tiras de luz muy intensas.
+// El metal necesita contraste (claros y oscuros) que reflejar, o parece plástico.
 function studioEnv() {
   const env = new THREE.Scene();
   env.add(new THREE.Mesh(
@@ -78,7 +80,7 @@ function studioEnv() {
     new THREE.ShaderMaterial({
       side: THREE.BackSide,
       vertexShader: 'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-      fragmentShader: 'varying vec3 vP; void main(){ float h = vP.y * 0.5 + 0.5; vec3 floorC = vec3(0.13, 0.16, 0.78); vec3 c = mix(floorC, vec3(0.55, 0.57, 0.66), smoothstep(0.42, 0.52, h)); c = mix(c, vec3(0.97), smoothstep(0.6, 0.95, h)); gl_FragColor = vec4(c, 1.0); }',
+      fragmentShader: 'varying vec3 vP; void main(){ float h = vP.y * 0.5 + 0.5; vec3 c = mix(vec3(0.09, 0.11, 0.62), vec3(0.34, 0.35, 0.38), smoothstep(0.4, 0.5, h)); c = mix(c, vec3(1.1), smoothstep(0.6, 0.95, h)); gl_FragColor = vec4(c, 1.0); }',
     })
   ));
   const box = (w, h, x, y, z, k) => {
@@ -88,11 +90,12 @@ function studioEnv() {
     m.lookAt(0, 0, 0);
     env.add(m);
   };
-  box(7, 44, -26, 6, 16, 2.4);
-  box(5, 36, 25, 4, 16, 1.8);
-  box(30, 10, 0, 32, -6, 1.6);
-  box(14, 4, 0, 4, 34, 1.2);
-  box(4, 30, -6, 2, -30, 1.4);
+  box(3, 44, -24, 6, 16, 9);    // tira alta, izquierda delante
+  box(2, 36, 26, 4, 10, 6);     // tira derecha
+  box(44, 5, 0, 30, 2, 4);      // techo
+  box(12, 26, 12, 4, -28, 3);   // detrás
+  box(26, 3, 0, 6, 30, 2.2);    // reflejo bajo en la cara
+  box(6, 20, -30, 2, -12, 1.5);
   return env;
 }
 scene.environment = pmrem.fromScene(studioEnv(), 0.02).texture;
@@ -151,7 +154,7 @@ function grain(g, w, h, amount) {
   g.putImageData(img, 0, 0);
 }
 
-const TEX_W = 512, TEX_H = Math.round(512 * NH / NW);
+const TEX_W = 1024, TEX_H = Math.round(1024 * NH / NW);
 const FOLD_V = 0.36; // pliegue de la solapa, desde abajo (como en la imagen)
 
 function canvasTexture(c) {
@@ -161,38 +164,83 @@ function canvasTexture(c) {
   return t;
 }
 
-// Cara que se ve dentro del servilletero: el dorso, con la tinta transparentándose
-function backSideTexture(img) {
+function paperCanvas() {
   const c = document.createElement('canvas');
   c.width = TEX_W; c.height = TEX_H;
   const g = c.getContext('2d');
   g.fillStyle = PAPER;
   g.fillRect(0, 0, TEX_W, TEX_H);
-  if (img) {
-    g.save();
-    g.globalAlpha = 0.07;
-    g.translate(TEX_W, 0);
-    g.scale(-1, 1);
-    g.filter = 'blur(1.2px) grayscale(0.4)';
-    g.drawImage(img, 0, 0, TEX_W, TEX_H);
-    g.restore();
-  }
-  fibers(g, TEX_W, TEX_H, 900, 0.06);
+  fibers(g, TEX_W, TEX_H, 1600, 0.06);
+  return { c, g };
+}
+
+// Cara de fuera, la que se ve en el servilletero: la solapa con el clásico rótulo de bar
+function flapTexture() {
+  const { c, g } = paperCanvas();
+  const fy = TEX_H * (1 - FOLD_V);
+  // canto de la solapa doblada
+  g.fillStyle = 'rgba(90,80,60,0.16)';
+  g.fillRect(0, fy - 3, TEX_W, 3);
+  g.fillStyle = 'rgba(255,255,255,0.8)';
+  g.fillRect(0, fy, TEX_W, 2);
+  const shade = g.createLinearGradient(0, fy, 0, fy + 40);
+  shade.addColorStop(0, 'rgba(90,80,60,0.05)');
+  shade.addColorStop(1, 'rgba(90,80,60,0)');
+  g.fillStyle = shade;
+  g.fillRect(0, fy + 2, TEX_W, 40);
+  // rótulo
+  const cy = fy + (TEX_H - fy) * 0.44;
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  g.fillStyle = INK;
+  g.globalAlpha = 0.9;
+  g.filter = 'blur(0.4px)';
+  g.font = `italic 400 ${Math.round(TEX_W * 0.082)}px Fraunces, Georgia, serif`;
+  g.fillText('Gracias por su visita', TEX_W / 2, cy);
+  g.font = `700 ${Math.round(TEX_W * 0.026)}px "Bricolage Grotesque", system-ui, sans-serif`;
+  g.letterSpacing = `${Math.round(TEX_W * 0.012)}px`;
+  g.fillText('CAFECITA', TEX_W / 2, cy + TEX_W * 0.085);
+  g.letterSpacing = '0px';
+  const rule = TEX_W * 0.09;
+  g.fillRect(TEX_W / 2 - TEX_W * 0.14 - rule, cy + TEX_W * 0.085 - 1, rule, 2);
+  g.fillRect(TEX_W / 2 + TEX_W * 0.14, cy + TEX_W * 0.085 - 1, rule, 2);
+  g.filter = 'none';
+  g.globalAlpha = 1;
   grain(g, TEX_W, TEX_H, 7);
   return canvasTexture(c);
 }
 
-// Cara impresa (la que da al taco): retrato y frase
-function printedTexture(img) {
-  const c = document.createElement('canvas');
-  c.width = TEX_W; c.height = TEX_H;
-  const g = c.getContext('2d');
-  g.fillStyle = PAPER;
-  g.fillRect(0, 0, TEX_W, TEX_H);
-  if (img) g.drawImage(img, 0, 0, TEX_W, TEX_H);
-  fibers(g, TEX_W, TEX_H, 500, 0.04);
-  grain(g, TEX_W, TEX_H, 5);
+// Cara de dentro: papel en blanco (el retrato y la frase se ven al revelarla)
+function blankTexture() {
+  const { c, g } = paperCanvas();
+  grain(g, TEX_W, TEX_H, 7);
   return canvasTexture(c);
+}
+
+// Acero cepillado: vetas horizontales finas (color y rugosidad)
+function brushedTextures() {
+  const n = 1024;
+  const make = (base, spread, alpha) => {
+    const c = document.createElement('canvas');
+    c.width = c.height = n;
+    const g = c.getContext('2d');
+    g.fillStyle = `rgb(${base},${base},${base})`;
+    g.fillRect(0, 0, n, n);
+    for (let i = 0; i < 5000; i++) {
+      const v = base + (Math.random() - 0.5) * spread | 0;
+      g.fillStyle = `rgba(${v},${v},${v},${Math.random() * alpha})`;
+      const y = Math.random() * n, len = n * (0.2 + Math.random() * 0.8);
+      g.fillRect(Math.random() * n - len / 2, y, len, Math.random() * 1.6 + 0.4);
+    }
+    const t = new THREE.CanvasTexture(c);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(1 / 6, 1 / 6); // 6 cm por tesela (UV = cm)
+    t.anisotropy = 16;
+    return t;
+  };
+  const color = make(240, 26, 0.35);
+  color.colorSpace = THREE.SRGBColorSpace;
+  return { color, rough: make(200, 90, 0.5) };
 }
 
 // Relieve del papel: arrugas finas + los dos pliegues de la servilleta de bar
@@ -256,11 +304,16 @@ function stackEdgeTexture() {
 }
 
 // ---------- Materiales ----------
-const chrome = new THREE.MeshPhysicalMaterial({
-  color: '#eef0f3', metalness: 1, roughness: 0.09, envMapIntensity: 1.15,
-  clearcoat: 0.4, clearcoatRoughness: 0.05,
-});
-const rubber = new THREE.MeshStandardMaterial({ color: '#111114', roughness: 0.6 });
+const brushed = brushedTextures();
+const MATERIALS = {
+  Inox: new THREE.MeshPhysicalMaterial({
+    color: '#eceef1', map: brushed.color, metalness: 1, roughness: 0.34, roughnessMap: brushed.rough,
+    anisotropy: 0.8, anisotropyRotation: 0,
+  }),
+  Cromo: new THREE.MeshPhysicalMaterial({ color: '#f5f7f9', metalness: 1, roughness: 0.04, envMapIntensity: 1.15 }),
+  Grabado: new THREE.MeshPhysicalMaterial({ color: '#7d8288', metalness: 1, roughness: 0.6 }),
+  Goma: new THREE.MeshStandardMaterial({ color: '#111114', roughness: 0.6 }),
+};
 const paperNormal = paperNormalMap();
 const edgeTex = stackEdgeTexture();
 const stackFront = new THREE.MeshStandardMaterial({ color: PAPER, roughness: 0.95, envMapIntensity: 0.35, emissive: '#ffffff', emissiveIntensity: 0.3 });
@@ -269,7 +322,7 @@ function paperMaterial(map, side) {
   return new THREE.MeshStandardMaterial({
     map, side, roughness: 0.88, envMapIntensity: 0.35,
     normalMap: paperNormal, normalScale: new THREE.Vector2(0.35, 0.35),
-    emissive: '#ffffff', emissiveIntensity: 0.3, emissiveMap: map,
+    emissive: '#ffffff', emissiveIntensity: 0.42, emissiveMap: map,
   });
 }
 
@@ -290,7 +343,7 @@ const pickables = [];
 new GLTFLoader().load('models/servilletero.glb', (gltf) => {
   gltf.scene.traverse((o) => {
     if (!o.isMesh) return;
-    o.material = o.material?.name === 'Goma' ? rubber : chrome;
+    o.material = MATERIALS[o.material?.name] ?? MATERIALS.Inox;
     o.castShadow = o.receiveShadow = true;
     pickables.push(o);
   });
@@ -373,10 +426,12 @@ class Sheet {
     const cx = this.pos[best * 3], cy = this.pos[best * 3 + 1], cz = this.pos[best * 3 + 2];
     this.grabRestY = this.rest[best * 3 + 1];
     this.grabbed = [];
-    for (let i = 0; i < N; i++) {
+    // los dedos pellizcan una línea del papel: el resto puede girar alrededor
+    const row = (best / NX) | 0;
+    for (let i = row * NX; i < (row + 1) * NX; i++) {
       if (this.mode[i] !== FREE) continue;
       const ox = this.pos[i * 3] - cx, oy = this.pos[i * 3 + 1] - cy;
-      if (Math.abs(ox) > 1.6 || Math.abs(oy) > 0.6) continue;
+      if (Math.abs(ox) > 1.6) continue;
       this.mode[i] = GRABBED;
       this.offset.set([ox, oy, this.pos[i * 3 + 2] - cz], i * 3);
       this.grabbed.push(i);
@@ -516,6 +571,7 @@ class Sheet {
 
 // ---------- Caras ----------
 const faces = {};
+const flapTex = flapTexture(), blankTex = blankTexture();
 const stackGeo = new THREE.BoxGeometry(NW, NH, NAPKIN_Z - 0.06);
 stackGeo.translate(0, N_BOTTOM + NH / 2, (NAPKIN_Z - 0.06) / 2 + 0.03);
 
@@ -531,12 +587,8 @@ for (const [id, s] of [['A', 1], ['B', -1]]) {
   const sheet = new Sheet();
   const geo = new THREE.PlaneGeometry(NW, NH, NX - 1, NY - 1);
   geo.attributes.position.array.set(sheet.pos);
-  const printed = printedTexture(napkinImages[id]);
-  // visto por detrás, la imagen se invierte: la volvemos a invertir para que se lea
-  printed.wrapS = THREE.RepeatWrapping;
-  printed.repeat.x = -1;
-  const front = new THREE.Mesh(geo, paperMaterial(backSideTexture(napkinImages[id]), THREE.FrontSide));
-  const back = new THREE.Mesh(geo, paperMaterial(printed, THREE.BackSide));
+  const front = new THREE.Mesh(geo, paperMaterial(flapTex, THREE.FrontSide));
+  const back = new THREE.Mesh(geo, paperMaterial(blankTex, THREE.BackSide));
   for (const m of [front, back]) { m.castShadow = true; m.receiveShadow = true; group.add(m); }
 
   faces[id] = { id, s, group, stack, sheet, geo, front, back, settled: true };
