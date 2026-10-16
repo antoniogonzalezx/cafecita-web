@@ -308,7 +308,7 @@ function stackEdgeTexture() {
 const brushed = brushedTextures();
 const MATERIALS = {
   Inox: new THREE.MeshPhysicalMaterial({
-    color: '#eceef1', map: brushed.color, metalness: 1, roughness: 0.34, roughnessMap: brushed.rough,
+    color: '#f6f7f9', map: brushed.color, metalness: 1, roughness: 0.27, roughnessMap: brushed.rough, envMapIntensity: 1.3,
     anisotropy: 0.8, anisotropyRotation: 0,
   }),
   Goma: new THREE.MeshStandardMaterial({ color: '#111114', roughness: 0.6 }),
@@ -353,12 +353,12 @@ new GLTFLoader().load('models/servilletero.glb', (gltf) => {
 // Rejilla de partículas (verlet) con distancias fijas: el papel se dobla pero no se estira.
 // La parte de arriba queda pillada bajo el marco y solo desliza si se tira hacia abajo;
 // la de abajo (la solapa) se suelta en cuanto se agarra.
-const NX = 16, NY = 24;
+const NX = 13, NY = 19;
 const N = NX * NY;
 const DX = NW / (NX - 1), DY = NH / (NY - 1);
 const GRAVITY = -650;   // cm/s², el papel cae "frenado" por el aire
 const DRAG = 0.992;
-const ITER = 14;
+const ITER = 18;
 const FREE = 0, HELD_TOP = 1, HELD_BOTTOM = 2, GRABBED = 3;
 
 class Sheet {
@@ -379,11 +379,12 @@ class Sheet {
         if (ix < NX - 1) link(i, idx(ix + 1, iy), 1);
         if (iy < NY - 1) link(i, idx(ix, iy + 1), 1);
         if (ix < NX - 1 && iy < NY - 1) { link(i, idx(ix + 1, iy + 1), 0.9); link(idx(ix + 1, iy), idx(ix, iy + 1), 0.9); }
-        // rigidez a flexión: el papel de bar es fino pero tieso
-        if (ix < NX - 2) link(i, idx(ix + 2, iy), 0.7);
-        if (iy < NY - 2) link(i, idx(ix, iy + 2), 0.7);
-        if (ix < NX - 3) link(i, idx(ix + 3, iy), 0.12);
-        if (iy < NY - 3) link(i, idx(ix, iy + 3), 0.12);
+        // rigidez a flexión y a torsión: el papel se curva en arcos amplios, no se arruga como la tela
+        if (ix < NX - 2) link(i, idx(ix + 2, iy), 1);
+        if (iy < NY - 2) link(i, idx(ix, iy + 2), 1);
+        if (ix < NX - 2 && iy < NY - 2) { link(i, idx(ix + 2, iy + 2), 0.7); link(idx(ix + 2, iy), idx(ix, iy + 2), 0.7); }
+        if (ix < NX - 4) link(i, idx(ix + 4, iy), 0.45);
+        if (iy < NY - 4) link(i, idx(ix, iy + 4), 0.45);
       }
     }
     this.pairs = Int32Array.from(c.filter((_, j) => j % 3 !== 2));
