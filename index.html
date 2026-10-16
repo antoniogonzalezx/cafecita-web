@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>CAFECITA</title>
+  <meta name="theme-color" content="#3F48F4" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/",
+        "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <header class="top">
+    <h1 class="logo">CAFECITA</h1>
+  </header>
+
+  <canvas id="scene" aria-label="Servilletero. Arrastra la servilleta hacia fuera para sacarla."></canvas>
+
+  <div class="bottom">
+    <span class="dots" aria-hidden="true"><i data-side="A"></i><i data-side="B"></i></span>
+    <button class="icon-btn" id="turn" type="button" aria-label="Girar servilletero">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>
+    </button>
+  </div>
+
+  <div class="reveal" id="reveal" hidden>
+    <div class="reveal-bg" id="revealBg"></div>
+    <button class="icon-btn close" id="close" type="button" aria-label="Cerrar">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <div class="reveal-inner">
+      <div class="napkin-card" id="napkinCard"><img id="napkinImg" alt="" /></div>
+      <div class="actions">
+        <button class="pill" id="download" type="button">Descargar</button>
+        <button class="icon-btn" id="share" type="button" aria-label="Compartir" hidden>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
