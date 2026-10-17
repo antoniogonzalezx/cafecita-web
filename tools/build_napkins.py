@@ -68,6 +68,8 @@ def main(pieces=None):
             "id": nid,
             "quote": p.quote,
             "author": p.author.name,
+            "linea": p.linea,
+            "rareza": p.rareza,
             "napkin": f"napkins/{nid}.webp",
             "story": f"stories/{nid}.jpg",
             "size": list(napkin.size),

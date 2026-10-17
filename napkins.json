@@ -3,6 +3,8 @@
     "id": "01",
     "quote": "Somos sentimientos y tenemos seres humanos.",
     "author": "Mariano Rajoy",
+    "linea": "humor",
+    "rareza": "legendaria",
     "napkin": "napkins/01.webp",
     "story": "stories/01.jpg",
     "size": [
@@ -14,6 +16,8 @@
     "id": "02",
     "quote": "Es el vecino el que elige al alcalde y es el alcalde el que quiere que sean los vecinos el alcalde.",
     "author": "Mariano Rajoy",
+    "linea": "humor",
+    "rareza": "legendaria",
     "napkin": "napkins/02.webp",
     "story": "stories/02.jpg",
     "size": [
@@ -25,6 +29,8 @@
     "id": "03",
     "quote": "Los españoles son muy españoles y mucho españoles.",
     "author": "Mariano Rajoy",
+    "linea": "humor",
+    "rareza": "comun",
     "napkin": "napkins/03.webp",
     "story": "stories/03.jpg",
     "size": [
@@ -36,6 +42,8 @@
     "id": "04",
     "quote": "Un vaso es un vaso y un plato es un plato.",
     "author": "Mariano Rajoy",
+    "linea": "humor",
+    "rareza": "comun",
     "napkin": "napkins/04.webp",
     "story": "stories/04.jpg",
     "size": [
@@ -47,6 +55,8 @@
     "id": "08",
     "quote": "Cuanto peor, mejor para todos. Y cuanto peor para todos, mejor.",
     "author": "Mariano Rajoy",
+    "linea": "humor",
+    "rareza": "comun",
     "napkin": "napkins/08.webp",
     "story": "stories/08.jpg",
     "size": [
@@ -58,6 +68,8 @@
     "id": "09",
     "quote": "Son las cinco de la tarde y no he comido.",
     "author": "Pedro Sánchez",
+    "linea": "humor",
+    "rareza": "rara",
     "napkin": "napkins/09.webp",
     "story": "stories/09.jpg",
     "size": [
@@ -69,6 +81,8 @@
     "id": "11",
     "quote": "No dormiría por la noche, junto al 95% de los ciudadanos.",
     "author": "Pedro Sánchez",
+    "linea": "humor",
+    "rareza": "comun",
     "napkin": "napkins/11.webp",
     "story": "stories/11.jpg",
     "size": [
@@ -80,6 +94,8 @@
     "id": "13",
     "quote": "Eso es un vestido de verano.",
     "author": "José Luis Ábalos",
+    "linea": "humor",
+    "rareza": "comun",
     "napkin": "napkins/13.webp",
     "story": "stories/13.jpg",
     "size": [
@@ -91,6 +107,8 @@
     "id": "26",
     "quote": "¿Por qué no te callas?",
     "author": "Juan Carlos I",
+    "linea": "humor",
+    "rareza": "legendaria",
     "napkin": "napkins/26.webp",
     "story": "stories/26.jpg",
     "size": [
@@ -102,6 +120,8 @@
     "id": "27",
     "quote": "Lo siento mucho. Me he equivocado y no volverá a ocurrir.",
     "author": "Juan Carlos I",
+    "linea": "humor",
+    "rareza": "rara",
     "napkin": "napkins/27.webp",
     "story": "stories/27.jpg",
     "size": [
@@ -113,6 +133,8 @@
     "id": "42",
     "quote": "En ningún momento supe que eran travestis.",
     "author": "Ronaldo Nazario",
+    "linea": "humor",
+    "rareza": "comun",
     "napkin": "napkins/42.webp",
     "story": "stories/42.jpg",
     "size": [
@@ -124,6 +146,8 @@
     "id": "43",
     "quote": "Eu farei 10x se for preciso. Eles não estão preparados.",
     "author": "Vinícius Jr",
+    "linea": "humor",
+    "rareza": "legendaria",
     "napkin": "napkins/43.webp",
     "story": "stories/43.jpg",
     "size": [
@@ -135,6 +159,8 @@
     "id": "44",
     "quote": "Porque soy rico, guapo y un gran jugador, me tienen envidia.",
     "author": "Cristiano Ronaldo",
+    "linea": "humor",
+    "rareza": "legendaria",
     "napkin": "napkins/44.webp",
     "story": "stories/44.jpg",
     "size": [
@@ -146,6 +172,8 @@
     "id": "46",
     "quote": "Calma, calma. Estoy aquí.",
     "author": "Cristiano Ronaldo",
+    "linea": "humor",
+    "rareza": "rara",
     "napkin": "napkins/46.webp",
     "story": "stories/46.jpg",
     "size": [
@@ -157,6 +185,8 @@
     "id": "48",
     "quote": "Él es el puto jefe, el puto amo.",
     "author": "Pep Guardiola",
+    "linea": "humor",
+    "rareza": "legendaria",
     "napkin": "napkins/48.webp",
     "story": "stories/48.jpg",
     "size": [
@@ -168,6 +198,8 @@
     "id": "59",
     "quote": "GP2 engine. GP2! Argh!",
     "author": "Fernando Alonso",
+    "linea": "humor",
+    "rareza": "rara",
     "napkin": "napkins/59.webp",
     "story": "stories/59.jpg",
     "size": [
@@ -179,6 +211,8 @@
     "id": "90",
     "quote": "Me gustan los catalanes porque hacen cosas.",
     "author": "Mariano Rajoy",
+    "linea": "humor",
+    "rareza": "rara",
     "napkin": "napkins/90.webp",
     "story": "stories/90.jpg",
     "size": [
@@ -190,6 +224,8 @@
     "id": "91",
     "quote": "Hay que fabricar máquinas que nos permitan seguir fabricando máquinas.",
     "author": "Mariano Rajoy",
+    "linea": "humor",
+    "rareza": "legendaria",
     "napkin": "napkins/91.webp",
     "story": "stories/91.jpg",
     "size": [
@@ -201,6 +237,8 @@
     "id": "94",
     "quote": "A veces la mejor decisión es no tomar ninguna decisión, que también es tomar una decisión.",
     "author": "Mariano Rajoy",
+    "linea": "humor",
+    "rareza": "rara",
     "napkin": "napkins/94.webp",
     "story": "stories/94.jpg",
     "size": [
@@ -212,6 +250,8 @@
     "id": "96",
     "quote": "¿Qué parte del no no ha entendido?",
     "author": "Pedro Sánchez",
+    "linea": "humor",
+    "rareza": "comun",
     "napkin": "napkins/96.webp",
     "story": "stories/96.jpg",
     "size": [
@@ -223,6 +263,8 @@
     "id": "98",
     "quote": "Con Bildu no vamos a pactar. Si quiere se lo digo cinco veces, o veinte.",
     "author": "Pedro Sánchez",
+    "linea": "humor",
+    "rareza": "rara",
     "napkin": "napkins/98.webp",
     "story": "stories/98.jpg",
     "size": [
@@ -234,6 +276,8 @@
     "id": "99",
     "quote": "Fui a evitar una crisis diplomática.",
     "author": "José Luis Ábalos",
+    "linea": "humor",
+    "rareza": "comun",
     "napkin": "napkins/99.webp",
     "story": "stories/99.jpg",
     "size": [
@@ -245,6 +289,8 @@
     "id": "101",
     "quote": "Vou continuar dançando.",
     "author": "Vinícius Jr",
+    "linea": "humor",
+    "rareza": "rara",
     "napkin": "napkins/101.webp",
     "story": "stories/101.jpg",
     "size": [
@@ -256,6 +302,8 @@
     "id": "102",
     "quote": "¡Siuuu!",
     "author": "Cristiano Ronaldo",
+    "linea": "humor",
+    "rareza": "rara",
     "napkin": "napkins/102.webp",
     "story": "stories/102.jpg",
     "size": [
@@ -267,6 +315,8 @@
     "id": "104",
     "quote": "Soy el mejor jugador de la historia, en los buenos y en los malos momentos.",
     "author": "Cristiano Ronaldo",
+    "linea": "humor",
+    "rareza": "comun",
     "napkin": "napkins/104.webp",
     "story": "stories/104.jpg",
     "size": [
@@ -278,6 +328,8 @@
     "id": "105",
     "quote": "No le respeto, porque él no me respeta a mí.",
     "author": "Cristiano Ronaldo",
+    "linea": "humor",
+    "rareza": "comun",
     "napkin": "napkins/105.webp",
     "story": "stories/105.jpg",
     "size": [
@@ -289,6 +341,8 @@
     "id": "109",
     "quote": "Sabía que iba a frenar, porque tiene una esposa y dos hijos. Yo no.",
     "author": "Fernando Alonso",
+    "linea": "humor",
+    "rareza": "legendaria",
     "napkin": "napkins/109.webp",
     "story": "stories/109.jpg",
     "size": [
@@ -300,6 +354,8 @@
     "id": "110",
     "quote": "Qué idiota. Este solo sabe conducir y ganar saliendo primero.",
     "author": "Fernando Alonso",
+    "linea": "humor",
+    "rareza": "rara",
     "napkin": "napkins/110.webp",
     "story": "stories/110.jpg",
     "size": [
@@ -311,6 +367,8 @@
     "id": "111",
     "quote": "Gasté mucho dinero en coches, mujeres y alcohol. El resto lo malgasté.",
     "author": "George Best",
+    "linea": "humor",
+    "rareza": "legendaria",
     "napkin": "napkins/111.webp",
     "story": "stories/111.jpg",
     "size": [
@@ -322,6 +380,8 @@
     "id": "112",
     "quote": "En 1969 dejé las mujeres y la bebida. Fueron los peores 20 minutos de mi vida.",
     "author": "George Best",
+    "linea": "humor",
+    "rareza": "legendaria",
     "napkin": "napkins/112.webp",
     "story": "stories/112.jpg",
     "size": [
@@ -333,6 +393,8 @@
     "id": "113",
     "quote": "Si hubiera nacido feo, ustedes no habrían oído hablar de Pelé.",
     "author": "George Best",
+    "linea": "humor",
+    "rareza": "rara",
     "napkin": "napkins/113.webp",
     "story": "stories/113.jpg",
     "size": [
@@ -344,6 +406,8 @@
     "id": "114",
     "quote": "Tenía una casa al borde del mar, pero para ir a la playa había que pasar por delante de un bar. Nunca me bañé.",
     "author": "George Best",
+    "linea": "humor",
+    "rareza": "legendaria",
     "napkin": "napkins/114.webp",
     "story": "stories/114.jpg",
     "size": [
@@ -355,6 +419,8 @@
     "id": "115",
     "quote": "He dejado de beber, pero solo cuando estoy dormido.",
     "author": "George Best",
+    "linea": "humor",
+    "rareza": "rara",
     "napkin": "napkins/115.webp",
     "story": "stories/115.jpg",
     "size": [
@@ -366,6 +432,8 @@
     "id": "116",
     "quote": "Dicen que me acosté con siete Miss Mundo. No es verdad, fueron cuatro. A las otras tres no me presenté.",
     "author": "George Best",
+    "linea": "humor",
+    "rareza": "legendaria",
     "napkin": "napkins/116.webp",
     "story": "stories/116.jpg",
     "size": [
@@ -377,6 +445,8 @@
     "id": "117",
     "quote": "Si me hubieran dado a elegir entre regatear a cuatro y marcar en Anfield o acostarme con Miss Mundo, habría sido difícil. Por suerte, tuve las dos.",
     "author": "George Best",
+    "linea": "humor",
+    "rareza": "rara",
     "napkin": "napkins/117.webp",
     "story": "stories/117.jpg",
     "size": [
@@ -388,6 +458,8 @@
     "id": "118",
     "quote": "Si quisiera un trabajo fácil, me habría quedado en el Oporto: bonita silla azul, la Champions, Dios, y después de Dios, yo.",
     "author": "José Mourinho",
+    "linea": "humor",
+    "rareza": "legendaria",
     "napkin": "napkins/118.webp",
     "story": "stories/118.jpg",
     "size": [
@@ -399,6 +471,8 @@
     "id": "120",
     "quote": "Es un especialista en el fracaso.",
     "author": "José Mourinho",
+    "linea": "humor",
+    "rareza": "rara",
     "napkin": "napkins/120.webp",
     "story": "stories/120.jpg",
     "size": [
@@ -410,6 +484,8 @@
     "id": "122",
     "quote": "Pelé callado es un poeta.",
     "author": "Romário",
+    "linea": "humor",
+    "rareza": "rara",
     "napkin": "napkins/122.webp",
     "story": "stories/122.jpg",
     "size": [
@@ -421,6 +497,8 @@
     "id": "123",
     "quote": "Cuando nací, Dios me señaló y dijo: ese es el tío.",
     "author": "Romário",
+    "linea": "humor",
+    "rareza": "rara",
     "napkin": "napkins/123.webp",
     "story": "stories/123.jpg",
     "size": [
@@ -432,6 +510,8 @@
     "id": "124",
     "quote": "La pelota no se mancha.",
     "author": "Diego Armando Maradona",
+    "linea": "humor",
+    "rareza": "legendaria",
     "napkin": "napkins/124.webp",
     "story": "stories/124.jpg",
     "size": [
@@ -443,6 +523,8 @@
     "id": "125",
     "quote": "Que la chupen, que la sigan chupando.",
     "author": "Diego Armando Maradona",
+    "linea": "humor",
+    "rareza": "legendaria",
     "napkin": "napkins/125.webp",
     "story": "stories/125.jpg",
     "size": [
@@ -454,6 +536,8 @@
     "id": "126",
     "quote": "Un poco con la cabeza de Maradona y otro poco con la mano de Dios.",
     "author": "Diego Armando Maradona",
+    "linea": "humor",
+    "rareza": "legendaria",
     "napkin": "napkins/126.webp",
     "story": "stories/126.jpg",
     "size": [
@@ -465,6 +549,8 @@
     "id": "127",
     "quote": "Me cortaron las piernas.",
     "author": "Diego Armando Maradona",
+    "linea": "humor",
+    "rareza": "rara",
     "napkin": "napkins/127.webp",
     "story": "stories/127.jpg",
     "size": [
@@ -476,6 +562,8 @@
     "id": "128",
     "quote": "Si me muero, quiero volver a nacer y ser futbolista. Y quiero volver a ser Diego Armando Maradona.",
     "author": "Diego Armando Maradona",
+    "linea": "humor",
+    "rareza": "rara",
     "napkin": "napkins/128.webp",
     "story": "stories/128.jpg",
     "size": [
@@ -487,6 +575,8 @@
     "id": "133",
     "quote": "Cuando metes gol eres grande; cuando no… estás gordo.",
     "author": "Ronaldo Nazario",
+    "linea": "humor",
+    "rareza": "rara",
     "napkin": "napkins/133.webp",
     "story": "stories/133.jpg",
     "size": [
@@ -498,6 +588,8 @@
     "id": "134",
     "quote": "Dios mío, yo a los 38 años ya pesaba 120 kilos.",
     "author": "Ronaldo Nazario",
+    "linea": "humor",
+    "rareza": "legendaria",
     "napkin": "napkins/134.webp",
     "story": "stories/134.jpg",
     "size": [
@@ -509,6 +601,8 @@
     "id": "135",
     "quote": "Presi, si yo tuviera la mujer que tiene Figo, sin duda me quedaría en casa todos los días.",
     "author": "Ronaldo Nazario",
+    "linea": "humor",
+    "rareza": "legendaria",
     "napkin": "napkins/135.webp",
     "story": "stories/135.jpg",
     "size": [
@@ -520,6 +614,8 @@
     "id": "136",
     "quote": "En mi mente siempre soy el mejor. No me importa lo que la gente piense.",
     "author": "Cristiano Ronaldo",
+    "linea": "humor",
+    "rareza": "rara",
     "napkin": "napkins/136.webp",
     "story": "stories/136.jpg",
     "size": [
@@ -531,6 +627,8 @@
     "id": "137",
     "quote": "Soy el mejor presidente de la historia.",
     "author": "Florentino Pérez",
+    "linea": "humor",
+    "rareza": "rara",
     "napkin": "napkins/137.webp",
     "story": "stories/137.jpg",
     "size": [
@@ -542,6 +640,8 @@
     "id": "138",
     "quote": "Solo sé que no sé nada.",
     "author": "Sócrates",
+    "linea": "filosofia",
+    "rareza": "legendaria",
     "napkin": "napkins/138.webp",
     "story": "stories/138.jpg",
     "size": [
@@ -553,6 +653,8 @@
     "id": "139",
     "quote": "Una vida sin examen no merece ser vivida.",
     "author": "Sócrates",
+    "linea": "filosofia",
+    "rareza": "rara",
     "napkin": "napkins/139.webp",
     "story": "stories/139.jpg",
     "size": [
@@ -564,6 +666,8 @@
     "id": "140",
     "quote": "Cásate: si te toca una buena mujer, serás feliz; si no, te harás filósofo.",
     "author": "Sócrates",
+    "linea": "filosofia",
+    "rareza": "rara",
     "napkin": "napkins/140.webp",
     "story": "stories/140.jpg",
     "size": [
@@ -575,6 +679,8 @@
     "id": "141",
     "quote": "Es mucho más seguro ser temido que amado.",
     "author": "Nicolás Maquiavelo",
+    "linea": "filosofia",
+    "rareza": "rara",
     "napkin": "napkins/141.webp",
     "story": "stories/141.jpg",
     "size": [
@@ -586,6 +692,8 @@
     "id": "142",
     "quote": "Los hombres olvidan antes la muerte de su padre que la pérdida de su patrimonio.",
     "author": "Nicolás Maquiavelo",
+    "linea": "filosofia",
+    "rareza": "rara",
     "napkin": "napkins/142.webp",
     "story": "stories/142.jpg",
     "size": [
@@ -597,6 +705,8 @@
     "id": "143",
     "quote": "El fin justifica los medios.",
     "author": "Nicolás Maquiavelo",
+    "linea": "filosofia",
+    "rareza": "legendaria",
     "napkin": "napkins/143.webp",
     "story": "stories/143.jpg",
     "size": [
@@ -608,6 +718,8 @@
     "id": "144",
     "quote": "Lo que no me mata me hace más fuerte.",
     "author": "Friedrich Nietzsche",
+    "linea": "filosofia",
+    "rareza": "legendaria",
     "napkin": "napkins/144.webp",
     "story": "stories/144.jpg",
     "size": [
@@ -619,6 +731,8 @@
     "id": "145",
     "quote": "Dios ha muerto.",
     "author": "Friedrich Nietzsche",
+    "linea": "filosofia",
+    "rareza": "rara",
     "napkin": "napkins/145.webp",
     "story": "stories/145.jpg",
     "size": [
@@ -630,6 +744,8 @@
     "id": "146",
     "quote": "Sin música, la vida sería un error.",
     "author": "Friedrich Nietzsche",
+    "linea": "filosofia",
+    "rareza": "comun",
     "napkin": "napkins/146.webp",
     "story": "stories/146.jpg",
     "size": [
@@ -641,6 +757,8 @@
     "id": "147",
     "quote": "Si miras largo tiempo a un abismo, el abismo también mira dentro de ti.",
     "author": "Friedrich Nietzsche",
+    "linea": "filosofia",
+    "rareza": "rara",
     "napkin": "napkins/147.webp",
     "story": "stories/147.jpg",
     "size": [
@@ -652,6 +770,8 @@
     "id": "148",
     "quote": "Pienso, luego existo.",
     "author": "René Descartes",
+    "linea": "filosofia",
+    "rareza": "legendaria",
     "napkin": "napkins/148.webp",
     "story": "stories/148.jpg",
     "size": [
@@ -663,6 +783,8 @@
     "id": "149",
     "quote": "El buen sentido es la cosa mejor repartida del mundo: nadie desea más del que ya tiene.",
     "author": "René Descartes",
+    "linea": "filosofia",
+    "rareza": "rara",
     "napkin": "napkins/149.webp",
     "story": "stories/149.jpg",
     "size": [
@@ -674,6 +796,8 @@
     "id": "150",
     "quote": "¡Atrévete a servirte de tu propio entendimiento!",
     "author": "Immanuel Kant",
+    "linea": "filosofia",
+    "rareza": "rara",
     "napkin": "napkins/150.webp",
     "story": "stories/150.jpg",
     "size": [
@@ -685,6 +809,8 @@
     "id": "151",
     "quote": "El cielo estrellado sobre mí y la ley moral en mí.",
     "author": "Immanuel Kant",
+    "linea": "filosofia",
+    "rareza": "comun",
     "napkin": "napkins/151.webp",
     "story": "stories/151.jpg",
     "size": [
@@ -696,6 +822,8 @@
     "id": "152",
     "quote": "Apártate, que me tapas el sol.",
     "author": "Diógenes de Sinope",
+    "linea": "filosofia",
+    "rareza": "legendaria",
     "napkin": "napkins/152.webp",
     "story": "stories/152.jpg",
     "size": [
@@ -707,6 +835,8 @@
     "id": "153",
     "quote": "Busco un hombre.",
     "author": "Diógenes de Sinope",
+    "linea": "filosofia",
+    "rareza": "rara",
     "napkin": "napkins/153.webp",
     "story": "stories/153.jpg",
     "size": [
@@ -718,6 +848,8 @@
     "id": "154",
     "quote": "No es pobre el que tiene poco, sino el que mucho desea.",
     "author": "Séneca",
+    "linea": "filosofia",
+    "rareza": "comun",
     "napkin": "napkins/154.webp",
     "story": "stories/154.jpg",
     "size": [
@@ -729,6 +861,8 @@
     "id": "155",
     "quote": "No es que tengamos poco tiempo, es que perdemos mucho.",
     "author": "Séneca",
+    "linea": "filosofia",
+    "rareza": "comun",
     "napkin": "napkins/155.webp",
     "story": "stories/155.jpg",
     "size": [
@@ -740,6 +874,8 @@
     "id": "156",
     "quote": "Seguiré dando guerra mientras el cuerpo aguante.",
     "author": "Juan Carlos I",
+    "linea": "humor",
+    "rareza": "rara",
     "napkin": "napkins/156.webp",
     "story": "stories/156.jpg",
     "size": [
@@ -751,6 +887,8 @@
     "id": "157",
     "quote": "La justicia es igual para todos.",
     "author": "Juan Carlos I",
+    "linea": "humor",
+    "rareza": "legendaria",
     "napkin": "napkins/157.webp",
     "story": "stories/157.jpg",
     "size": [
@@ -762,6 +900,8 @@
     "id": "158",
     "quote": "Si uno va a cazar con un buen perro, caza mucho. Pero si no hay perro, no hay más remedio que utilizar a un gato.",
     "author": "José Mourinho",
+    "linea": "humor",
+    "rareza": "rara",
     "napkin": "napkins/158.webp",
     "story": "stories/158.jpg",
     "size": [
@@ -773,6 +913,8 @@
     "id": "159",
     "quote": "Habláis de Pedro León y parece que me preguntáis por Zidane o Maradona.",
     "author": "José Mourinho",
+    "linea": "humor",
+    "rareza": "legendaria",
     "napkin": "napkins/159.webp",
     "story": "stories/159.jpg",
     "size": [
@@ -784,6 +926,8 @@
     "id": "160",
     "quote": "No mando ni en mi casa.",
     "author": "José Mourinho",
+    "linea": "humor",
+    "rareza": "rara",
     "napkin": "napkins/160.webp",
     "story": "stories/160.jpg",
     "size": [
@@ -795,6 +939,8 @@
     "id": "161",
     "quote": "Mi relación con mi mujer es mejor que con Sergio Ramos.",
     "author": "José Mourinho",
+    "linea": "humor",
+    "rareza": "rara",
     "napkin": "napkins/161.webp",
     "story": "stories/161.jpg",
     "size": [
@@ -806,6 +952,8 @@
     "id": "162",
     "quote": "Morri Crismas and japi niu yiar.",
     "author": "Sergio Ramos",
+    "linea": "humor",
+    "rareza": "legendaria",
     "napkin": "napkins/162.webp",
     "story": "stories/162.jpg",
     "size": [
@@ -817,6 +965,8 @@
     "id": "163",
     "quote": "Cuando éramos pequeños, a algunos les gustaba el baloncesto y a otros el basket.",
     "author": "Sergio Ramos",
+    "linea": "humor",
+    "rareza": "legendaria",
     "napkin": "napkins/163.webp",
     "story": "stories/163.jpg",
     "size": [
@@ -828,6 +978,8 @@
     "id": "164",
     "quote": "No tengo que probar nada a nadie. Soy el mejor.",
     "author": "Fernando Alonso",
+    "linea": "humor",
+    "rareza": "rara",
     "napkin": "napkins/164.webp",
     "story": "stories/164.jpg",
     "size": [
@@ -839,6 +991,8 @@
     "id": "165",
     "quote": "La grandeza se define por la capacidad de seguir adelante a pesar de las dificultades. La rendición es la única derrota definitiva.",
     "author": "Fernando Alonso",
+    "linea": "filosofia",
+    "rareza": "comun",
     "napkin": "napkins/165.webp",
     "story": "stories/165.jpg",
     "size": [
@@ -850,6 +1004,8 @@
     "id": "166",
     "quote": "La disciplina siempre superará al talento.",
     "author": "Fernando Alonso",
+    "linea": "filosofia",
+    "rareza": "comun",
     "napkin": "napkins/166.webp",
     "story": "stories/166.jpg",
     "size": [
@@ -861,6 +1017,8 @@
     "id": "167",
     "quote": "Cuando tenga 50 años miraré los trofeos que he conseguido, pero hoy no me sirven de nada. Quiero volver a ganar.",
     "author": "Fernando Alonso",
+    "linea": "filosofia",
+    "rareza": "rara",
     "napkin": "napkins/167.webp",
     "story": "stories/167.jpg",
     "size": [
@@ -872,6 +1030,8 @@
     "id": "168",
     "quote": "La Fórmula 1 no es solo ir rápido, sino saber cuándo ir rápido. Es como el ajedrez a 300 km/h.",
     "author": "Fernando Alonso",
+    "linea": "filosofia",
+    "rareza": "comun",
     "napkin": "napkins/168.webp",
     "story": "stories/168.jpg",
     "size": [
@@ -883,6 +1043,8 @@
     "id": "169",
     "quote": "Mañana será otro día, termine primero o último.",
     "author": "Fernando Alonso",
+    "linea": "filosofia",
+    "rareza": "comun",
     "napkin": "napkins/169.webp",
     "story": "stories/169.jpg",
     "size": [
@@ -894,6 +1056,8 @@
     "id": "170",
     "quote": "El infierno son los otros.",
     "author": "Jean-Paul Sartre",
+    "linea": "filosofia",
+    "rareza": "legendaria",
     "napkin": "napkins/170.webp",
     "story": "stories/170.jpg",
     "size": [
@@ -905,6 +1069,8 @@
     "id": "171",
     "quote": "El hombre es un lobo para el hombre.",
     "author": "Thomas Hobbes",
+    "linea": "filosofia",
+    "rareza": "rara",
     "napkin": "napkins/171.webp",
     "story": "stories/171.jpg",
     "size": [
@@ -916,6 +1082,8 @@
     "id": "172",
     "quote": "Nadie se baña dos veces en el mismo río.",
     "author": "Heráclito",
+    "linea": "filosofia",
+    "rareza": "rara",
     "napkin": "napkins/172.webp",
     "story": "stories/172.jpg",
     "size": [
@@ -927,6 +1095,8 @@
     "id": "173",
     "quote": "De lo que no se puede hablar, hay que callar.",
     "author": "Ludwig Wittgenstein",
+    "linea": "filosofia",
+    "rareza": "rara",
     "napkin": "napkins/173.webp",
     "story": "stories/173.jpg",
     "size": [
@@ -938,6 +1108,8 @@
     "id": "174",
     "quote": "El hombre es por naturaleza un animal político.",
     "author": "Aristóteles",
+    "linea": "filosofia",
+    "rareza": "comun",
     "napkin": "napkins/174.webp",
     "story": "stories/174.jpg",
     "size": [
@@ -949,6 +1121,8 @@
     "id": "175",
     "quote": "La muerte no es nada para nosotros: mientras existimos, ella no está; y cuando está, nosotros ya no existimos.",
     "author": "Epicuro",
+    "linea": "filosofia",
+    "rareza": "rara",
     "napkin": "napkins/175.webp",
     "story": "stories/175.jpg",
     "size": [
@@ -960,6 +1134,8 @@
     "id": "176",
     "quote": "Lo que no es bueno para la colmena no es bueno para la abeja.",
     "author": "Marco Aurelio",
+    "linea": "filosofia",
+    "rareza": "comun",
     "napkin": "napkins/176.webp",
     "story": "stories/176.jpg",
     "size": [
@@ -971,6 +1147,8 @@
     "id": "177",
     "quote": "No nos perturban las cosas, sino las opiniones que tenemos sobre las cosas.",
     "author": "Epicteto",
+    "linea": "filosofia",
+    "rareza": "comun",
     "napkin": "napkins/177.webp",
     "story": "stories/177.jpg",
     "size": [
@@ -982,6 +1160,8 @@
     "id": "178",
     "quote": "Saber que se sabe lo que se sabe y que no se sabe lo que no se sabe: ese es el verdadero saber.",
     "author": "Confucio",
+    "linea": "filosofia",
+    "rareza": "rara",
     "napkin": "napkins/178.webp",
     "story": "stories/178.jpg",
     "size": [
@@ -993,6 +1173,8 @@
     "id": "179",
     "quote": "Un viaje de mil millas comienza con un solo paso.",
     "author": "Lao-Tse",
+    "linea": "filosofia",
+    "rareza": "comun",
     "napkin": "napkins/179.webp",
     "story": "stories/179.jpg",
     "size": [
@@ -1004,6 +1186,8 @@
     "id": "180",
     "quote": "Cada uno toma los límites de su propio campo de visión por los límites del mundo.",
     "author": "Arthur Schopenhauer",
+    "linea": "filosofia",
+    "rareza": "comun",
     "napkin": "napkins/180.webp",
     "story": "stories/180.jpg",
     "size": [
@@ -1015,6 +1199,8 @@
     "id": "181",
     "quote": "Lo mejor es enemigo de lo bueno.",
     "author": "Voltaire",
+    "linea": "filosofia",
+    "rareza": "rara",
     "napkin": "napkins/181.webp",
     "story": "stories/181.jpg",
     "size": [
@@ -1026,6 +1212,8 @@
     "id": "182",
     "quote": "El corazón tiene razones que la razón no entiende.",
     "author": "Blaise Pascal",
+    "linea": "filosofia",
+    "rareza": "legendaria",
     "napkin": "napkins/182.webp",
     "story": "stories/182.jpg",
     "size": [
@@ -1037,6 +1225,8 @@
     "id": "183",
     "quote": "Toda la desgracia de los hombres viene de no saber quedarse tranquilos en una habitación.",
     "author": "Blaise Pascal",
+    "linea": "filosofia",
+    "rareza": "rara",
     "napkin": "napkins/183.webp",
     "story": "stories/183.jpg",
     "size": [
@@ -1048,6 +1238,8 @@
     "id": "184",
     "quote": "La vida solo puede ser comprendida mirando hacia atrás, pero ha de ser vivida mirando hacia delante.",
     "author": "Søren Kierkegaard",
+    "linea": "filosofia",
+    "rareza": "comun",
     "napkin": "napkins/184.webp",
     "story": "stories/184.jpg",
     "size": [
@@ -1059,6 +1251,8 @@
     "id": "185",
     "quote": "Yo soy yo y mi circunstancia.",
     "author": "José Ortega y Gasset",
+    "linea": "filosofia",
+    "rareza": "legendaria",
     "napkin": "napkins/185.webp",
     "story": "stories/185.jpg",
     "size": [
@@ -1070,6 +1264,8 @@
     "id": "186",
     "quote": "Venceréis, pero no convenceréis.",
     "author": "Miguel de Unamuno",
+    "linea": "filosofia",
+    "rareza": "legendaria",
     "napkin": "napkins/186.webp",
     "story": "stories/186.jpg",
     "size": [
@@ -1081,6 +1277,8 @@
     "id": "187",
     "quote": "Lo bueno, si breve, dos veces bueno.",
     "author": "Baltasar Gracián",
+    "linea": "filosofia",
+    "rareza": "legendaria",
     "napkin": "napkins/187.webp",
     "story": "stories/187.jpg",
     "size": [
@@ -1092,6 +1290,8 @@
     "id": "188",
     "quote": "Hay que imaginarse a Sísifo feliz.",
     "author": "Albert Camus",
+    "linea": "filosofia",
+    "rareza": "rara",
     "napkin": "napkins/188.webp",
     "story": "stories/188.jpg",
     "size": [
@@ -1103,6 +1303,8 @@
     "id": "189",
     "quote": "No se nace mujer: se llega a serlo.",
     "author": "Simone de Beauvoir",
+    "linea": "filosofia",
+    "rareza": "rara",
     "napkin": "napkins/189.webp",
     "story": "stories/189.jpg",
     "size": [
@@ -1114,6 +1316,8 @@
     "id": "190",
     "quote": "La religión es el opio del pueblo.",
     "author": "Karl Marx",
+    "linea": "filosofia",
+    "rareza": "rara",
     "napkin": "napkins/190.webp",
     "story": "stories/190.jpg",
     "size": [
@@ -1125,6 +1329,8 @@
     "id": "191",
     "quote": "Los filósofos no han hecho más que interpretar el mundo de diversos modos; de lo que se trata es de transformarlo.",
     "author": "Karl Marx",
+    "linea": "filosofia",
+    "rareza": "comun",
     "napkin": "napkins/191.webp",
     "story": "stories/191.jpg",
     "size": [
@@ -1136,6 +1342,8 @@
     "id": "192",
     "quote": "El hombre nace libre, pero en todas partes está encadenado.",
     "author": "Jean-Jacques Rousseau",
+    "linea": "filosofia",
+    "rareza": "rara",
     "napkin": "napkins/192.webp",
     "story": "stories/192.jpg",
     "size": [

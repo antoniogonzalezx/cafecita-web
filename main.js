@@ -45,12 +45,57 @@ if (new URLSearchParams(location.search).has('reset')) {
 }
 
 // ---------- Servilletas del día ----------
-// Cada día tocan dos piezas seguidas del catálogo: una por cada lado.
+// Cada dispositivo tiene su propia baraja: cara A de humor y cara B de filosofía.
+// Saca una carta por cara y día, sin repetir hasta acabar el mazo, y luego baraja otra vez.
+// Las legendarias pesan menos, así que suelen salir tarde.
+const DECK_KEY = 'cafecita.baraja.v1';
+const WEIGHT = { comun: 6, rara: 3, legendaria: 1 };
+const dayNum = (date) => Math.floor(new Date(`${date}T00:00:00Z`).getTime() / 86400000);
+
+function loadDeck() {
+  try {
+    const d = JSON.parse(localStorage.getItem(DECK_KEY));
+    if (d && Number.isInteger(d.seed) && /^\d{4}-\d{2}-\d{2}$/.test(d.start)) return d;
+  } catch {}
+  const d = { seed: crypto.getRandomValues(new Uint32Array(1))[0] | 0, start: state.date };
+  try { localStorage.setItem(DECK_KEY, JSON.stringify(d)); } catch {}
+  return d;
+}
+
+function prng(seed) { // mulberry32
+  return () => {
+    seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// barajado ponderado sin repetición (Efraimidis–Spirakis): clave u^(1/peso)
+function shuffle(cards, seed) {
+  const rnd = prng(seed);
+  return cards
+    .map((c) => ({ c, k: Math.pow(rnd() || 1e-9, 1 / (WEIGHT[c.rareza] || WEIGHT.rara)) }))
+    .sort((a, b) => b.k - a.k)
+    .map((x) => x.c);
+}
+
+function drawCard(cards, salt, day) {
+  const round = (r) => shuffle(cards, Math.imul(deck.seed ^ salt, 0x9E3779B1) + r);
+  const r = Math.floor(day / cards.length), i = day % cards.length;
+  const order = round(r);
+  // que la primera de una vuelta no repita la última de la anterior
+  if (r > 0 && cards.length > 1 && order[0] === round(r - 1).at(-1)) [order[0], order[1]] = [order[1], order[0]];
+  return order[i];
+}
+
 const NAPKINS = await fetch('napkins.json').then((r) => r.json());
-const dayNumber = Math.floor(new Date(`${state.date}T00:00:00Z`).getTime() / 86400000);
+const deck = loadDeck();
+const day = Math.max(0, dayNum(state.date) - dayNum(deck.start));
+const ofLine = (l) => { const c = NAPKINS.filter((n) => n.linea === l); return c.length ? c : NAPKINS; };
 const todays = {
-  A: NAPKINS[(dayNumber * 2) % NAPKINS.length],
-  B: NAPKINS[(dayNumber * 2 + 1) % NAPKINS.length],
+  A: drawCard(ofLine('humor'), 0xA, day),
+  B: drawCard(ofLine('filosofia'), 0xB, day),
 };
 for (const n of Object.values(todays)) new Image().src = n.napkin;
 // la solapa se rotula con la tipografía de la marca y el logo en tinta
