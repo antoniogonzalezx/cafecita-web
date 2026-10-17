@@ -29,6 +29,56 @@ html, body {
   user-select: none;
 }
 
+/* ---------- Carga: silueta del servilletero hasta que llega el modelo 3D ---------- */
+#scene { transition: opacity .6s ease; }
+.loading #scene { opacity: 0; }
+
+.skeleton {
+  /* misma escala que la cámara de main.js: el alto de la escena es 2,1 × el servilletero */
+  --s: min(100vh / 25.3, 100vw / 19.8);
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  transition: opacity .5s ease;
+}
+@supports (height: 100dvh) { .skeleton { --s: min(100dvh / 25.3, 100vw / 19.8); } }
+body:not(.loading) .skeleton { opacity: 0; }
+
+.skeleton-box {
+  position: relative;
+  width: calc(var(--s) * 12);
+  height: calc(var(--s) * 12.8);
+  border-radius: calc(var(--s) * .35);
+  background: rgba(255, 255, 255, .14);
+  overflow: hidden;
+}
+.skeleton-side {
+  position: absolute;
+  inset: 0 74% 0 0;
+  background: rgba(12, 14, 46, .1);
+}
+.skeleton-napkin {
+  position: absolute;
+  top: 7%; bottom: 5%; left: 39%; right: 3%;
+  border-radius: calc(var(--s) * .12);
+  background: rgba(255, 255, 255, .2);
+}
+.skeleton-box::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, .22) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: skeleton-shine 1.6s ease-in-out infinite;
+}
+@keyframes skeleton-shine { to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-box::after { animation: none; display: none; }
+}
+
 .top {
   position: fixed;
   top: 0; left: 0; right: 0;

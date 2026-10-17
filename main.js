@@ -388,6 +388,8 @@ contact.position.y = 0.01;
 dispenser.add(contact);
 
 const pickables = [];
+// hasta que llega el modelo se ve la silueta (.skeleton); luego entra la escena
+const loaded = () => requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove('loading')));
 new GLTFLoader().load('models/servilletero.glb', (gltf) => {
   gltf.scene.traverse((o) => {
     if (!o.isMesh) return;
@@ -396,7 +398,8 @@ new GLTFLoader().load('models/servilletero.glb', (gltf) => {
     pickables.push(o);
   });
   dispenser.add(gltf.scene);
-});
+  loaded();
+}, undefined, loaded);
 
 // ---------- Servilleta: hoja de papel simulada ----------
 // Rejilla de partículas (verlet) con distancias fijas: el papel se dobla pero no se estira.
@@ -878,9 +881,9 @@ if (navigator.share) {
   $('share').addEventListener('click', async () => {
     const file = new File([await storyBlob()], fileName(), { type: 'image/jpeg' });
     try {
-      const text = 'Mi servilleta de hoy. Saca la tuya en cafecita.app';
+      const text = 'Gracias por su visita.';
       if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: 'Mi servilleta de hoy', text });
-      else await navigator.share({ title: 'Cafecita · Tu frase de barra', text, url: 'https://cafecita.app/' });
+      else await navigator.share({ title: 'CAFECITA', text, url: 'https://cafecita.app/' });
     } catch {}
   });
 }
