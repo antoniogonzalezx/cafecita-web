@@ -3,18 +3,32 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>CAFECITA</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-XXII1TwAN2TrTrsiI2NAXH44vp64aSYdt4qoJm5hg0k='; style-src 'self'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self' data: blob:; object-src 'none'; base-uri 'none'; form-action 'none'" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <title>Cafecita · Tu frase de barra</title>
+  <meta name="description" content="Lo que se dice en la barra. Saca tu servilleta del día: una frase con gracia y una de filosofía, distintas en cada móvil." />
   <meta name="theme-color" content="#3F48F4" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=Fraunces:ital,opsz,wght@1,9..144,400&display=swap" rel="stylesheet" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="canonical" href="https://cafecita.app/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Cafecita" />
+  <meta property="og:title" content="Cafecita · Tu frase de barra" />
+  <meta property="og:description" content="Saca tu servilleta del día. Gracias por su visita." />
+  <meta property="og:url" content="https://cafecita.app/" />
+  <meta property="og:image" content="https://cafecita.app/og.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="es_ES" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="stylesheet" href="fonts/fonts.css" />
   <link rel="stylesheet" href="style.css" />
   <script type="importmap">
     {
       "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/",
-        "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.js"
+        "three": "./vendor/three/three.module.min.js",
+        "three/addons/loaders/GLTFLoader.js": "./vendor/three/loaders/GLTFLoader.js",
+        "gsap": "./vendor/gsap/index.js"
       }
     }
   </script>

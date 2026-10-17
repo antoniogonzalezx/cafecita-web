@@ -878,8 +878,9 @@ if (navigator.share) {
   $('share').addEventListener('click', async () => {
     const file = new File([await storyBlob()], fileName(), { type: 'image/jpeg' });
     try {
-      if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: 'Mi servilleta de hoy' });
-      else await navigator.share({ title: 'Cafecita', url: location.href });
+      const text = 'Mi servilleta de hoy. Saca la tuya en cafecita.app';
+      if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: 'Mi servilleta de hoy', text });
+      else await navigator.share({ title: 'Cafecita · Tu frase de barra', text, url: 'https://cafecita.app/' });
     } catch {}
   });
 }
