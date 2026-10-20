@@ -970,7 +970,7 @@ function disposeBall(mesh) {
 }
 
 function saveFloor() {
-  const list = balls.filter((b) => b.asleep).map((b) => ({
+  const list = balls.filter((b) => !b.held).map((b) => ({
     s: b.mesh.userData.seed,
     p: b.mesh.position.toArray().map((x) => +x.toFixed(2)),
     q: b.mesh.quaternion.toArray().map((x) => +x.toFixed(3)),
@@ -1216,6 +1216,8 @@ function stepBalls(dt) {
   if (slept) saveFloor();
 }
 restoreFloor();
+// si se cierra o se recarga con una bola aún rodando, también se queda en el suelo
+window.addEventListener('pagehide', saveFloor);
 
 // ---------- Revelado ----------
 const reveal = $('reveal');
