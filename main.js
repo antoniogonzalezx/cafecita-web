@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { gsap } from 'gsap';
-import { paintNapkin, paintStory, wrinkle } from './napkin.js?v=9';
-import * as sound from './sound.js?v=9';
+import { paintNapkin, paintStory, wrinkle } from './napkin.js?v=10';
+import * as sound from './sound.js?v=10';
 
 // ---------- Medidas (cm, iguales que tools/blender_servilletero.py) ----------
 const W = 9.0;      // ancho
@@ -94,13 +94,19 @@ function drawCard(cards, salt, n) {
 }
 
 // ---------- Qué sale en cada servilleta ----------
-// Noticias sin fin mientras haya (noticias.json, lo renueva cada media hora .github/workflows/noticias.yml),
-// como mucho QUOTES_PER_DAY citas al día entre medias y, cada AD_EVERY, un anuncio (anuncios.json).
-// Si ya se han leído todas las noticias, sale el aviso de que el personal está reponiendo.
+// Noticias sin fin mientras haya, como mucho QUOTES_PER_DAY citas al día entre medias y,
+// cada AD_EVERY, un anuncio (anuncios.json). Si ya se han leído todas las noticias, sale el aviso
+// de que el personal está reponiendo.
 const AD_EVERY = 10;      // como mucho 1 de cada 10 (monetizacion.md)
 const QUOTES_PER_DAY = 2;
 const QUOTE_ODDS = 0.2;
-const getNews = () => fetch('noticias.json', { cache: 'no-cache' }).then((r) => r.json()).then((d) => d.noticias || []);
+// Las noticias no viven en el repo: las sirve Supabase (proyecto «cafecita», tabla noticias), que
+// rellena cada media hora la función noticias-refrescar (supabase/). La clave es la publicable:
+// solo deja leer esa tabla.
+const NEWS_API = 'https://xnrjddrkecwdqgrjcqyr.supabase.co/rest/v1/noticias?select=id,titular,fuente,url,fecha&order=orden.asc';
+const NEWS_KEY = 'sb_publishable_Dez0B-jytDhNqQT08S1a6g_HbcG8Yzt';
+const getNews = () => fetch(NEWS_API, { headers: { apikey: NEWS_KEY }, signal: AbortSignal.timeout(8000) })
+  .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`noticias: HTTP ${r.status}`))));
 let [NAPKINS, NEWS, ADS] = await Promise.all([
   fetch('napkins.json').then((r) => r.json()),
   getNews().catch(() => []),

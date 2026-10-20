@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-XXII1TwAN2TrTrsiI2NAXH44vp64aSYdt4qoJm5hg0k='; style-src 'self'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self' data: blob:; object-src 'none'; base-uri 'none'; form-action 'none'" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-XXII1TwAN2TrTrsiI2NAXH44vp64aSYdt4qoJm5hg0k='; style-src 'self'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self' data: blob: https://xnrjddrkecwdqgrjcqyr.supabase.co; object-src 'none'; base-uri 'none'; form-action 'none'" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <title>CAFECITA</title>
   <meta name="description" content="Saca una servilleta y llévate la noticia del día. Gracias por su visita." />
@@ -23,7 +23,7 @@
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="stylesheet" href="fonts/fonts.css" />
   <!-- ?v= obliga a recargar CSS y JS tras un despliegue (GitHub Pages cachea 10 min): súbelo al cambiarlos -->
-  <link rel="stylesheet" href="style.css?v=9" />
+  <link rel="stylesheet" href="style.css?v=10" />
   <script type="importmap">
     {
       "imports": {
@@ -81,6 +81,6 @@
   <span class="hand" id="hand" aria-hidden="true" hidden></span>
   <p class="toast" id="toast" role="status" hidden></p>
 
-  <script type="module" src="main.js?v=9"></script>
+  <script type="module" src="main.js?v=10"></script>
 </body>
 </html>
