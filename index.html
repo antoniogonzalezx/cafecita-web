@@ -23,7 +23,7 @@
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="stylesheet" href="fonts/fonts.css" />
   <!-- ?v= obliga a recargar CSS y JS tras un despliegue (GitHub Pages cachea 10 min): súbelo al cambiarlos -->
-  <link rel="stylesheet" href="style.css?v=8" />
+  <link rel="stylesheet" href="style.css?v=9" />
   <script type="importmap">
     {
       "imports": {
@@ -47,14 +47,9 @@
 
   <p class="hint" id="hint">Abre la solapa, súbela y tira hacia abajo</p>
 
-  <div class="bottom">
-    <button class="icon-btn" id="sound" type="button" aria-label="Sonido" aria-pressed="true">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="on" d="M15.5 9a4.2 4.2 0 0 1 0 6M18.2 6.5a8 8 0 0 1 0 11"/><path class="off" d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
-    </button>
-    <button class="icon-btn" id="turn" type="button" aria-label="Girar servilletero">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>
-    </button>
-  </div>
+  <button class="sound-btn" id="sound" type="button" aria-label="Sonido" aria-pressed="true">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="on" d="M15.5 9a4.2 4.2 0 0 1 0 6M18.2 6.5a8 8 0 0 1 0 11"/><path class="off" d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
+  </button>
 
   <div class="reveal" id="reveal" hidden>
     <div class="reveal-bg" id="revealBg"></div>
@@ -63,7 +58,7 @@
     </button>
     <div class="reveal-inner">
       <p class="coach" id="coachSwipe" hidden>Desliza hacia abajo para tirarla</p>
-      <div class="napkin-card" id="napkinCard"><img id="napkinImg" alt="" /><canvas id="napkinCanvas" role="img" hidden></canvas></div>
+      <div class="napkin-card" id="napkinCard"><img id="napkinImg" alt="" draggable="false" /><canvas id="napkinCanvas" role="img" hidden></canvas></div>
       <div class="actions">
         <a class="pill source" id="source" target="_blank" rel="noopener" hidden><span id="sourceLabel"></span>
           <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg>
@@ -86,6 +81,6 @@
   <span class="hand" id="hand" aria-hidden="true" hidden></span>
   <p class="toast" id="toast" role="status" hidden></p>
 
-  <script type="module" src="main.js?v=8"></script>
+  <script type="module" src="main.js?v=9"></script>
 </body>
 </html>

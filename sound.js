@@ -155,6 +155,16 @@ export function crumple(dur = 0.6) {
   }
 }
 
+// doblar la servilleta: dos pliegues secos, uno detrás de otro
+export function fold() {
+  if (!ready()) return;
+  const t = ctx.currentTime;
+  for (const at of [0.1, 0.55]) {
+    burst(t + at, 0.12, [filter('bandpass', 2200, 0.8)], 0.22);
+    for (let i = 0; i < 4; i++) crackle(0.15 + Math.random() * 0.2, t + at + Math.random() * 0.06);
+  }
+}
+
 // la bola sale volando de la mano
 export function toss() {
   if (!ready()) return;

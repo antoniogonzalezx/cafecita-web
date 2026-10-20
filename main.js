@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { gsap } from 'gsap';
-import { paintNapkin, paintStory, wrinkle } from './napkin.js?v=8';
-import * as sound from './sound.js?v=8';
+import { paintNapkin, paintStory, wrinkle } from './napkin.js?v=9';
+import * as sound from './sound.js?v=9';
 
 // ---------- Medidas (cm, iguales que tools/blender_servilletero.py) ----------
 const W = 9.0;      // ancho
@@ -445,6 +445,8 @@ new GLTFLoader().load('models/servilletero.glb', (gltf) => {
     pickables.push(o);
   });
   dispenser.add(gltf.scene);
+  // las bolas guardadas se colocaron sin servilletero: que vuelvan a mirar si se ven
+  for (const b of balls) b.asleep = false;
   loaded();
 }, undefined, loaded);
 
@@ -518,7 +520,6 @@ class Sheet {
         if (iy < NY - 4) link(i, idx(ix, iy + 4), 0.45);
       }
     }
-    this.obstacles = [];
     this.pairs = Int32Array.from(c.filter((_, j) => j % 3 !== 2));
     this.stiff = Float32Array.from(c.filter((_, j) => j % 3 === 2));
     this.len = new Float32Array(this.stiff.length);
@@ -683,15 +684,8 @@ class Sheet {
       if (this.mode[i] !== FREE) continue;
       const j = i * 3;
       this.inside[i] = solid(p[j], p[j + 1], p[j + 2], this.inside[i], q[j], q[j + 1], q[j + 2]);
-      let x = out[0], y = out[1], z = out[2];
-      // las bolas del suelo tampoco se atraviesan
-      for (const o of this.obstacles) {
-        const dx = x - o.x, dy = y - o.y, dz = z - o.z, d2 = dx * dx + dy * dy + dz * dz;
-        if (d2 >= o.r2 || d2 < 1e-8) continue;
-        const k = o.r / Math.sqrt(d2);
-        x = o.x + dx * k; y = o.y + dy * k; z = o.z + dz * k;
-      }
-      p[j] = x; p[j + 1] = Math.max(y, 0.03); p[j + 2] = z;
+      // las bolas no frenan al papel: es él quien las aparta (hitSheets), así nunca impiden sacar otra
+      p[j] = out[0]; p[j + 1] = Math.max(out[1], 0.03); p[j + 2] = out[2];
     }
   }
 }
@@ -847,7 +841,7 @@ canvas.addEventListener('pointermove', (e) => {
     setRay(e);
     const b = drag.ball, h = b.r + 1.6;
     if (raycaster.ray.intersectPlane(plane.set(UP, -h), tmpV)) {
-      b.target.set(THREE.MathUtils.clamp(tmpV.x, -8.5, 8.5), h, THREE.MathUtils.clamp(tmpV.z, -10, 8));
+      b.target.set(THREE.MathUtils.clamp(tmpV.x, -8.5, 8.5), h, THREE.MathUtils.clamp(tmpV.z, -1, 8));
     }
     return;
   }
@@ -880,7 +874,11 @@ function endDrag() {
     b.target = null;
     // un toque sin arrastrar la abre; si no, se suelta con la velocidad que lleve
     if (!drag.moved && performance.now() - drag.t0 < 400) openBall(b);
-    else if (b.v.length() > 120) sound.toss();
+    else {
+      // un lanzamiento con el dedo, pero sin mandarla fuera de la mesa
+      if (b.v.length() > 220) b.v.setLength(220);
+      if (b.v.length() > 120) sound.toss();
+    }
   } else if (drag.mode === 'rotate') {
     rotTarget = BASE_ROT + Math.round((rot - BASE_ROT) / Math.PI) * Math.PI;
   } else if (!busy) {
@@ -947,12 +945,6 @@ function refill(face) {
   }
 }
 
-function turn() {
-  if (busy) return;
-  rotTarget = BASE_ROT + (Math.round((rotTarget - BASE_ROT) / Math.PI) + 1) * Math.PI;
-}
-$('turn').addEventListener('click', turn);
-
 // ---------- Bolas en el suelo ----------
 // Al cerrar la servilleta se arruga en una bola y se tira al suelo, como en la barra de un bar.
 // Las bolas ruedan, chocan entre ellas, con el servilletero y con el papel que cuelga,
@@ -1009,11 +1001,16 @@ function disposeBall(mesh) {
 
 // qué servilleta era cada bola, para poder volver a abrirla
 const packItem = (it) => (!it ? null
-  : it.kind === 'news' ? { k: 'news', n: it.news }
+  : it.kind === 'news' ? { k: 'news', n: it.news, f: it.folded ? 1 : 0 }
   : it.kind === 'quote' ? { k: 'quote', id: it.quote.id }
-  : it.kind === 'ad' ? { k: 'ad', id: it.ad.id }
-  : { k: 'empty' });
+  : it.kind === 'ad' ? { k: 'ad', id: it.ad.id, f: it.folded ? 1 : 0 }
+  : { k: 'empty', f: it.folded ? 1 : 0 });
 function unpackItem(x) {
+  const it = unpackKind(x);
+  if (it && x.f) it.folded = true;
+  return it;
+}
+function unpackKind(x) {
   if (!x) return null;
   if (x.k === 'news' && x.n && typeof x.n.titular === 'string' && /^https:\/\//.test(x.n.url)) return { kind: 'news', id: x.n.id, news: x.n };
   if (x.k === 'quote') { const q = NAPKINS.find((n) => n.id === x.id); return q ? { kind: 'quote', id: q.id, quote: q } : null; }
@@ -1051,7 +1048,7 @@ function restoreFloor() {
     mesh.userData.item = unpackItem(it);
     mesh.position.fromArray(p);
     mesh.position.x = THREE.MathUtils.clamp(mesh.position.x, -8.5, 8.5);
-    mesh.position.z = THREE.MathUtils.clamp(mesh.position.z, -10, 8);
+    mesh.position.z = THREE.MathUtils.clamp(mesh.position.z, -1, 8);
     mesh.quaternion.fromArray(q).normalize();
     scene.add(mesh);
     // despierta: si se guardó metida en otra o en el servilletero, la física la saca
@@ -1088,7 +1085,7 @@ function paperFromCard(el) {
   mesh.castShadow = mesh.receiveShadow = true;
   mesh.userData.seed = seed;
   mesh.userData.dims = [fitW * perPx, fitH * perPx];
-  mesh.userData.item = current && { ...current, wrinkled: false };
+  mesh.userData.item = current && { ...current, wrinkled: false, folded: !napkinCanvas.hidden && !!napkinCanvas.dataset.folded };
   ndc.set(((r.left + r.width / 2) / window.innerWidth) * 2 - 1, -((r.top + r.height / 2) / window.innerHeight) * 2 + 1);
   raycaster.setFromCamera(ndc, camera);
   const fwd = camera.getWorldDirection(new THREE.Vector3());
@@ -1142,7 +1139,7 @@ function finishCrumple(paper) {
 // tiro con parábola hasta un hueco del suelo, a izquierda o derecha (nunca delante de la ventana)
 function throwBall(mesh) {
   const side = Math.random() < 0.5 ? -1 : 1;
-  const land = new THREE.Vector3(side * (5.8 + Math.random() * 1.8), BALL_R, -3 + Math.random() * 8);
+  const land = new THREE.Vector3(side * (5.8 + Math.random() * 1.8), BALL_R, 0.5 + Math.random() * 5.5);
   mesh.position.y = Math.max(mesh.position.y, BALL_R + 2);
   const tau = THREE.MathUtils.clamp(mesh.position.distanceTo(land) / 55, 0.45, 0.8);
   const v = land.clone().sub(mesh.position).addScaledVector(UP, 0.5 * BALL_G * tau * tau).divideScalar(tau);
@@ -1198,8 +1195,9 @@ function lowest(b) {
   return min;
 }
 
-// el papel que cuelga del servilletero también es sólido para las bolas
+// el papel que cuelga del servilletero también es sólido para las bolas: las aparta
 function hitSheets(b) {
+  let hit = false;
   for (const f of Object.values(faces)) {
     if (f.settled || !f.front.visible) continue;
     const c = f.group.worldToLocal(tmpV.copy(b.mesh.position));
@@ -1210,10 +1208,41 @@ function hitSheets(b) {
       if (d2 >= b.r * b.r || d2 < 1e-8) continue;
       const d = Math.sqrt(d2), s = (b.r - d) / d;
       c.x += dx * s; c.y += dy * s; c.z += dz * s;
-      b.asleep = false;
+      hit = true;
     }
     b.mesh.position.copy(f.group.localToWorld(c));
   }
+  return hit;
+}
+
+// delante de cada ventana no se queda ninguna bola: es por donde sale la servilleta
+function clearWindows(b) {
+  const ry = dispenser.rotation.y;
+  local.copy(b.mesh.position).applyAxisAngle(UP, -ry);
+  const front = Math.abs(local.z) > D / 2 && Math.abs(local.z) < D / 2 + 6, ahead = Math.abs(local.x) < W / 2 + b.r;
+  if (!front || !ahead) return false;
+  // se aparta hacia el lado que tenga más cerca, con un empujoncito
+  const side = Math.sign(local.x) || 1;
+  lv.copy(b.v).applyAxisAngle(UP, -ry);
+  lv.x = side * Math.max(Math.abs(lv.x), 40);
+  b.v.copy(lv.applyAxisAngle(UP, ry));
+  return true;
+}
+
+// ¿la tapa el servilletero desde la cámara?
+const sight = new THREE.Raycaster();
+// (se mira al centro y a sus dos lados: una bola que solo asoma un pelín cuenta como tapada)
+const side = new THREE.Vector3();
+function hidden(b) {
+  dispenser.updateMatrixWorld(); // recién cargado (o girando) aún no tiene puesta su posición
+  side.set(1, 0, 0).applyQuaternion(camera.quaternion).multiplyScalar(b.r * 0.8);
+  for (const k of [0, 1, -1]) {
+    const p = tmpV.copy(b.mesh.position).addScaledVector(side, k), to = p.sub(camera.position), d = to.length();
+    sight.set(camera.position, to.divideScalar(d));
+    const hit = sight.intersectObjects(pickables, false)[0];
+    if (hit && hit.distance < d) return true;
+  }
+  return false;
 }
 
 const dq = new THREE.Quaternion(), axis = new THREE.Vector3(), sep = new THREE.Vector3();
@@ -1221,8 +1250,8 @@ function stepBalls(dt) {
   let slept = false;
   for (const b of balls) {
     if (b.asleep) {
-      // si el servilletero gira encima de una bola, la empuja
-      if (hitDispenser(b)) b.asleep = false;
+      // si el servilletero gira encima de una bola, o el papel la roza, la empuja
+      if (hitDispenser(b) || hitSheets(b) || (!b.held && clearWindows(b))) b.asleep = false;
       continue;
     }
     const p = b.mesh.position;
@@ -1256,12 +1285,17 @@ function stepBalls(dt) {
     }
     hitDispenser(b);
     hitSheets(b);
-    // que no se salgan de lo que se ve
+    if (!b.held && b.ground) clearWindows(b);
+    // que no se salgan de lo que se ve (detrás del servilletero quedarían tapadas)
     if (Math.abs(p.x) > 8.5) { p.x = Math.sign(p.x) * 8.5; b.v.x *= -0.3; }
-    if (p.z < -10 || p.z > 8) { p.z = THREE.MathUtils.clamp(p.z, -10, 8); b.v.z *= -0.3; }
+    if (p.z < -1 || p.z > 8) { p.z = THREE.MathUtils.clamp(p.z, -1, 8); b.v.z *= -0.3; }
     const wl = b.w.length();
     if (wl > 1e-3) b.mesh.quaternion.premultiply(dq.setFromAxisAngle(axis.copy(b.w).divideScalar(wl), wl * dt));
-    if (!b.held && b.ground && b.v.lengthSq() < 2) { b.asleep = true; b.v.set(0, 0, 0); slept = true; }
+    if (!b.held && b.ground && b.v.lengthSq() < 2) {
+      // si se para donde el servilletero la tapa, rueda un poco hacia delante hasta que se vea
+      if (hidden(b)) b.v.set(Math.sign(p.x) * 25, 0, 45);
+      else { b.asleep = true; b.v.set(0, 0, 0); slept = true; }
+    }
   }
   // bola contra bola: no se meten una en otra
   for (let i = 0; i < balls.length; i++) {
@@ -1334,6 +1368,15 @@ async function openBall(b) {
     c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
   } else {
     await paintNapkin(c, item, { logo: inkLogo });
+    // si se tiró doblada como «Gracias puta», así sigue
+    if (item.folded && c.dataset.thanks) {
+      const src = document.createElement('canvas');
+      src.width = c.width;
+      src.height = c.height;
+      src.getContext('2d').drawImage(c, 0, 0);
+      drawFold(c.getContext('2d'), src, c.dataset.thanks, 1);
+      c.dataset.folded = '1';
+    }
   }
   wrinkle(c, seed);
   const small = document.createElement('canvas');
@@ -1390,6 +1433,7 @@ async function openBall(b) {
 
 async function showReveal(item, { from } = {}) {
   current = item;
+  prank.reset();
   gsap.killTweensOf(['#revealBg', '.actions', '#close', '#napkinCard']);
   reveal.classList.remove('leaving');
   if (from) {
@@ -1398,6 +1442,9 @@ async function showReveal(item, { from } = {}) {
     napkinCanvas.height = from.height;
     napkinCanvas.getContext('2d').drawImage(from, 0, 0);
     napkinCanvas.dataset.box = from.dataset.box || '';
+    napkinCanvas.dataset.thanks = from.dataset.thanks || '';
+    napkinCanvas.dataset.fold = from.dataset.fold || '';
+    if (from.dataset.folded) napkinCanvas.dataset.folded = '1';
     napkinCanvas.setAttribute('aria-label', item.kind === 'quote' ? `“${item.quote.quote}” — ${item.quote.author}` : LABEL[item.kind](item));
   } else if (item.kind === 'quote') {
     napkinImg.src = item.quote.napkin;
@@ -1532,6 +1579,156 @@ function endSwipe(e) {
 }
 card.addEventListener('pointerup', endSwipe);
 card.addEventListener('pointercancel', endSwipe);
+// la cita es una imagen: que el navegador no se ponga a arrastrarla él y corte el gesto
+card.addEventListener('dragstart', (e) => e.preventDefault());
+
+// si entra un segundo dedo, deja de ser un deslizar: la servilleta vuelve a su sitio al momento
+function abortSwipe() {
+  if (!swipe) return;
+  const P = swipe.paper;
+  swipe = null;
+  card.classList.remove('dragging');
+  if (!P) return;
+  disposeBall(P.mesh);
+  unlift();
+  canvas.classList.remove('lifted');
+  gsap.set(card, { opacity: 1 });
+}
+
+// ---------- Easter egg: «Gracias puta» ----------
+// La broma de toda la vida en los bares: doblar la servilleta para que «Gracias por su visita»
+// se quede en «Gracias p·u·ta». Dos pliegues en Z esconden «or s» y « visi».
+// No se anuncia en ningún sitio. Se descubre:
+//  · en el móvil, pellizcando la solapa con dos dedos que se juntan en horizontal;
+//  · en el ordenador, pellizcando el trackpad sobre la solapa o escribiendo «gracias».
+// Solo en las servilletas que llevan el rótulo (noticias, anuncios, aviso); la doblada es la que
+// se comparte y la que luego se arruga.
+// u: 0 lisa, 1 doblada del todo. thanks: dónde caen «p», «or s», «u» y « visi» (napkin.js)
+function drawFold(g, src, thanks, u) {
+  const [a, b, c, d] = thanks.split(',').map(Number);
+  const W = src.width, H = src.height;
+  // de izquierda a derecha: lo que se ve, pliegue, lo que se ve, pliegue, lo que se ve
+  const parts = [[0, a, 0], [a, b, 1], [b, c, 0], [c, d, 1], [d, W, 0]];
+  const hiddenW = (b - a) + (d - c);
+  const k = Math.cos(u * Math.PI / 2), lift = Math.sin(u * Math.PI / 2);
+  g.clearRect(0, 0, W, H);
+  let x = hiddenW * (1 - k) / 2, dy = 0, seam = [];
+  for (const [s, e, pleat] of parts) {
+    if (!pleat) { g.drawImage(src, s, 0, e - s, H, x, dy, e - s, H); x += e - s; continue; }
+    // el pliegue se cierra como una Z: sus dos mitades se ven cada vez más estrechas
+    const half = (e - s) / 2;
+    for (const [from, tone] of [[s, 'rgba(60,45,25,'], [s + half, 'rgba(255,255,255,']]) {
+      const w = half * k;
+      if (w > 0.5) {
+        g.drawImage(src, from, 0, half, H, x, dy, w, H);
+        g.save();
+        g.globalCompositeOperation = 'source-atop';
+        g.fillStyle = `${tone}${0.28 * lift})`;
+        g.fillRect(x, 0, w, H);
+        g.restore();
+      }
+      x += w;
+    }
+    seam.push(x);
+    // a mano nunca queda recto: cada trozo baja o sube un pelín
+    dy += (seam.length === 1 ? 7 : -4) * lift;
+  }
+  // donde se monta el papel queda una raya y una sombra suave, como en la foto
+  g.save();
+  g.globalCompositeOperation = 'source-atop';
+  for (const sx of seam) {
+    const sh = g.createLinearGradient(sx, 0, sx + 26, 0);
+    sh.addColorStop(0, `rgba(40,30,20,${0.22 * lift})`);
+    sh.addColorStop(1, 'rgba(40,30,20,0)');
+    g.fillStyle = sh;
+    g.fillRect(sx, 0, 26, H);
+    g.fillStyle = `rgba(40,30,20,${0.55 * lift})`;
+    g.fillRect(sx - 1, 0, 2, H);
+  }
+  g.restore();
+}
+
+const prank = (() => {
+  const fingers = new Map();
+  let span0 = 0, wheel = 0, wheelAt = 0, typed = '';
+
+  const ready = () => !reveal.hidden && !reveal.classList.contains('leaving') && !napkinCanvas.hidden &&
+    !!napkinCanvas.dataset.thanks && !napkinCanvas.dataset.folded;
+  const onFlap = (y) => {
+    const r = napkinCanvas.getBoundingClientRect();
+    return y > r.top + r.height * (+napkinCanvas.dataset.fold || 0.6);
+  };
+
+  function fold() {
+    if (!ready()) return;
+    abortSwipe();
+    napkinCanvas.dataset.folded = '1';
+    const thanks = napkinCanvas.dataset.thanks;
+    const W = napkinCanvas.width, H = napkinCanvas.height;
+    const src = document.createElement('canvas');
+    src.width = W;
+    src.height = H;
+    src.getContext('2d').drawImage(napkinCanvas, 0, 0);
+    const g = napkinCanvas.getContext('2d');
+    const draw = (u) => drawFold(g, src, thanks, u);
+    sound.fold();
+    if (navigator.vibrate) navigator.vibrate([12, 60, 12]);
+    const o = { u: 0 };
+    gsap.to(o, {
+      u: 1, duration: 1.1, ease: 'power2.inOut',
+      onUpdate: () => draw(o.u),
+      // la que se comparte ya es la doblada
+      onComplete: () => {
+        const item = current;
+        paintStory(napkinCanvas, paperLogo).then((blob) => {
+          if (current === item) shareFile = new File([blob], fileName(item).replace('.jpg', '-gracias.jpg'), { type: 'image/jpeg' });
+        });
+      },
+    });
+    gsap.fromTo(card, { scaleX: 1.04 }, { scaleX: 1, duration: 0.5, delay: 1, ease: 'back.out(3)' });
+  }
+
+  // dos dedos que se juntan sobre la solapa
+  card.addEventListener('pointerdown', (e) => {
+    fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (fingers.size === 2) {
+      abortSwipe();
+      try { card.setPointerCapture(e.pointerId); } catch {}
+      const [p, q] = [...fingers.values()];
+      span0 = Math.abs(p.x - q.x);
+    }
+  });
+  card.addEventListener('pointermove', (e) => {
+    if (!fingers.has(e.pointerId)) return;
+    fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (fingers.size !== 2 || span0 < 40) return;
+    const [p, q] = [...fingers.values()];
+    if (onFlap(p.y) && onFlap(q.y) && Math.abs(p.x - q.x) < span0 * 0.55) { span0 = 0; fold(); }
+  });
+  const lift = (e) => { fingers.delete(e.pointerId); if (fingers.size < 2) span0 = 0; };
+  card.addEventListener('pointerup', lift);
+  card.addEventListener('pointercancel', lift);
+
+  // el pellizco del trackpad llega como rueda con ctrl; con la servilleta abierta no hay zoom
+  reveal.addEventListener('wheel', (e) => {
+    if (!e.ctrlKey) return;
+    e.preventDefault();
+    if (!ready() || !onFlap(e.clientY)) return;
+    const now = performance.now();
+    if (now - wheelAt > 400) wheel = 0;
+    wheelAt = now;
+    wheel += e.deltaY;
+    if (wheel > 45) { wheel = 0; fold(); }
+  }, { passive: false });
+
+  window.addEventListener('keydown', (e) => {
+    if (reveal.hidden || e.key.length !== 1) return;
+    typed = (typed + e.key.toLowerCase()).slice(-7);
+    if (typed === 'gracias') { typed = ''; fold(); }
+  });
+
+  return { reset() { delete napkinCanvas.dataset.folded; fingers.clear(); } };
+})();
 
 // ---------- Onboarding ----------
 // La primera visita: bienvenida, un dedo que enseña el gesto sobre la solapa,
@@ -1693,11 +1890,6 @@ function frame(dt) {
     acc -= SUB;
     for (const f of Object.values(faces)) {
       if (f.settled || !f.front.visible || f.tween?.isActive()) continue;
-      // las bolas, en las coordenadas de esta cara
-      f.sheet.obstacles = balls.map((b) => {
-        const c = f.group.worldToLocal(b.mesh.position.clone());
-        return { x: c.x, y: c.y, z: c.z, r: b.r, r2: b.r * b.r };
-      });
       f.sheet.step(SUB, f.sheet.grabTarget ? 0 : 160);
     }
     stepBalls(SUB);

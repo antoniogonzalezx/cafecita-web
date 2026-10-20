@@ -123,6 +123,11 @@ export async function paintNapkin(canvas, item, { logo } = {}) {
   g.globalAlpha = 0.9;
   g.font = SERIF(Math.round(W * 0.078));
   g.fillText('Gracias por su visita', W / 2, cy);
+  // dónde cae cada letra, para poder doblarla como en los bares (el easter egg de main.js)
+  const x0 = W / 2 - g.measureText('Gracias por su visita').width / 2;
+  canvas.dataset.thanks = ['Gracias p', 'Gracias por s', 'Gracias por su', 'Gracias por su visi']
+    .map((s) => Math.round(x0 + g.measureText(s).width)).join(',');
+  canvas.dataset.fold = t.fold;
   const ly = cy + W * 0.095, lH = W * 0.044;
   if (logo) {
     const lW = lH * logo.naturalWidth / logo.naturalHeight;

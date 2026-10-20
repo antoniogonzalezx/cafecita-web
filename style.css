@@ -97,20 +97,26 @@ body:not(.loading) .skeleton { opacity: 0; }
 }
 .logo svg { height: 100%; width: auto; display: block; }
 
-.bottom {
-  position: fixed;
-  left: 0; right: 0; bottom: 0;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  padding: 0 16px max(28px, env(safe-area-inset-bottom));
-  pointer-events: none;
-}
-.bottom > * { pointer-events: auto; }
 
-.bottom { flex-direction: row; justify-content: center; }
+/* el sonido es secundario: pequeño, sin borde y en la esquina */
+.sound-btn {
+  position: fixed;
+  top: max(20px, env(safe-area-inset-top));
+  right: 12px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 40px; height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #fff;
+  opacity: .5;
+  cursor: pointer;
+  transition: opacity .2s;
+}
+.sound-btn:hover, .sound-btn:focus-visible { opacity: .9; }
 #sound .off, #sound[aria-pressed="false"] .on { display: none; }
 #sound[aria-pressed="false"] .off { display: inline; }
 
@@ -145,7 +151,7 @@ body:not(.loading) .skeleton { opacity: 0; }
 .hint {
   position: fixed;
   left: 16px; right: 16px;
-  bottom: calc(max(28px, env(safe-area-inset-bottom)) + 70px);
+  bottom: calc(max(28px, env(safe-area-inset-bottom)) + 24px);
   z-index: 2;
   margin: 0;
   text-align: center;
@@ -217,7 +223,8 @@ body:not(.loading) .skeleton { opacity: 0; }
 .reveal.leaving { pointer-events: none; }
 
 /* ---------- Deslizar para tirar ---------- */
-.napkin-card { touch-action: none; cursor: grab; }
+.napkin-card { touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.napkin-card img, .napkin-card canvas { -webkit-user-drag: none; }
 .napkin-card.dragging { cursor: grabbing; }
 .coach {
   position: absolute;
@@ -289,7 +296,7 @@ body:not(.loading) .skeleton { opacity: 0; }
 .toast {
   position: fixed;
   left: 16px; right: 16px;
-  bottom: calc(max(28px, env(safe-area-inset-bottom)) + 70px);
+  bottom: calc(max(28px, env(safe-area-inset-bottom)) + 24px);
   z-index: 25;
   max-width: 360px;
   margin: 0 auto;
