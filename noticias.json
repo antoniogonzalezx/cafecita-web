@@ -1,5 +1,5 @@
 {
- "actualizado": "2026-10-20T18:48:31Z",
+ "actualizado": "2026-10-20T20:39:43Z",
  "noticias": [
   {
    "id": "43c53a8a63",
@@ -23,11 +23,11 @@
    "fecha": "2026-10-20T12:57:25Z"
   },
   {
-   "id": "9b83c0bb8a",
-   "titular": "Posibles restos de un cohete chino caen sobre un campo de maíz en EE.UU.",
+   "id": "2fcaf7f01e",
+   "titular": "En el kilómetro 0 de las protestas en Francia: «Nos manifestamos porque nos falta de todo»",
    "fuente": "ABC",
-   "url": "https://www.abc.es/ciencia/posibles-restos-cohete-chino-caen-sobre-campo-20261020202719-nt.html",
-   "fecha": "2026-10-20T18:27:19Z"
+   "url": "https://www.abc.es/internacional/visita-kilometro-cero-protestas-francia-liceo-saintexupery-20261020190624-nt.html",
+   "fecha": "2026-10-20T20:34:28Z"
   },
   {
    "id": "0a05e73b6e",
@@ -37,11 +37,11 @@
    "fecha": "2026-10-20T17:45:27Z"
   },
   {
-   "id": "7dd9b08376",
-   "titular": "Junqueras, tras la aplicación de la amnistía: “La represión fue brutal e innecesaria, lo hicieron porque nos tenían miedo”",
+   "id": "dd47a1a8fb",
+   "titular": "Feijóo propone exigir a los nacionalizados un “tiempo de residencia mínima” en España para poder votar",
    "fuente": "El País",
-   "url": "https://elpais.com/espana/2026-10-20/ultima-hora-de-la-actualidad-politica-en-directo.html",
-   "fecha": "2026-10-20T17:49:51Z"
+   "url": "https://elpais.com/espana/elecciones-generales/2026-10-20/feijoo-propone-exigir-un-tiempo-de-residencia-minima-en-espana-para-poder-votar-a-quienes-hayan-sido-nacionalizados.html",
+   "fecha": "2026-10-20T11:35:05Z"
   },
   {
    "id": "48acadb3c7",
@@ -72,11 +72,11 @@
    "fecha": "2026-10-20T12:06:51Z"
   },
   {
-   "id": "dd47a1a8fb",
-   "titular": "Feijóo propone exigir a los nacionalizados un “tiempo de residencia mínima” en España para poder votar",
+   "id": "6bd8c7e914",
+   "titular": "Meloni aprueba por decreto el arresto preventivo de menores y que sean imputables desde los 14 años",
    "fuente": "El País",
-   "url": "https://elpais.com/espana/elecciones-generales/2026-10-20/feijoo-propone-exigir-un-tiempo-de-residencia-minima-en-espana-para-poder-votar-a-quienes-hayan-sido-nacionalizados.html",
-   "fecha": "2026-10-20T11:35:05Z"
+   "url": "https://elpais.com/internacional/2026-10-20/meloni-aprueba-por-decreto-el-arresto-preventivo-de-menores-y-que-sean-imputables-desde-los-14-anos.html",
+   "fecha": "2026-10-20T18:37:40Z"
   },
   {
    "id": "ff1fd0715e",
@@ -93,11 +93,11 @@
    "fecha": "2026-10-19T20:55:39Z"
   },
   {
-   "id": "db938a36b6",
-   "titular": "Sánchez declara zona catastrófica los municipios afectados por la DANA tras una tensa visita a Oliva",
+   "id": "e23bc4ac87",
+   "titular": "Llorca anuncia ayudas de 6.000 euros para vivienda y enseres a los afectados por Adam",
    "fuente": "20minutos",
-   "url": "https://www.20minutos.es/comunidad-valenciana/sanchez-anuncia-declaracion-zona-catastrofica-los-municipios-dana-adam-recursos-agilizacion-contratos_7051052_0.html",
-   "fecha": "2026-10-20T12:19:34Z"
+   "url": "https://www.20minutos.es/comunidad-valenciana/llorca-anuncia-ayudas-emergencia-6-000-euros-para-vivienda-enseres-los-afectados-por-dana-adam_7051262_0.html",
+   "fecha": "2026-10-20T18:50:15Z"
   },
   {
    "id": "c00defa787",
@@ -107,11 +107,11 @@
    "fecha": "2026-10-20T12:09:34Z"
   },
   {
-   "id": "031ea87b3e",
-   "titular": "El PP propone a Vox que no se presente en todas las provincias y le garantiza senadores autonómicos",
+   "id": "8a58628318",
+   "titular": "Wirtz marca el cuarto del Liverpool",
    "fuente": "ABC",
-   "url": "https://www.abc.es/espana/negociacion-quirurgica-pp-vox-evitar-izquierda-haga-20261020012626-nt.html",
-   "fecha": "2026-10-20T18:11:19Z"
+   "url": "https://www.abc.es/deportes/futbol/liverpool-villarreal-directo-resultado-goles-partido-champions-20261020132617-di.html",
+   "fecha": "2026-10-20T20:27:46Z"
   },
   {
    "id": "29aab75a19",
@@ -128,18 +128,18 @@
    "fecha": "2026-10-20T15:53:30Z"
   },
   {
-   "id": "3dc0e27f44",
-   "titular": "Sorpresón en el once de Flick para el partido del año entre PSG y Barça",
+   "id": "db938a36b6",
+   "titular": "Sánchez anuncia la declaración de zona catastrófica de los municipios de la DANA Adam, recursos y la agilización de contratos",
    "fuente": "20minutos",
-   "url": "https://www.20minutos.es/deportes/futbol/psg-barcelona-champions-league-directo-marcador-goles-ultima-hora-jornada-3-fase-liga_7051177_6.html",
-   "fecha": "2026-10-20T16:16:11Z"
+   "url": "https://www.20minutos.es/comunidad-valenciana/sanchez-anuncia-declaracion-zona-catastrofica-los-municipios-dana-adam-recursos-agilizacion-contratos_7051052_0.html",
+   "fecha": "2026-10-20T12:19:34Z"
   },
   {
-   "id": "b21682942d",
-   "titular": "Fisuelos de Laciana, el dulce leonés frito",
+   "id": "3ebf7efaf2",
+   "titular": "El Atlético se queda con diez: roja clara a Hjulmand por una dura entrada",
    "fuente": "ABC",
-   "url": "https://www.abc.es/recetasderechupete/fisuelos-de-laciana-el-dulce-leones-frito-en-espiral/176906/",
-   "fecha": "2026-10-20T18:08:31Z"
+   "url": "https://www.abc.es/deportes/atletico-madrid/stuttgart-atletico-madrid-directo-resultado-ganador-goles-20261020162342-di.html",
+   "fecha": "2026-10-20T20:21:26Z"
   },
   {
    "id": "623e6a2e43",
@@ -149,6 +149,13 @@
    "fecha": "2026-10-20T13:14:46Z"
   },
   {
+   "id": "08e00a7759",
+   "titular": "La UCO cuestiona la veracidad del tiroteo al coche de Aldama",
+   "fuente": "El País",
+   "url": "https://elpais.com/espana/2026-10-20/la-uco-cuestiona-la-veracidad-del-tiroteo-al-coche-de-aldama.html",
+   "fecha": "2026-10-20T18:36:11Z"
+  },
+  {
    "id": "483ab3ef9b",
    "titular": "Vox sondea un “acuerdo” con el PP contra la unión de las izquierdas en el Senado",
    "fuente": "elDiario.es",
@@ -156,11 +163,18 @@
    "fecha": "2026-10-19T19:54:33Z"
   },
   {
-   "id": "cdf60119e8",
-   "titular": "Julián Álvarez, gran protagonista del once del Atlético de Madrid para la visita al Stuttgart",
+   "id": "6b2f65feec",
+   "titular": "Sánchez resucita el \"acuerdo de país frente a la emergencia climática\" tras una tensa visita a Oliva por la dana",
+   "fuente": "El Mundo",
+   "url": "https://www.elmundo.es/comunidad-valenciana/2026/10/20/6ad74772fc6c83c56d8b459b.html",
+   "fecha": "2026-10-20T12:25:34Z"
+  },
+  {
+   "id": "3dc0e27f44",
+   "titular": "El Barça aprieta a un PSG en cuadro: Gavi roza el segundo",
    "fuente": "20minutos",
-   "url": "https://www.20minutos.es/deportes/futbol/stuttgart-atletico-madrid-champions-league-directo-marcador-goles-ultima-hora-jornada-3-fase-liga_7051175_6.html",
-   "fecha": "2026-10-20T16:23:06Z"
+   "url": "https://www.20minutos.es/deportes/futbol/psg-barcelona-champions-league-directo-marcador-goles-ultima-hora-jornada-3-fase-liga_7051177_6.html",
+   "fecha": "2026-10-20T16:16:11Z"
   },
   {
    "id": "4e3119cb92",
@@ -170,11 +184,11 @@
    "fecha": "2026-10-20T11:34:38Z"
   },
   {
-   "id": "c9a14ade58",
-   "titular": "Hummus de lentejas: aperitivo paso a paso",
+   "id": "e05d3b52c8",
+   "titular": "¡Empata el Barcelona! Gol de Xavi Espart para poner el 1-1",
    "fuente": "ABC",
-   "url": "https://www.abc.es/gastronomia/falsa-rechupete-20240712032340-nt.html",
-   "fecha": "2026-10-20T18:08:21Z"
+   "url": "https://www.abc.es/deportes/futbol/psg-barcelona-directo-resultado-goles-partido-champions-20261019203110-di.html",
+   "fecha": "2026-10-20T20:19:13Z"
   },
   {
    "id": "dcc99425da",
@@ -184,11 +198,11 @@
    "fecha": "2026-10-20T11:02:55Z"
   },
   {
-   "id": "08e00a7759",
-   "titular": "La UCO cuestiona la veracidad del tiroteo al coche de Aldama",
+   "id": "e5676a3d64",
+   "titular": "Lucas Hernández vuelve a adelantar al PSG",
    "fuente": "El País",
-   "url": "https://elpais.com/espana/2026-10-20/la-uco-cuestiona-la-veracidad-del-tiroteo-al-coche-de-aldama.html",
-   "fecha": "2026-10-20T18:36:11Z"
+   "url": "https://elpais.com/deportes/futbol/2026-10-20/psg-barcelona-en-directo-el-partido-de-la-champions-league-en-vivo.html",
+   "fecha": "2026-10-20T20:38:43Z"
   },
   {
    "id": "491ea54cec",
@@ -205,18 +219,11 @@
    "fecha": "2026-10-20T07:33:01Z"
   },
   {
-   "id": "203346ab6e",
-   "titular": "Muere una mujer al recibir cinco puñaladas en el portal de la urbanización de Madrid en la que vivía",
-   "fuente": "20minutos",
-   "url": "https://www.20minutos.es/madrid/muere-una-mujer-tras-ser-apunalada-portal-su-urbanizacion-madrid_7051197_0.html",
-   "fecha": "2026-10-20T16:38:33Z"
-  },
-  {
-   "id": "2fcaf7f01e",
-   "titular": "En el kilómetro 0 de las protestas en Francia: «Nos manifestamos porque nos falta de todo»",
+   "id": "b359dec8f1",
+   "titular": "Medio siglo después, Patti Smith aún tiene el poder",
    "fuente": "ABC",
-   "url": "https://www.abc.es/internacional/visita-kilometro-cero-protestas-francia-liceo-saintexupery-20261020190624-nt.html",
-   "fecha": "2026-10-20T18:08:08Z"
+   "url": "https://www.abc.es/cultura/musica/medio-siglo-despues-patti-smith-poder-20261020213651-nt.html",
+   "fecha": "2026-10-20T19:40:31Z"
   },
   {
    "id": "e81b8bb2b9",
@@ -226,11 +233,11 @@
    "fecha": "2026-10-20T17:33:09Z"
   },
   {
-   "id": "32aeef87ca",
-   "titular": "Un satélite ruso acecha a otro de EE UU durante días en una maniobra “sin precedentes”: un paso más hacia la guerra de las galaxias",
+   "id": "d4bf1764b2",
+   "titular": "Las hermanas Llanos, juntas en un escenario una década después del final de Dover: “Yo no supe de la violación hasta unos años después. Para mí fue tremendo”",
    "fuente": "El País",
-   "url": "https://elpais.com/ciencia/2026-10-20/un-satelite-ruso-acecha-a-otro-durante-dias-en-una-maniobra-sin-precedentes-un-paso-mas-hacia-la-guerra-de-las-galaxias.html",
-   "fecha": "2026-10-20T14:00:56Z"
+   "url": "https://elpais.com/cultura/2026-10-20/las-hermanas-llanos-juntas-en-un-escenario-una-decada-despues-del-final-de-dover-yo-no-supe-de-la-violacion-hasta-unos-anos-despues-para-mi-fue-tremendo.html",
+   "fecha": "2026-10-20T19:15:22Z"
   },
   {
    "id": "98759a2590",
@@ -247,6 +254,13 @@
    "fecha": "2026-10-20T16:00:30Z"
   },
   {
+   "id": "04c76e7094",
+   "titular": "Liverpool - Villarreal de Champions League, en directo: marcador, goles y última hora de la jornada 3 de la fase liga",
+   "fuente": "20minutos",
+   "url": "https://www.20minutos.es/deportes/futbol/liverpool-villarreal-champions-league-directo-marcador-goles-ultima-hora-jornada-3-fase-liga_7051218_0.html",
+   "fecha": "2026-10-20T17:21:08Z"
+  },
+  {
    "id": "3a11e4bdfd",
    "titular": "Vox veta en Castilla y León las ayudas al cine que “adoctrine” ideológicamente",
    "fuente": "La Vanguardia",
@@ -254,11 +268,11 @@
    "fecha": "2026-10-20T18:00:35Z"
   },
   {
-   "id": "6481d80477",
-   "titular": "Pasta con setas y panceta: receta italiana",
+   "id": "4f1d543b80",
+   "titular": "El día de la resignación en la costa valenciana: «¿Volver? En esta época, no»",
    "fuente": "ABC",
-   "url": "https://www.abc.es/recetasderechupete/espaguetis-con-setas-y-panceta/8589/",
-   "fecha": "2026-10-20T18:08:07Z"
+   "url": "https://www.abc.es/espana/comunidad-valenciana/dia-resignacion-costa-valenciana-volver-epoca-20261020195633-nt.html",
+   "fecha": "2026-10-20T19:23:24Z"
   },
   {
    "id": "aa4817c83d",
@@ -268,11 +282,11 @@
    "fecha": "2026-10-20T12:02:03Z"
   },
   {
-   "id": "01673a8dd2",
-   "titular": "Ramírez de Lucas, el rubio de Albacete: el amor de Lorca que sobrevivió al tiempo",
+   "id": "32aeef87ca",
+   "titular": "Un satélite ruso acecha a otro de EE UU durante días en una maniobra “sin precedentes”: un paso más hacia la guerra de las galaxias",
    "fuente": "El País",
-   "url": "https://elpais.com/cultura/2026-10-20/ramirez-de-lucas-el-rubio-de-albacete-el-amor-de-lorca-que-sobrevivio-al-tiempo.html",
-   "fecha": "2026-10-20T03:30:01Z"
+   "url": "https://elpais.com/ciencia/2026-10-20/un-satelite-ruso-acecha-a-otro-durante-dias-en-una-maniobra-sin-precedentes-un-paso-mas-hacia-la-guerra-de-las-galaxias.html",
+   "fecha": "2026-10-20T14:00:56Z"
   },
   {
    "id": "d24ea985c6",
@@ -282,25 +296,25 @@
    "fecha": "2026-10-19T17:08:00Z"
   },
   {
-   "id": "8ad7578d7e",
-   "titular": "Las videocámaras están por todas partes, y ahora están siendo pirateadas para la guerra",
+   "id": "adb3019371",
+   "titular": "El PSOE retoma la vivienda tras el shock del 'caso Mínguez' y promete medidas e inversión",
    "fuente": "El Mundo",
-   "url": "https://www.elmundo.es/papel/historias/2026/10/20/6ad0bfeefdddff5b568b45a1.html",
-   "fecha": "2026-10-19T22:04:56Z"
+   "url": "https://www.elmundo.es/elecciones/elecciones-generales/2026/10/20/6ad7a5e921efa0e9778b458e.html",
+   "fecha": "2026-10-20T18:20:38Z"
   },
   {
-   "id": "b2d45bbc4b",
-   "titular": "Fallece Anna Mellano, estrella emergente del baloncesto, a los 17 años",
+   "id": "203346ab6e",
+   "titular": "Muere una mujer tras ser apuñalada en el portal de su casa en Madrid en un posible caso de violencia de género",
    "fuente": "20minutos",
-   "url": "https://www.20minutos.es/deportes/baloncesto/muere-los-17-anos-anna-mellano-estrella-emergente-baloncesto-tras-una-larga-batalla-contra-leucemia_7051195_0.html",
-   "fecha": "2026-10-20T16:25:52Z"
+   "url": "https://www.20minutos.es/madrid/muere-una-mujer-tras-ser-apunalada-portal-su-urbanizacion-madrid_7051197_0.html",
+   "fecha": "2026-10-20T16:38:33Z"
   },
   {
-   "id": "44d3b321dd",
-   "titular": "Cómo limpiar la nevera por dentro y por fuera",
+   "id": "977cd07ced",
+   "titular": "Asesinan a cuchilladas a una mujer en plena calle de Carabanchel",
    "fuente": "ABC",
-   "url": "https://www.abc.es/recetasderechupete/como-limpiar-la-nevera-por-dentro-y-por-fuera-trucos-para-dejarla-impecable/177215/",
-   "fecha": "2026-10-20T18:07:44Z"
+   "url": "https://www.abc.es/espana/madrid/asesinan-cuchilladas-mujer-plena-calle-carabanchel-20261020182644-nt.html",
+   "fecha": "2026-10-20T19:16:54Z"
   },
   {
    "id": "0d5bf9dc5c",
@@ -310,13 +324,6 @@
    "fecha": "2026-10-20T15:44:39Z"
   },
   {
-   "id": "bf8d851537",
-   "titular": "Arturo Pérez-Reverte: “Me pone caliente cada nueva novela, cada batalla me obliga a ser joven de nuevo”",
-   "fuente": "El País",
-   "url": "https://elpais.com/cultura/2026-10-20/arturo-perez-reverte-me-pone-caliente-cada-nueva-novela-cada-batalla-me-obliga-a-ser-joven-de-nuevo.html",
-   "fecha": "2026-10-20T10:07:53Z"
-  },
-  {
    "id": "fb8ba158f4",
    "titular": "Hacienda no quiere que Aldama se encargue de la venta de su Ferrari F12",
    "fuente": "elDiario.es",
@@ -324,60 +331,60 @@
    "fecha": "2026-10-20T15:44:49Z"
   },
   {
-   "id": "9430dcdb20",
-   "titular": "Zelenski se reúne con Witkoff mientras las relaciones entre EEUU y Ucrania caen a mínimos históricos",
+   "id": "b8d75f26c7",
+   "titular": "El Tribunal Supremo falla contra UGT-A y le obliga a devolver a la Junta de Andalucía 18,3 millones de euros en subvenciones para cursos de formación",
    "fuente": "El Mundo",
-   "url": "https://www.elmundo.es/internacional/2026/10/20/6ad78f11e4d4d81d6f8b45d8.html",
-   "fecha": "2026-10-20T16:13:14Z"
-  },
-  {
-   "id": "e255933d4d",
-   "titular": "Asaltan la casa de Sergio Rico en Sevilla con él y su familia dentro: \"Entraron encapuchados con armas\"",
-   "fuente": "20minutos",
-   "url": "https://www.20minutos.es/deportes/futbol/asaltan-casa-sergio-rico-sevilla-con-su-familia-dentro-entraron-cinco-encapuchados-con-guantes-armas_7051098_0.html",
-   "fecha": "2026-10-20T13:28:17Z"
+   "url": "https://www.elmundo.es/andalucia/2026/10/20/6ad783e0e9cf4a7b0b8b459f.html",
+   "fecha": "2026-10-20T16:12:00Z"
   },
   {
    "id": "c856fead31",
-   "titular": "El Barça visita al PSG en la Champions | Posibles alineaciones y horario del partido",
+   "titular": "Arranca el segundo tiempo (1-0) | El Barça visita al PSG en la Champions",
    "fuente": "La Vanguardia",
    "url": "https://www.lavanguardia.com/deportes/futbol/20261020/11663743/psg-barcelona-champions-league-partido-futbol-hoy-en-directo.html",
    "fecha": "2026-10-20T17:29:22Z"
   },
   {
-   "id": "d8cc41c8f1",
-   "titular": "La telenovela turca que se coló en Venezuela: un romance exprés, una boda trumpista y un rastro de millones de dólares",
-   "fuente": "El País",
-   "url": "https://elpais.com/america/2026-10-20/la-telenovela-turca-que-se-colo-en-venezuela-un-romance-expres-una-boda-trumpista-y-un-rastro-de-millones-de-dolares.html",
-   "fecha": "2026-10-20T09:30:00Z"
-  },
-  {
-   "id": "adb3019371",
-   "titular": "El PSOE retoma la vivienda tras el shock del 'caso Mínguez' y promete medidas e inversión",
-   "fuente": "El Mundo",
-   "url": "https://www.elmundo.es/elecciones/elecciones-generales/2026/10/20/6ad7a5e921efa0e9778b458e.html",
-   "fecha": "2026-10-20T18:20:38Z"
-  },
-  {
-   "id": "c22f0751f0",
-   "titular": "Joe Manganiello publica una foto desnudo para mostrar el tatuaje con el que tapó las \"cicatrices\" de su operación",
-   "fuente": "20minutos",
-   "url": "https://www.20minutos.es/gente/joe-manganiello-publica-una-foto-semidesnudo-para-mostrar-tatuaje-con-que-se-tapo-las-cicatrices-su-cirugia_7051062_0.html",
-   "fecha": "2026-10-20T12:27:30Z"
-  },
-  {
-   "id": "a14ac0ba9f",
-   "titular": "Arancha, en París y en Ceuta",
-   "fuente": "La Vanguardia",
-   "url": "https://www.lavanguardia.com/politica/20261020/11663289/arancha-paris-ceuta.html",
-   "fecha": "2026-10-20T04:00:00Z"
-  },
-  {
-   "id": "d12fb31799",
-   "titular": "Del 1-O a la amnistía: el traje a medida para borrar el 'procés'",
+   "id": "e6d8860d1f",
+   "titular": "Konaté: «No sabía lo que ponía en las camisetas y me enteré después de lo de Ceuta»",
    "fuente": "ABC",
-   "url": "https://www.abc.es/espana/amnistia-traje-medida-borrar-proces-20261010194659-nt.html",
-   "fecha": "2026-10-20T17:54:56Z"
+   "url": "https://www.abc.es/deportes/real-madrid/konate-sabia-ponia-camisetas-entere-despues-ceuta-20261020134200-nt.html",
+   "fecha": "2026-10-20T19:16:43Z"
+  },
+  {
+   "id": "bf8d851537",
+   "titular": "Arturo Pérez-Reverte: “Me pone caliente cada nueva novela, cada batalla me obliga a ser joven de nuevo”",
+   "fuente": "El País",
+   "url": "https://elpais.com/cultura/2026-10-20/arturo-perez-reverte-me-pone-caliente-cada-nueva-novela-cada-batalla-me-obliga-a-ser-joven-de-nuevo.html",
+   "fecha": "2026-10-20T10:07:53Z"
+  },
+  {
+   "id": "ea6fe7da6f",
+   "titular": "El Gobierno promete blindar la subida salarial de los funcionarios para 2027 pero evita fijar la fecha",
+   "fuente": "El Mundo",
+   "url": "https://www.elmundo.es/economia/2026/10/20/6ad7a847e85eceb94a8b45a5.html",
+   "fecha": "2026-10-20T17:46:45Z"
+  },
+  {
+   "id": "b2d45bbc4b",
+   "titular": "Fallece Anna Mellano, estrella emergente del baloncesto, a los 17 años",
+   "fuente": "20minutos",
+   "url": "https://www.20minutos.es/deportes/baloncesto/muere-los-17-anos-anna-mellano-estrella-emergente-baloncesto-tras-una-larga-batalla-contra-leucemia_7051195_0.html",
+   "fecha": "2026-10-20T16:25:52Z"
+  },
+  {
+   "id": "6447cef941",
+   "titular": "El Barça denunciará ante la UEFA la pancarta de la motosierra del PSG: “Massacre a la Parisienne”",
+   "fuente": "La Vanguardia",
+   "url": "https://www.lavanguardia.com/deportes/futbol/20261020/11663997/barca-denunciara-uefa-pancarta-motosierra-psg-massacre-parisienne-champions.html",
+   "fecha": "2026-10-20T19:47:06Z"
+  },
+  {
+   "id": "5b349ea7b7",
+   "titular": "Cuatro detenidos por el asesinato a golpes de una anciana en su casa en Galapagar",
+   "fuente": "ABC",
+   "url": "https://www.abc.es/espana/madrid/cuatro-detenidos-asesinato-golpes-anciana-casa-galapagar-20261020205040-nt.html",
+   "fecha": "2026-10-20T19:10:03Z"
   },
   {
    "id": "54464f1d6e",
@@ -401,25 +408,32 @@
    "fecha": "2026-10-20T10:25:27Z"
   },
   {
-   "id": "b8d75f26c7",
-   "titular": "El Tribunal Supremo falla contra UGT-A y le obliga a devolver a la Junta de Andalucía 18,3 millones de euros en subvenciones para cursos de formación",
+   "id": "d092e40d51",
+   "titular": "\"La fuerza del amor\" de Sánchez y Begoña sorprende en Argentina: \"El kirchnerismo ha llegado a Madrid\"",
    "fuente": "El Mundo",
-   "url": "https://www.elmundo.es/andalucia/2026/10/20/6ad783e0e9cf4a7b0b8b459f.html",
-   "fecha": "2026-10-20T16:12:00Z"
+   "url": "https://www.elmundo.es/elecciones/elecciones-generales/2026/10/20/6ad78bb9fc6c838f678b45b1.html",
+   "fecha": "2026-10-20T16:02:49Z"
   },
   {
-   "id": "5c1bbdef72",
-   "titular": "La Pantera Rosa que supuestamente participaba en las protestas de París resultó ser todo un engaño",
+   "id": "ee672b3414",
+   "titular": "Trump dice que España fue \"invadida\" por inmigrantes y \"no está haciendo nada\"",
    "fuente": "20minutos",
-   "url": "https://www.20minutos.es/comunicacion/pantera-rosa-que-supuestamente-participaba-las-protestas-paris-resulto-ser-todo-un-engano_7051120_0.html",
-   "fecha": "2026-10-20T14:22:57Z"
+   "url": "https://www.20minutos.es/internacional/trump-afirma-que-espana-fue-invadida-por-migrantes-no-esta-haciendo-nada-respecto_7051277_0.html",
+   "fecha": "2026-10-20T19:28:59Z"
   },
   {
-   "id": "d7cb4b5632",
-   "titular": "Francia ensaya el toque de queda",
+   "id": "312e65d1ba",
+   "titular": "Meloni decreta la prisión preventiva para menores para frenar las protestas violentas",
    "fuente": "La Vanguardia",
-   "url": "https://www.lavanguardia.com/internacional/20261020/11663056/francia-ensaya-toque-queda.html",
-   "fecha": "2026-10-20T04:00:00Z"
+   "url": "https://www.lavanguardia.com/internacional/20261020/11663987/meloni-decreta-prision-preventiva-menores-frenar-protestas-violentas.html",
+   "fecha": "2026-10-20T19:16:27Z"
+  },
+  {
+   "id": "f01f8afd2d",
+   "titular": "El Colegio de Procuradores reconoce a la Audiencia Nacional en su 50 aniversario",
+   "fuente": "ABC",
+   "url": "https://www.abc.es/espana/procuradores-reclaman-gran-pacto-nacional-justicia-20261020205218-nt.html",
+   "fecha": "2026-10-20T18:52:30Z"
   },
   {
    "id": "936cf6d8c0",
@@ -429,25 +443,32 @@
    "fecha": "2026-10-20T03:30:01Z"
   },
   {
-   "id": "ea6fe7da6f",
-   "titular": "El Gobierno promete blindar la subida salarial de los funcionarios para 2027 pero evita fijar la fecha",
+   "id": "d27f6d8aec",
+   "titular": "La única luz de un edificio fantasma: los chinos que viven entre las ruinas de la crisis inmobiliaria",
    "fuente": "El Mundo",
-   "url": "https://www.elmundo.es/economia/2026/10/20/6ad7a847e85eceb94a8b45a5.html",
-   "fecha": "2026-10-20T17:46:45Z"
+   "url": "https://www.elmundo.es/economia/2026/10/20/6ad625c2e4d4d8302a8b458e.html",
+   "fecha": "2026-10-19T22:02:25Z"
   },
   {
-   "id": "c7d58ea4b2",
-   "titular": "Barcelona convoca ayudas de hasta 6.000 € para rehabilitar viviendas y de hasta 60.000 para instalar ascensores",
+   "id": "5a4fe773f6",
+   "titular": "Maxi Iglesias y Aitana Sánchez-Gijón reaparecen con un apasionado beso tras meses sin novedades",
    "fuente": "20minutos",
-   "url": "https://www.20minutos.es/cataluna/barcelona/barcelona-convoca-ayudas-hasta-6-000-euros-para-rehabilitar-viviendas-hasta-60-000-para-instalar-ascensores-fincas_7050538_0.html",
-   "fecha": "2026-10-20T07:31:40Z"
+   "url": "https://www.20minutos.es/gente/maxi-iglesias-aitana-sanchez-gijon-reaparecen-publicamente-con-un-apasionado-beso-tras-meses-sin-novedades-su-relacion_7051287_0.html",
+   "fecha": "2026-10-20T20:18:59Z"
   },
   {
-   "id": "9372878cef",
-   "titular": "Una generación sin futuro enciende las calles de Europa",
+   "id": "d7cb4b5632",
+   "titular": "Francia ensaya el toque de queda",
    "fuente": "La Vanguardia",
-   "url": "https://www.lavanguardia.com/videos/claves-del-dia/20261020/11663918/generacion-futuro-enciende-calles-europa.html",
-   "fecha": "2026-10-20T16:44:44Z"
+   "url": "https://www.lavanguardia.com/internacional/20261020/11663056/francia-ensaya-toque-queda.html",
+   "fecha": "2026-10-20T04:00:00Z"
+  },
+  {
+   "id": "9b83c0bb8a",
+   "titular": "Posibles restos de un cohete chino caen sobre un campo de maíz en EE.UU.",
+   "fuente": "ABC",
+   "url": "https://www.abc.es/ciencia/posibles-restos-cohete-chino-caen-sobre-campo-20261020202719-nt.html",
+   "fecha": "2026-10-20T18:49:48Z"
   },
   {
    "id": "4696450674",
@@ -464,39 +485,32 @@
    "fecha": "2026-10-20T17:28:12Z"
   },
   {
-   "id": "d092e40d51",
-   "titular": "\"La fuerza del amor\" de Sánchez y Begoña sorprende en Argentina: \"El kirchnerismo ha llegado a Madrid\"",
-   "fuente": "El Mundo",
-   "url": "https://www.elmundo.es/elecciones/elecciones-generales/2026/10/20/6ad78bb9fc6c838f678b45b1.html",
-   "fecha": "2026-10-20T16:02:49Z"
-  },
-  {
-   "id": "1086e296b9",
-   "titular": "La Premier prepara una histórica sanción al City: supondría el descenso y una multa millonaria",
+   "id": "5c1bbdef72",
+   "titular": "La Pantera Rosa que supuestamente participaba en las protestas de París resultó ser todo un engaño",
    "fuente": "20minutos",
-   "url": "https://www.20minutos.es/deportes/futbol/premier-prepara-una-historica-sancion-manchester-city-deduccion-puntos-que-supondria-descenso-una-multa-millonaria_7051166_0.html",
-   "fecha": "2026-10-20T15:38:24Z"
+   "url": "https://www.20minutos.es/comunicacion/pantera-rosa-que-supuestamente-participaba-las-protestas-paris-resulto-ser-todo-un-engano_7051120_0.html",
+   "fecha": "2026-10-20T14:22:57Z"
   },
   {
-   "id": "56de36df36",
-   "titular": "Detenidos en Catalunya dos presuntos yihadistas radicalizados en los postulados del Daesh",
+   "id": "60af8b8d20",
+   "titular": "Javier Godó reivindica el “buen periodismo” como garantía de libertad",
    "fuente": "La Vanguardia",
-   "url": "https://www.lavanguardia.com/politica/20261020/11663519/detenidos-catalunya-dos-presuntos-yihadistas-radicalizados-postulados-daesh.html",
-   "fecha": "2026-10-20T09:53:37Z"
+   "url": "https://www.lavanguardia.com/vida/20261020/11663985/javier-godo-reivindica-buen-periodismo-garantia-libertad.html",
+   "fecha": "2026-10-20T19:38:48Z"
   },
   {
-   "id": "59485f4cad",
-   "titular": "Sánchez mete al Consejo de Ministros en campaña con un aluvión de promesas sociales",
+   "id": "dcad78f78d",
+   "titular": "Meloni consigue endurecer las medidas contra menores que participan en actos violentos tras los disturbios en Milán",
    "fuente": "ABC",
-   "url": "https://www.abc.es/espana/sanchez-convierte-boe-instrumento-campana-agitar-votantes-20261021192003-nt.html",
-   "fecha": "2026-10-20T17:26:33Z"
+   "url": "https://www.abc.es/internacional/italia-estudia-nuevas-medidas-reforzar-seguridad-protestas-20261020203500-nt.html",
+   "fecha": "2026-10-20T18:37:41Z"
   },
   {
-   "id": "f96a593a13",
-   "titular": "Ayuso retrasa su decisión sobre reunirse con Milei en Madrid: “No lo tenemos cerrado en agenda”",
+   "id": "e29d07a9d2",
+   "titular": "La visita de Milei incomoda a la derecha en plena polémica preelectoral sobre el futuro de las pensiones",
    "fuente": "El País",
-   "url": "https://elpais.com/espana/madrid/2026-10-20/ayuso-retrasa-su-decision-sobre-reunirse-con-milei-en-madrid-no-lo-tenemos-cerrado-en-agenda.html",
-   "fecha": "2026-10-20T10:52:54Z"
+   "url": "https://elpais.com/espana/2026-10-20/la-visita-de-milei-incomoda-a-la-derecha-en-plena-polemica-preelectoral-sobre-el-futuro-de-las-pensiones.html",
+   "fecha": "2026-10-20T20:00:33Z"
   },
   {
    "id": "e0ee8169aa",
@@ -506,25 +520,25 @@
    "fecha": "2026-10-20T12:25:22Z"
   },
   {
-   "id": "d27f6d8aec",
-   "titular": "La única luz de un edificio fantasma: los chinos que viven entre las ruinas de la crisis inmobiliaria",
+   "id": "b48be0fd94",
+   "titular": "Patti Smith sumerge en un ritual chamánico Gijón para celebrar los 50 años de su primer concierto en España",
    "fuente": "El Mundo",
-   "url": "https://www.elmundo.es/economia/2026/10/20/6ad625c2e4d4d8302a8b458e.html",
-   "fecha": "2026-10-19T22:02:25Z"
+   "url": "https://www.elmundo.es/cultura/musica/2026/10/20/6ad7bb36e9cf4aab048b45b9.html",
+   "fecha": "2026-10-20T19:39:11Z"
   },
   {
-   "id": "7104eab63a",
-   "titular": "El Supremo amnistía a los líderes del 'procés' entre críticas a la \"innecesaria grandilocuencia\" del TC",
+   "id": "c7d58ea4b2",
+   "titular": "Barcelona convoca ayudas de hasta 6.000 € para rehabilitar viviendas y de hasta 60.000 para instalar ascensores",
    "fuente": "20minutos",
-   "url": "https://www.20minutos.es/nacional/supremo-amnistia-los-condenados-proces-entre-criticas-innecesaria-grandilocuencia-constitucional_7051013_0.html",
-   "fecha": "2026-10-20T10:57:47Z"
+   "url": "https://www.20minutos.es/cataluna/barcelona/barcelona-convoca-ayudas-hasta-6-000-euros-para-rehabilitar-viviendas-hasta-60-000-para-instalar-ascensores-fincas_7050538_0.html",
+   "fecha": "2026-10-20T07:31:40Z"
   },
   {
-   "id": "d140a7fc27",
-   "titular": "Las víctimas de Adamuz cargan contra Puente por un spot publicitario: «Se está riendo de la situación»",
-   "fuente": "ABC",
-   "url": "https://www.abc.es/espana/andalucia/cordoba/victimas-accidente-adamuz-cargan-oscar-puente-spot-20261020170101-nts.html",
-   "fecha": "2026-10-20T17:24:54Z"
+   "id": "56de36df36",
+   "titular": "Detenidos en Catalunya dos presuntos yihadistas radicalizados en los postulados del Daesh",
+   "fuente": "La Vanguardia",
+   "url": "https://www.lavanguardia.com/politica/20261020/11663519/detenidos-catalunya-dos-presuntos-yihadistas-radicalizados-postulados-daesh.html",
+   "fecha": "2026-10-20T09:53:37Z"
   },
   {
    "id": "7f5bf9b3ea",
@@ -541,25 +555,25 @@
    "fecha": "2026-10-20T16:35:50Z"
   },
   {
-   "id": "35fe1e3053",
-   "titular": "Junqueras, sobre la decisión: \"La política ha vuelto al terreno de la política\"",
+   "id": "9430dcdb20",
+   "titular": "Zelenski: \"No estamos perdiendo la guerra, estamos perdiendo gente y tiempo\"",
+   "fuente": "El Mundo",
+   "url": "https://www.elmundo.es/internacional/2026/10/20/6ad78f11e4d4d81d6f8b45d8.html",
+   "fecha": "2026-10-20T18:44:16Z"
+  },
+  {
+   "id": "1086e296b9",
+   "titular": "La Premier prepara una histórica sanción al City: supondría el descenso y una multa millonaria",
    "fuente": "20minutos",
-   "url": "https://www.20minutos.es/cataluna/junqueres-ante-amnistia-politica-ha-vuelto-terreno-politica_7051199_0.html",
-   "fecha": "2026-10-20T16:35:30Z"
+   "url": "https://www.20minutos.es/deportes/futbol/premier-prepara-una-historica-sancion-manchester-city-deduccion-puntos-que-supondria-descenso-una-multa-millonaria_7051166_0.html",
+   "fecha": "2026-10-20T15:38:24Z"
   },
   {
-   "id": "9f2dbf53d3",
-   "titular": "Pérez-Reverte: “La historia tiene muy mala leche y el Mediterráneo está colonizando Europa”",
-   "fuente": "La Vanguardia",
-   "url": "https://www.lavanguardia.com/cultura/20261020/11663042/perez-reverte-historia-mala-leche-mediterraneo-esta-colonizando-europa.html",
-   "fecha": "2026-10-20T10:00:00Z"
-  },
-  {
-   "id": "c179533b54",
-   "titular": "Piden al Supremo que advierta de posibles responsabilidades penales si se incumple su auto de la 'ley de nietos'",
+   "id": "031ea87b3e",
+   "titular": "El PP propone a Vox que no se presente en todas las provincias y le garantiza senadores autonómicos",
    "fuente": "ABC",
-   "url": "https://www.abc.es/espana/piden-supremo-advierta-posibles-responsabilidades-penales-incumple-20261020175436-nt.html",
-   "fecha": "2026-10-20T17:19:31Z"
+   "url": "https://www.abc.es/espana/negociacion-quirurgica-pp-vox-evitar-izquierda-haga-20261020012626-nt.html",
+   "fecha": "2026-10-20T18:11:19Z"
   },
   {
    "id": "2651e3c7a2",
@@ -569,32 +583,32 @@
    "fecha": "2026-10-20T14:41:40Z"
   },
   {
-   "id": "13c0f22c34",
-   "titular": "El voto latino, entre el desencanto con Trump y la desconexión demócrata: \"No se puede deportar a inocentes y trabajadores\"",
+   "id": "76ed42c4e5",
+   "titular": "La Fiscalía archiva la denuncia contra Albiol por el desalojo del instituto B9 en Badalona",
    "fuente": "El Mundo",
-   "url": "https://www.elmundo.es/internacional/2026/10/20/6ad5d3fde4d4d8451b8b4579.html",
-   "fecha": "2026-10-20T05:20:28Z"
+   "url": "https://www.elmundo.es/cataluna/2026/10/20/6ad7c6e2e85ecece7f8b45af.html",
+   "fecha": "2026-10-20T19:56:38Z"
   },
   {
-   "id": "72cdcf6137",
-   "titular": "El denostado 'ADN basura' es mucho más útil de lo que parecía: puede ayudar a encender los genes",
+   "id": "7104eab63a",
+   "titular": "El Supremo amnistía a los líderes del 'procés' entre críticas a la \"innecesaria grandilocuencia\" del TC",
    "fuente": "20minutos",
-   "url": "https://www.20minutos.es/salud/denostado-adn-basura-es-mucho-mas-util-que-parecia-ayuda-encender-los-genes_7051159_0.html",
-   "fecha": "2026-10-20T15:14:19Z"
+   "url": "https://www.20minutos.es/nacional/supremo-amnistia-los-condenados-proces-entre-criticas-innecesaria-grandilocuencia-constitucional_7051013_0.html",
+   "fecha": "2026-10-20T10:57:47Z"
   },
   {
-   "id": "f61bcf918e",
-   "titular": "Rubio admite que se ha retenido el envío de interceptores de misiles a Ucrania",
+   "id": "9f2dbf53d3",
+   "titular": "Pérez-Reverte: “La historia tiene muy mala leche y el Mediterráneo está colonizando Europa”",
    "fuente": "La Vanguardia",
-   "url": "https://www.lavanguardia.com/internacional/20261020/11663872/ee-uu-dice-quiere-perjudicar-ucrania-pese-negarle-armamento-e-inteligencia.html",
-   "fecha": "2026-10-20T15:50:50Z"
+   "url": "https://www.lavanguardia.com/cultura/20261020/11663042/perez-reverte-historia-mala-leche-mediterraneo-esta-colonizando-europa.html",
+   "fecha": "2026-10-20T10:00:00Z"
   },
   {
-   "id": "977cd07ced",
-   "titular": "Asesinan a cuchilladas a una mujer en plena calle de Carabanchel",
+   "id": "b21682942d",
+   "titular": "Fisuelos de Laciana, el dulce leonés frito",
    "fuente": "ABC",
-   "url": "https://www.abc.es/espana/madrid/asesinan-cuchilladas-mujer-plena-calle-carabanchel-20261020182644-nt.html",
-   "fecha": "2026-10-20T17:18:21Z"
+   "url": "https://www.abc.es/recetasderechupete/fisuelos-de-laciana-el-dulce-leones-frito-en-espiral/176906/",
+   "fecha": "2026-10-20T18:08:31Z"
   },
   {
    "id": "6b772bd2fc",
@@ -604,25 +618,25 @@
    "fecha": "2026-10-20T15:56:43Z"
   },
   {
-   "id": "230f83835b",
-   "titular": "Muere una mujer de 52 años tras ser apuñalada en Carabanchel: se investiga si puede ser un crimen machista",
-   "fuente": "El Mundo",
-   "url": "https://www.elmundo.es/madrid/2026/10/20/6ad79599e85ece4c208b45a7.html",
-   "fecha": "2026-10-20T16:28:44Z"
-  },
-  {
-   "id": "96d0cd9fd1",
-   "titular": "Cambia la tendencia de la adopción de animales en España: \"Era país de perros, pero ahora los gatos ganan\"",
+   "id": "35fe1e3053",
+   "titular": "Junqueras, sobre la decisión: \"La política ha vuelto al terreno de la política\"",
    "fuente": "20minutos",
-   "url": "https://www.20minutos.es/animaleros/un-informe-apunta-un-cambio-tendencia-adopcion-animal-espana-era-un-pais-perros-pero-ahora-los-gatos-ganan_7051130_0.html",
-   "fecha": "2026-10-20T16:45:51Z"
+   "url": "https://www.20minutos.es/cataluna/junqueres-ante-amnistia-politica-ha-vuelto-terreno-politica_7051199_0.html",
+   "fecha": "2026-10-20T16:35:30Z"
   },
   {
-   "id": "1ef3244577",
-   "titular": "El Gobierno reparte 180 millones a las autonomías que apliquen la ley de Vivienda",
+   "id": "f61bcf918e",
+   "titular": "Rubio admite que se ha retenido el envío de interceptores de misiles a Ucrania",
    "fuente": "La Vanguardia",
-   "url": "https://www.lavanguardia.com/economia/20261020/11663601/gobierno-reparte-180-millones-subvenciones-comunidades-apliquen-ley-vivienda.html",
-   "fecha": "2026-10-20T10:54:35Z"
+   "url": "https://www.lavanguardia.com/internacional/20261020/11663872/ee-uu-dice-quiere-perjudicar-ucrania-pese-negarle-armamento-e-inteligencia.html",
+   "fecha": "2026-10-20T15:50:50Z"
+  },
+  {
+   "id": "c9a14ade58",
+   "titular": "Hummus de lentejas: aperitivo paso a paso",
+   "fuente": "ABC",
+   "url": "https://www.abc.es/gastronomia/falsa-rechupete-20240712032340-nt.html",
+   "fecha": "2026-10-20T18:08:21Z"
   },
   {
    "id": "3eb7296b0f",
@@ -639,25 +653,18 @@
    "fecha": "2026-10-19T19:54:34Z"
   },
   {
-   "id": "7add0401f7",
-   "titular": "Feijóo confirma que negocia con Vox una fórmula para que el \"sanchismo\" no logre controlar el Senado tras el 29 de noviembre",
+   "id": "e8090704a8",
+   "titular": "¿Sabías que los seguros existen desde hace miles de años? Te lo contamos en un minuto",
    "fuente": "20minutos",
-   "url": "https://www.20minutos.es/nacional/pp-vox-buscan-una-formula-para-no-facilitar-sanchismo-control-senado-pero-mantienen-discrecion_7050850_0.html",
-   "fecha": "2026-10-20T07:51:14Z"
+   "url": "https://www.20minutos.es/lainformacion/economia-y-finanzas/sabias-seguros-existen-hace-miles-anos_7051201_0.html",
+   "fecha": "2026-10-20T19:10:33Z"
   },
   {
-   "id": "748a417334",
-   "titular": "El propietario del piso donde vive Macarena: “Solo quiero recuperarlo”",
-   "fuente": "La Vanguardia",
-   "url": "https://www.lavanguardia.com/local/barcelona/20261020/11663011/quiero-recuperar-mi-piso.html",
-   "fecha": "2026-10-20T04:00:00Z"
-  },
-  {
-   "id": "c918bf7dee",
-   "titular": "Ayuso considera «irrealizables» las exigencias de los profesores: 328 colegios nuevos y 13.600 docentes más",
+   "id": "6481d80477",
+   "titular": "Pasta con setas y panceta: receta italiana",
    "fuente": "ABC",
-   "url": "https://www.abc.es/espana/madrid/ayuso-considera-irrealizables-exigencias-huelga-educativa-328-20261020094426-nt.html",
-   "fecha": "2026-10-20T17:15:00Z"
+   "url": "https://www.abc.es/recetasderechupete/espaguetis-con-setas-y-panceta/8589/",
+   "fecha": "2026-10-20T18:08:07Z"
   },
   {
    "id": "f70e31f23e",
@@ -674,39 +681,53 @@
    "fecha": "2026-10-19T19:47:55Z"
   },
   {
-   "id": "1e81306607",
-   "titular": "Aplazado el desahucio de la hermana del cantante Lluís Gavaldà en la Riera de Gaià",
-   "fuente": "La Vanguardia",
-   "url": "https://www.lavanguardia.com/local/tarragona/20261020/11663513/aplazado-desahucio-hermana-cantante-lluis-gavalda-riera-gaia.html",
-   "fecha": "2026-10-20T09:59:09Z"
-  },
-  {
-   "id": "20e0f0b148",
-   "titular": "«No podemos hacer con el dinero lo mismo que nuestros padres»",
-   "fuente": "ABC",
-   "url": "https://www.abc.es/economia/cuentas-corrientes/podemos-dinero-padres-bastaba-vivienda-20261020011934-nt.html",
-   "fecha": "2026-10-20T17:12:33Z"
-  },
-  {
-   "id": "5e04ba8d11",
-   "titular": "El Gobierno de Meloni quiere desplegar soldados en las calles de Milán tras los disturbios del pasado fin de semana",
-   "fuente": "elDiario.es",
-   "url": "https://www.eldiario.es/internacional/gobierno-meloni-quiere-desplegar-soldados-calles-milan-disturbios-pasado-semana_1_13600238.html",
-   "fecha": "2026-10-20T12:11:37Z"
-  },
-  {
-   "id": "5da48ac567",
-   "titular": "Hallan el cadáver de un hombre flotando en el mar durante el temporal en Menorca",
+   "id": "13c0f22c34",
+   "titular": "El voto latino, entre el desencanto con Trump y la desconexión demócrata: \"No se puede deportar a inocentes y trabajadores\"",
    "fuente": "El Mundo",
-   "url": "https://www.elmundo.es/baleares/2026/10/20/6ad7673b21efa0477f8b45a4.html",
-   "fecha": "2026-10-20T13:10:34Z"
+   "url": "https://www.elmundo.es/internacional/2026/10/20/6ad5d3fde4d4d8451b8b4579.html",
+   "fecha": "2026-10-20T05:20:28Z"
   },
   {
-   "id": "071af2a169",
-   "titular": "Las protestas recorren Europa: toques de queda en Francia, Italia despliega al Ejército y Portugal desaloja las acampadas",
+   "id": "96d0cd9fd1",
+   "titular": "Cambia la tendencia de la adopción de animales en España: \"Era país de perros, pero ahora los gatos ganan\"",
    "fuente": "20minutos",
-   "url": "https://www.20minutos.es/internacional/una-ola-protestas-recorre-europa-francia-mantiene-los-toques-queda-italia-despliega-ejercito-portugal-desaloja-las-acampadas_7051096_0.html",
-   "fecha": "2026-10-20T15:03:29Z"
+   "url": "https://www.20minutos.es/animaleros/un-informe-apunta-un-cambio-tendencia-adopcion-animal-espana-era-un-pais-perros-pero-ahora-los-gatos-ganan_7051130_0.html",
+   "fecha": "2026-10-20T16:45:51Z"
+  },
+  {
+   "id": "1ef3244577",
+   "titular": "El Gobierno reparte 180 millones a las autonomías que apliquen la ley de Vivienda",
+   "fuente": "La Vanguardia",
+   "url": "https://www.lavanguardia.com/economia/20261020/11663601/gobierno-reparte-180-millones-subvenciones-comunidades-apliquen-ley-vivienda.html",
+   "fecha": "2026-10-20T10:54:35Z"
+  },
+  {
+   "id": "44d3b321dd",
+   "titular": "Cómo limpiar la nevera por dentro y por fuera",
+   "fuente": "ABC",
+   "url": "https://www.abc.es/recetasderechupete/como-limpiar-la-nevera-por-dentro-y-por-fuera-trucos-para-dejarla-impecable/177215/",
+   "fecha": "2026-10-20T18:07:44Z"
+  },
+  {
+   "id": "42015186f9",
+   "titular": "La policía investiga como crimen machista el asesinato de una mujer en una urbanización de Carabanchel",
+   "fuente": "El País",
+   "url": "https://elpais.com/espana/madrid/2026-10-20/una-mujer-es-asesinada-en-una-urbanizacion-en-carabanchel-a-cuchilladas.html",
+   "fecha": "2026-10-20T16:35:16Z"
+  },
+  {
+   "id": "9d3a1f8f63",
+   "titular": "Investigado en Cáceres por llegar conduciendo al examen para recuperar los puntos del carné",
+   "fuente": "El Mundo",
+   "url": "https://www.elmundo.es/espana/2026/10/20/6ad783ea21efa0c50d8b45ab.html",
+   "fecha": "2026-10-20T15:10:41Z"
+  },
+  {
+   "id": "b6f850818d",
+   "titular": "Zelenski traslada al enviado de Donald Trump propuestas de paz para que se las presente a Putin este miércoles en San Petersburgo",
+   "fuente": "20minutos",
+   "url": "https://www.20minutos.es/internacional/zelenski-traslada-enviado-trump-propuestas-paz-para-que-se-las-presente-putin-este-miercoles-moscu_7051254_0.html",
+   "fecha": "2026-10-20T18:17:05Z"
   },
   {
    "id": "a63d38727b",
@@ -714,13 +735,6 @@
    "fuente": "La Vanguardia",
    "url": "https://www.lavanguardia.com/vida/20261020/11663672/granero-mundo-agua-potable.html",
    "fecha": "2026-10-20T12:05:44Z"
-  },
-  {
-   "id": "9a85f7b905",
-   "titular": "'Herrera en Cope' inaugura su minigira por España: «La confianza es la clave de la radio»",
-   "fuente": "ABC",
-   "url": "https://www.abc.es/play/television/noticias/herrera-cope-inaugura-minigira-espana-confianza-clave-20261020175043-nt.html",
-   "fecha": "2026-10-20T17:10:32Z"
   },
   {
    "id": "6a27cf6c9f",
@@ -737,18 +751,18 @@
    "fecha": "2026-10-20T08:09:15Z"
   },
   {
-   "id": "0a6b7dd3c8",
-   "titular": "Sebastian Hoeness, el último de una gran estirpe: un loco del golf, fan de Guardiola y técnico desde los 25 años",
+   "id": "691a28051a",
+   "titular": "Futbolistas del Madrid 'toreando' en Las Ventas, el Carrusel en las plazas y el hijo de Morante: así es el idilio entre los toros y el fútbol en España",
    "fuente": "El Mundo",
-   "url": "https://www.elmundo.es/deportes/futbol/champions-league/2026/10/20/6ad64e3cfc6c83ec1f8b4577.html",
-   "fecha": "2026-10-20T14:33:29Z"
+   "url": "https://www.elmundo.es/deportes/futbol/2026/10/20/6acfb37ffc6c832d328b4581.html",
+   "fecha": "2026-10-20T19:29:24Z"
   },
   {
-   "id": "f08af27497",
-   "titular": "Muere Gustavo Oliva, el referente del pádel que dijo adiós con una desgarradora carta: \"Mi vida llega a su fin\"",
+   "id": "03fbf734d6",
+   "titular": "Kallas avisa de que Putin \"incrementa los ataques híbridos\" sobre Europa porque \"no está ganando\" la guerra en Ucrania",
    "fuente": "20minutos",
-   "url": "https://www.20minutos.es/deportes/muere-gustavo-oliva-referente-padel-58-anos-que-se-despidio-con-una-desgarradora-carta-mi-vida-tierra-llega-su-fin_7050802_0.html",
-   "fecha": "2026-10-20T06:37:21Z"
+   "url": "https://www.20minutos.es/internacional/kallas-avisa-que-putin-incrementa-los-ataques-hibridos-sobre-europa-porque-no-esta-ganando-guerra-ucrania_7050834_0.html",
+   "fecha": "2026-10-20T07:21:37Z"
   },
   {
    "id": "27a2cff785",
@@ -758,11 +772,11 @@
    "fecha": "2026-10-20T05:58:01Z"
   },
   {
-   "id": "6613db69db",
-   "titular": "La Armada adquiere un buque multipropósito por 28,9 millones",
+   "id": "d12fb31799",
+   "titular": "Del 1-O a la amnistía: el traje a medida para borrar el 'procés'",
    "fuente": "ABC",
-   "url": "https://www.abc.es/espana/armada-adquiere-buque-multiproposito-289-millones-20261020182810-nt.html",
-   "fecha": "2026-10-20T16:58:22Z"
+   "url": "https://www.abc.es/espana/amnistia-traje-medida-borrar-proces-20261010194659-nt.html",
+   "fecha": "2026-10-20T17:54:56Z"
   },
   {
    "id": "e77435cf6d",
@@ -779,18 +793,18 @@
    "fecha": "2026-10-19T19:54:35Z"
   },
   {
-   "id": "9d3a1f8f63",
-   "titular": "Investigado en Cáceres por llegar conduciendo al examen para recuperar los puntos del carné",
+   "id": "5da48ac567",
+   "titular": "Hallan el cadáver de un hombre flotando en el mar durante el temporal en Menorca",
    "fuente": "El Mundo",
-   "url": "https://www.elmundo.es/espana/2026/10/20/6ad783ea21efa0c50d8b45ab.html",
-   "fecha": "2026-10-20T15:10:41Z"
+   "url": "https://www.elmundo.es/baleares/2026/10/20/6ad7673b21efa0477f8b45a4.html",
+   "fecha": "2026-10-20T13:10:34Z"
   },
   {
-   "id": "2bbef7c13a",
-   "titular": "Un agricultor egipcio encuentra una escultura de Ramsés II mientras cultivaba pepinos",
+   "id": "071af2a169",
+   "titular": "Las protestas recorren Europa: toques de queda en Francia, Italia despliega al Ejército y Portugal desaloja las acampadas",
    "fuente": "20minutos",
-   "url": "https://www.20minutos.es/artes/un-agricultor-egipcio-encuentra-una-escultura-ramses-ii-mientras-cultivaba-pepinos_7051137_0.html",
-   "fecha": "2026-10-20T16:26:04Z"
+   "url": "https://www.20minutos.es/internacional/una-ola-protestas-recorre-europa-francia-mantiene-los-toques-queda-italia-despliega-ejercito-portugal-desaloja-las-acampadas_7051096_0.html",
+   "fecha": "2026-10-20T15:03:29Z"
   },
   {
    "id": "fef5496424",
@@ -798,13 +812,6 @@
    "fuente": "La Vanguardia",
    "url": "https://www.lavanguardia.com/economia/20261020/11662596/eva-lain-biotecnologa-dejo-cambridge-mina-riotinto-cambiar-industria-metal-brl.html",
    "fecha": "2026-10-20T03:55:00Z"
-  },
-  {
-   "id": "016b56a0ec",
-   "titular": "Simon Sebag: «Hamás ha perdido en el campo de batalla, pero ha ganado la guerra de la información»",
-   "fuente": "ABC",
-   "url": "https://www.abc.es/historia/simon-sebag-experto-oriente-proximo-hamas-perdido-20261020012031-nt.html",
-   "fecha": "2026-10-20T16:57:40Z"
   },
   {
    "id": "0a4aff6009",
@@ -821,32 +828,32 @@
    "fecha": "2026-10-20T05:11:35Z"
   },
   {
-   "id": "691a28051a",
-   "titular": "Futbolistas del Madrid 'toreando' en Las Ventas, el Carrusel en las plazas y el hijo de Morante: así es el idilio entre los toros y el fútbol en España",
+   "id": "3c81509fe6",
+   "titular": "Muere una mujer al ser atacada por un tiburón en una playa de Sudáfrica",
    "fuente": "El Mundo",
-   "url": "https://www.elmundo.es/deportes/futbol/2026/10/20/6acfb37ffc6c832d328b4581.html",
-   "fecha": "2026-10-20T14:27:56Z"
+   "url": "https://www.elmundo.es/internacional/2026/10/20/6ad77656e85ece9c2f8b458c.html",
+   "fecha": "2026-10-20T14:31:00Z"
   },
   {
-   "id": "9421f440d9",
-   "titular": "El Gobierno aprueba 180 millones para incrementar los alquileres asequibles en las zonas tensionadas",
+   "id": "5111a7c752",
+   "titular": "Meloni extiende a los menores de edad la detención preventiva ante los disturbios en el país",
    "fuente": "20minutos",
-   "url": "https://www.20minutos.es/nacional/gobierno-aprueba-180-millones-euros-para-aumentar-oferta-viviendas-alquiler-asequible-zonas-tensionadas_7050970_0.html",
-   "fecha": "2026-10-20T11:28:34Z"
+   "url": "https://www.20minutos.es/internacional/meloni-refuerza-seguridad-milan-con-500-militares-tras-los-disturbios-saqueos_7051243_0.html",
+   "fecha": "2026-10-20T17:58:41Z"
   },
   {
-   "id": "4ed1e7a5e4",
-   "titular": "Del gusano por la nariz a los peligros de internet: la Reina alerta de las nuevas adicciones",
+   "id": "d04dbf31f8",
+   "titular": "La lluvia da una tregua a la moda catalana",
    "fuente": "La Vanguardia",
-   "url": "https://www.lavanguardia.com/vida/salud/20261020/11663542/gusano-nariz-peligros-internet-reina-alerta-nuevas-adicciones.html",
-   "fecha": "2026-10-20T10:38:10Z"
+   "url": "https://www.lavanguardia.com/gente/20261020/11663906/lluvia-da-tregua-moda-catalana.html",
+   "fecha": "2026-10-20T19:58:47Z"
   },
   {
-   "id": "6b041b0e13",
-   "titular": "Mariló Montero: «En mi casa hubo ruina. Hasta los 13 años dormía en una cama plegable en la cocina»",
+   "id": "59485f4cad",
+   "titular": "Sánchez mete al Consejo de Ministros en campaña con un aluvión de promesas sociales",
    "fuente": "ABC",
-   "url": "https://www.abc.es/gente/marilo-montero-sobre-infancia-humilde-casa-ruina-20261020113147-nt.html",
-   "fecha": "2026-10-20T16:55:33Z"
+   "url": "https://www.abc.es/espana/sanchez-convierte-boe-instrumento-campana-agitar-votantes-20261021192003-nt.html",
+   "fecha": "2026-10-20T17:26:33Z"
   },
   {
    "id": "daffa472eb",
@@ -863,11 +870,18 @@
    "fecha": "2026-10-19T19:21:06Z"
   },
   {
-   "id": "db3c0dafe5",
-   "titular": "Muere una mujer al ser atacada por un tiburón en una playa de Sudáfrica",
+   "id": "64bc194219",
+   "titular": "Ana de Alva, la voz de la nueva generación del cine español: \"Nadie es demasiado joven para dirigir una película\"",
+   "fuente": "El Mundo",
+   "url": "https://www.elmundo.es/la-lectura/2026/10/20/6ac8d0b0fdddffc46e8b45d6.html",
+   "fecha": "2026-10-19T22:07:45Z"
+  },
+  {
+   "id": "2bbef7c13a",
+   "titular": "Un agricultor egipcio encuentra una escultura de Ramsés II mientras cultivaba pepinos",
    "fuente": "20minutos",
-   "url": "https://www.20minutos.es/internacional/muere-una-mujer-ser-atacada-por-un-tiburon-una-playa-sudafrica_7051196_0.html",
-   "fecha": "2026-10-20T16:45:21Z"
+   "url": "https://www.20minutos.es/artes/un-agricultor-egipcio-encuentra-una-escultura-ramses-ii-mientras-cultivaba-pepinos_7051137_0.html",
+   "fecha": "2026-10-20T16:26:04Z"
   },
   {
    "id": "4e07f0e39a",
@@ -875,6 +889,13 @@
    "fuente": "La Vanguardia",
    "url": "https://www.lavanguardia.com/vida/20261020/11609136/seguimos-cambiando-hora-mayoria-paises-ue-quiere-eliminarlo.html",
    "fecha": "2026-10-20T04:00:00Z"
+  },
+  {
+   "id": "c179533b54",
+   "titular": "Piden al Supremo que advierta de posibles responsabilidades penales si se incumple su auto de la 'ley de nietos'",
+   "fuente": "ABC",
+   "url": "https://www.abc.es/espana/piden-supremo-advierta-posibles-responsabilidades-penales-incumple-20261020175436-nt.html",
+   "fecha": "2026-10-20T17:19:31Z"
   },
   {
    "id": "b6242a3861",
@@ -891,11 +912,18 @@
    "fecha": "2026-10-19T19:54:35Z"
   },
   {
-   "id": "631d9f9edf",
-   "titular": "Vuelve Wahlloween: el plan imprescindible para celebrar la noche más terrorífica en Madrid",
+   "id": "07ed11e41a",
+   "titular": "La Revolución Z convence a una generación de que no tendrán nada y cambiarán el mundo",
+   "fuente": "El Mundo",
+   "url": "https://www.elmundo.es/cultura/2026/10/20/6ad6406cfdddffbd688b45b8.html",
+   "fecha": "2026-10-20T08:51:07Z"
+  },
+  {
+   "id": "9b2210f30d",
+   "titular": "El Ejército israelí afirma haber matado a un alto cargo de Hamás en Gaza",
    "fuente": "20minutos",
-   "url": "https://www.20minutos.es/branded-content/vuelve-wahlloween-plan-imprescindible-para-celebrar-noche-mas-terrorifica-madrid_7048651_4.html",
-   "fecha": "2026-10-20T03:00:00Z"
+   "url": "https://www.20minutos.es/internacional/ejercito-israeli-afirma-haber-matado-un-alto-cargo-hamas-franja-gaza_7051284_0.html",
+   "fecha": "2026-10-20T19:56:32Z"
   },
   {
    "id": "b845efd892",
@@ -905,25 +933,11 @@
    "fecha": "2026-10-20T04:00:00Z"
   },
   {
-   "id": "4177d1a352",
-   "titular": "La 'maldición Kennedy' se cobra otra víctima: muere Kyle Kennedy a los 42 años",
-   "fuente": "ABC",
-   "url": "https://www.abc.es/gente/maldicion-kennedy-cobra-nueva-victima-muere-kyle-20261020180415-nt.html",
-   "fecha": "2026-10-20T16:28:33Z"
-  },
-  {
-   "id": "64bc194219",
-   "titular": "Ana de Alva, la voz de la nueva generación del cine español: \"Nadie es demasiado joven para dirigir una película\"",
+   "id": "f01a0c7fbd",
+   "titular": "El exitoso modelo de (la duradera) relación entre Javier Bardem y Penélope Cruz: \"Ninguno de los dos tiene que hacerse pequeño para que el otro brille\"",
    "fuente": "El Mundo",
-   "url": "https://www.elmundo.es/la-lectura/2026/10/20/6ac8d0b0fdddffc46e8b45d6.html",
-   "fecha": "2026-10-19T22:07:45Z"
-  },
-  {
-   "id": "f1a55b1794",
-   "titular": "El director de Innovación del Ejército reconoce que cortar la colaboración con Israel \"afecta\" a la seguridad",
-   "fuente": "20minutos",
-   "url": "https://www.20minutos.es/nacional/teniente-general-ivorra-han-regresado-los-conflictos-alta-intensidad-no-invertir-defensa-ya-no-es-una-opcion_7050837_0.html",
-   "fecha": "2026-10-20T07:42:44Z"
+   "url": "https://www.elmundo.es/yodona/actualidad/2026/10/20/6ad5f46b21efa049098b4578.html",
+   "fecha": "2026-10-19T22:12:50Z"
   },
   {
    "id": "9255771cbb",
@@ -940,18 +954,11 @@
    "fecha": "2026-10-20T14:02:06Z"
   },
   {
-   "id": "07ed11e41a",
-   "titular": "La Revolución Z convence a una generación de que no tendrán nada y cambiarán el mundo",
-   "fuente": "El Mundo",
-   "url": "https://www.elmundo.es/cultura/2026/10/20/6ad6406cfdddffbd688b45b8.html",
-   "fecha": "2026-10-20T08:51:07Z"
-  },
-  {
-   "id": "ccb6b51cf0",
-   "titular": "Quién es María Luz Martínez Seijo, la candidata de Ferraz que ha causado la dimisión en el PSOE de Palencia",
+   "id": "631d9f9edf",
+   "titular": "Vuelve Wahlloween: el plan imprescindible para celebrar la noche más terrorífica en Madrid",
    "fuente": "20minutos",
-   "url": "https://www.20minutos.es/nacional/quien-maria-luz-martinez-seijo-candidata-ferraz-provocado-dimision-bloque-psoe-palencia_7051031_0.html",
-   "fecha": "2026-10-20T12:24:06Z"
+   "url": "https://www.20minutos.es/branded-content/vuelve-wahlloween-plan-imprescindible-para-celebrar-noche-mas-terrorifica-madrid_7048651_4.html",
+   "fecha": "2026-10-20T03:00:00Z"
   },
   {
    "id": "dabf0921b6",
@@ -968,18 +975,11 @@
    "fecha": "2026-10-20T04:30:04Z"
   },
   {
-   "id": "f01a0c7fbd",
-   "titular": "El exitoso modelo de (la duradera) relación entre Javier Bardem y Penélope Cruz: \"Ninguno de los dos tiene que hacerse pequeño para que el otro brille\"",
-   "fuente": "El Mundo",
-   "url": "https://www.elmundo.es/yodona/actualidad/2026/10/20/6ad5f46b21efa049098b4578.html",
-   "fecha": "2026-10-19T22:12:50Z"
-  },
-  {
-   "id": "2851b4f1e5",
-   "titular": "Bruselas quiere unir la UE con Groenlandia y Canadá con un cable submarino para 'hacer frente' a Trump",
+   "id": "72cdcf6137",
+   "titular": "El denostado 'ADN basura' es mucho más útil de lo que parecía: puede ayudar a encender los genes",
    "fuente": "20minutos",
-   "url": "https://www.20minutos.es/internacional/bruselas-quiere-unir-ue-con-groenlandia-canada-traves-un-gran-clave-submarino-para-consolidarse-artico-frente-trump_7050814_0.html",
-   "fecha": "2026-10-20T12:54:41Z"
+   "url": "https://www.20minutos.es/salud/denostado-adn-basura-es-mucho-mas-util-que-parecia-ayuda-encender-los-genes_7051159_0.html",
+   "fecha": "2026-10-20T15:14:19Z"
   },
   {
    "id": "4b49072ace",
@@ -1003,11 +1003,11 @@
    "fecha": "2026-10-19T19:54:35Z"
   },
   {
-   "id": "ff379664f9",
-   "titular": "Anabel Pantoja lanza un misterioso mensaje tras las palabras de Omar: \"Aún tienen el valor de atreverse a decir que no te quiero\"",
+   "id": "ccb6b51cf0",
+   "titular": "Quién es María Luz Martínez Seijo, la candidata de Ferraz que ha causado la dimisión en el PSOE de Palencia",
    "fuente": "20minutos",
-   "url": "https://www.20minutos.es/gente/anabel-pantoja-lanza-un-misterioso-mensaje-tras-las-palabras-omar-aun-tienen-valor-atreverse-decir-que-no-te-quiero_7051073_0.html",
-   "fecha": "2026-10-20T12:59:19Z"
+   "url": "https://www.20minutos.es/nacional/quien-maria-luz-martinez-seijo-candidata-ferraz-provocado-dimision-bloque-psoe-palencia_7051031_0.html",
+   "fecha": "2026-10-20T12:24:06Z"
   },
   {
    "id": "63feb49de1",
@@ -1031,18 +1031,18 @@
    "fecha": "2026-10-20T11:27:31Z"
   },
   {
-   "id": "48e9753daf",
-   "titular": "Irina Shayk desafía los límites de las transparencias con su 'look' para el 'after party' de Victoria's Secret",
+   "id": "2851b4f1e5",
+   "titular": "Bruselas quiere unir la UE con Groenlandia y Canadá con un cable submarino para 'hacer frente' a Trump",
    "fuente": "20minutos",
-   "url": "https://www.20minutos.es/mujer/moda/irina-shayk-desafia-limites-transparencias-publico-look-after-party-victoria-s-secret_7050879_0.html",
-   "fecha": "2026-10-20T09:35:31Z"
+   "url": "https://www.20minutos.es/internacional/bruselas-quiere-unir-ue-con-groenlandia-canada-traves-un-gran-clave-submarino-para-consolidarse-artico-frente-trump_7050814_0.html",
+   "fecha": "2026-10-20T12:54:41Z"
   },
   {
-   "id": "201869cf1f",
-   "titular": "Beatriz Pérez-Aranda pone el broche de oro al 'Telediario' especial de TVE con su icónica frase",
+   "id": "9372878cef",
+   "titular": "Una generación sin futuro enciende las calles de Europa",
    "fuente": "La Vanguardia",
-   "url": "https://www.lavanguardia.com/television/20261020/11663568/beatriz-perez-aranda-pone-broche-oro-telediario-especial-70-anos-tve-iconica-frase-pepino.html",
-   "fecha": "2026-10-20T10:47:46Z"
+   "url": "https://www.lavanguardia.com/videos/claves-del-dia/20261020/11663918/generacion-futuro-enciende-calles-europa.html",
+   "fecha": "2026-10-20T16:44:44Z"
   }
  ]
 }
