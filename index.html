@@ -6,7 +6,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-XXII1TwAN2TrTrsiI2NAXH44vp64aSYdt4qoJm5hg0k='; style-src 'self'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self' data: blob:; object-src 'none'; base-uri 'none'; form-action 'none'" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <title>CAFECITA</title>
-  <meta name="description" content="Gracias por su visita." />
+  <meta name="description" content="Saca una servilleta y llévate la noticia del día. Gracias por su visita." />
   <meta name="theme-color" content="#3F48F4" />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
@@ -23,7 +23,7 @@
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="stylesheet" href="fonts/fonts.css" />
   <!-- ?v= obliga a recargar CSS y JS tras un despliegue (GitHub Pages cachea 10 min): súbelo al cambiarlos -->
-  <link rel="stylesheet" href="style.css?v=3" />
+  <link rel="stylesheet" href="style.css?v=7" />
   <script type="importmap">
     {
       "imports": {
@@ -48,7 +48,9 @@
   <p class="hint" id="hint">Abre la solapa, súbela y tira hacia abajo</p>
 
   <div class="bottom">
-    <span class="dots" aria-hidden="true"><i data-side="A"></i><i data-side="B"></i></span>
+    <button class="icon-btn" id="sound" type="button" aria-label="Sonido" aria-pressed="true">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="on" d="M15.5 9a4.2 4.2 0 0 1 0 6M18.2 6.5a8 8 0 0 1 0 11"/><path class="off" d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
+    </button>
     <button class="icon-btn" id="turn" type="button" aria-label="Girar servilletero">
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>
     </button>
@@ -60,16 +62,30 @@
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
     </button>
     <div class="reveal-inner">
-      <div class="napkin-card" id="napkinCard"><img id="napkinImg" alt="" /></div>
+      <p class="coach" id="coachSwipe" hidden>Desliza hacia abajo para tirarla</p>
+      <div class="napkin-card" id="napkinCard"><img id="napkinImg" alt="" /><canvas id="napkinCanvas" role="img" hidden></canvas></div>
       <div class="actions">
-        <button class="pill" id="download" type="button">Descargar</button>
-        <button class="icon-btn" id="share" type="button" aria-label="Compartir" hidden>
+        <a class="pill source" id="source" target="_blank" rel="noopener" hidden><span id="sourceLabel"></span>
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg>
+        </a>
+        <button class="icon-btn" id="share" type="button" aria-label="Compartir">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>
         </button>
       </div>
     </div>
   </div>
 
-  <script type="module" src="main.js?v=3"></script>
+  <div class="welcome" id="welcome" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle" hidden>
+    <div class="welcome-card">
+      <p class="welcome-kicker">Bienvenido al bar</p>
+      <h2 id="welcomeTitle">Cada servilleta trae una noticia del día.</h2>
+      <p>Sácalas, léelas y, cuando acabes, hazlas una bola y tíralas al suelo, como en la barra de toda la vida.</p>
+      <button class="pill" id="welcomeGo" type="button">Sacar la primera</button>
+    </div>
+  </div>
+  <span class="hand" id="hand" aria-hidden="true" hidden></span>
+  <p class="toast" id="toast" role="status" hidden></p>
+
+  <script type="module" src="main.js?v=7"></script>
 </body>
 </html>

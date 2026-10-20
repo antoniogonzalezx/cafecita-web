@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { gsap } from 'gsap';
+import { paintNapkin, paintStory } from './napkin.js?v=7';
+import * as sound from './sound.js?v=7';
 
 // ---------- Medidas (cm, iguales que tools/blender_servilletero.py) ----------
 const W = 9.0;      // ancho
@@ -20,44 +22,46 @@ const NW = 2 * WIN.x - 0.2, NH = N_TOP - N_BOTTOM;
 const BASE_ROT = 0.55;
 const PAPER = '#FBF9F4';
 
-// ---------- Estado diario ----------
-const STORE_KEY = 'cafecita.servilletero.v1';
+// ---------- Estado ----------
+// El servilletero no se acaba: cada dispositivo lleva la cuenta de las que ha sacado
+// y de las noticias que ya ha leído, para no repetirlas.
+const STORE_KEY = 'cafecita.servilletero.v2';
 const today = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
+const freshState = () => ({ count: 0, served: 0, quotes: 0, day: today(), quotesToday: 0, seen: [], last: null });
 function loadState() {
   try {
-    const s = JSON.parse(localStorage.getItem(STORE_KEY));
-    if (s && s.date === today()) return s;
+    const s = { ...freshState(), ...JSON.parse(localStorage.getItem(STORE_KEY)) };
+    if (Number.isInteger(s.count) && Number.isInteger(s.served) && Number.isInteger(s.quotes) && Array.isArray(s.seen)) return s;
   } catch {}
-  return { date: today(), taken: { A: false, B: false } };
+  return freshState();
 }
 function saveState() {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch {}
 }
 let state = loadState();
-// ?reset borra el límite del día (para pruebas)
+// ?reset vuelve a empezar (para pruebas)
 if (new URLSearchParams(location.search).has('reset')) {
-  state = { date: today(), taken: { A: false, B: false } };
+  state = freshState();
   saveState();
+  try { ['cafecita.suelo.v1', 'cafecita.onboarding.v1'].forEach((k) => localStorage.removeItem(k)); } catch {}
   history.replaceState(null, '', location.pathname);
 }
 
-// ---------- Servilletas del día ----------
-// Cada dispositivo tiene su propia baraja: cara A de humor y cara B de filosofía.
-// Saca una carta por cara y día, sin repetir hasta acabar el mazo, y luego baraja otra vez.
+// ---------- Citas ----------
+// Cada dispositivo tiene su propia baraja de citas, sin repetir hasta acabar el mazo.
 // Las legendarias pesan menos, así que suelen salir tarde.
 const DECK_KEY = 'cafecita.baraja.v1';
 const WEIGHT = { comun: 6, rara: 3, legendaria: 1 };
-const dayNum = (date) => Math.floor(new Date(`${date}T00:00:00Z`).getTime() / 86400000);
 
 function loadDeck() {
   try {
     const d = JSON.parse(localStorage.getItem(DECK_KEY));
-    if (d && Number.isInteger(d.seed) && /^\d{4}-\d{2}-\d{2}$/.test(d.start)) return d;
+    if (d && Number.isInteger(d.seed)) return d;
   } catch {}
-  const d = { seed: crypto.getRandomValues(new Uint32Array(1))[0] | 0, start: state.date };
+  const d = { seed: crypto.getRandomValues(new Uint32Array(1))[0] | 0 };
   try { localStorage.setItem(DECK_KEY, JSON.stringify(d)); } catch {}
   return d;
 }
@@ -80,34 +84,77 @@ function shuffle(cards, seed) {
     .map((x) => x.c);
 }
 
-function drawCard(cards, salt, day) {
+function drawCard(cards, salt, n) {
   const round = (r) => shuffle(cards, Math.imul(deck.seed ^ salt, 0x9E3779B1) + r);
-  const r = Math.floor(day / cards.length), i = day % cards.length;
+  const r = Math.floor(n / cards.length), i = n % cards.length;
   const order = round(r);
   // que la primera de una vuelta no repita la última de la anterior
   if (r > 0 && cards.length > 1 && order[0] === round(r - 1).at(-1)) [order[0], order[1]] = [order[1], order[0]];
   return order[i];
 }
 
-const NAPKINS = await fetch('napkins.json').then((r) => r.json());
+// ---------- Qué sale en cada servilleta ----------
+// Noticias sin fin mientras haya (noticias.json, lo renueva cada media hora .github/workflows/noticias.yml),
+// como mucho QUOTES_PER_DAY citas al día entre medias y, cada AD_EVERY, un anuncio (anuncios.json).
+// Si ya se han leído todas las noticias, sale el aviso de que el personal está reponiendo.
+const AD_EVERY = 10;      // como mucho 1 de cada 10 (monetizacion.md)
+const QUOTES_PER_DAY = 2;
+const QUOTE_ODDS = 0.2;
+const getNews = () => fetch('noticias.json', { cache: 'no-cache' }).then((r) => r.json()).then((d) => d.noticias || []);
+let [NAPKINS, NEWS, ADS] = await Promise.all([
+  fetch('napkins.json').then((r) => r.json()),
+  getNews().catch(() => []),
+  fetch('anuncios.json').then((r) => r.json()).catch(() => []),
+]);
 const deck = loadDeck();
-const day = Math.max(0, dayNum(state.date) - dayNum(deck.start));
-const ofLine = (l) => { const c = NAPKINS.filter((n) => n.linea === l); return c.length ? c : NAPKINS; };
-const todays = {
-  A: drawCard(ofLine('humor'), 0xA, day),
-  B: drawCard(ofLine('filosofia'), 0xB, day),
-};
-for (const n of Object.values(todays)) new Image().src = n.napkin;
+
+// sin noticias nuevas, se vuelve a mirar si han llegado (como mucho una vez por minuto)
+let lastRefresh = Date.now();
+function refreshNews() {
+  if (Date.now() - lastRefresh < 60000) return;
+  lastRefresh = Date.now();
+  getNews().then((n) => { if (n.length) NEWS = n; }).catch(() => {});
+}
+setInterval(refreshNews, 10 * 60000);
+
+function nextNapkin() {
+  state.count++;
+  if (state.day !== today()) Object.assign(state, { day: today(), quotesToday: 0 });
+  const fresh = NEWS.find((x) => !state.seen.includes(x.id));
+  let item;
+  if (!fresh) {
+    refreshNews();
+    item = { kind: 'empty', id: `vacio-${state.count}` };
+  } else if (ADS.length && ++state.served % AD_EVERY === 0) {
+    const ad = ADS[(state.served / AD_EVERY - 1) % ADS.length];
+    item = { kind: 'ad', id: ad.id, ad };
+  } else if (state.quotesToday < QUOTES_PER_DAY && state.last === 'news' && Math.random() < QUOTE_ODDS) {
+    const quote = drawCard(NAPKINS, 0xC, state.quotes++);
+    state.quotesToday++;
+    item = { kind: 'quote', id: quote.id, quote };
+  } else {
+    item = { kind: 'news', id: fresh.id, news: fresh };
+    state.seen = [...state.seen, fresh.id].slice(-600);
+  }
+  state.last = item.kind;
+  saveState();
+  return item;
+}
+
 // la solapa se rotula con la tipografía de la marca y el logo en tinta
 const INK = '#4A6789';
-const [inkLogo] = await Promise.all([
-  fetch('logo.svg').then((r) => r.text()).then(async (svg) => {
-    const img = new Image();
-    img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg.replace('currentColor', INK))}`;
-    await img.decode();
-    return img;
-  }).catch(() => null),
+const logoSvg = fetch('logo.svg').then((r) => r.text());
+const logoIn = (color) => logoSvg.then(async (svg) => {
+  const img = new Image();
+  img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg.replace('currentColor', color))}`;
+  await img.decode();
+  return img;
+}).catch(() => null);
+const [inkLogo, paperLogo] = await Promise.all([
+  logoIn(INK),
+  logoIn('#F7F3EA'),
   document.fonts.load('italic 400 80px Fraunces').catch(() => {}),
+  document.fonts.load("700 40px 'Bricolage Grotesque'").catch(() => {}),
 ]);
 
 // ---------- Render ----------
@@ -248,12 +295,9 @@ function flapTexture() {
   g.filter = 'blur(0.4px)';
   g.font = `italic 400 ${Math.round(TEX_W * 0.082)}px Fraunces, Georgia, serif`;
   g.fillText('Gracias por su visita', TEX_W / 2, cy);
-  const ly = cy + TEX_W * 0.085, lh = TEX_W * 0.032;
+  const ly = cy + TEX_W * 0.09, lh = TEX_W * 0.04;
   const lw = inkLogo ? lh * inkLogo.naturalWidth / inkLogo.naturalHeight : 0;
   if (inkLogo) g.drawImage(inkLogo, TEX_W / 2 - lw / 2, ly - lh / 2, lw, lh);
-  const rule = TEX_W * 0.08, gap = lw / 2 + TEX_W * 0.025;
-  g.fillRect(TEX_W / 2 - gap - rule, ly - 1, rule, 2);
-  g.fillRect(TEX_W / 2 + gap, ly - 1, rule, 2);
   g.filter = 'none';
   g.globalAlpha = 1;
   grain(g, TEX_W, TEX_H, 7);
@@ -389,7 +433,10 @@ dispenser.add(contact);
 
 const pickables = [];
 // hasta que llega el modelo se ve la silueta (.skeleton); luego entra la escena
-const loaded = () => requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove('loading')));
+const loaded = () => requestAnimationFrame(() => requestAnimationFrame(() => {
+  document.body.classList.remove('loading');
+  gsap.delayedCall(0.6, () => onboard.start());
+}));
 new GLTFLoader().load('models/servilletero.glb', (gltf) => {
   gltf.scene.traverse((o) => {
     if (!o.isMesh) return;
@@ -412,6 +459,38 @@ const GRAVITY = -650;   // cm/s², el papel cae "frenado" por el aire
 const DRAG = 0.992;
 const ITER = 18;
 const FREE = 0, HELD_TOP = 1, HELD_BOTTOM = 2, GRABBED = 3;
+
+// El servilletero es macizo para el papel: por dentro solo se sale por la ventana,
+// y por fuera solo se entra por ella. Si un punto acaba metido en la chapa, sale por
+// la cara por la que venía. Devuelve si el punto queda dentro; la posición, en solid.out.
+function solid(x, y, z, inside, px, py, pz) {
+  const out = solid.out;
+  const inWin = Math.abs(x) < WIN.x - 0.06 && y > WIN.bottom + 0.06 && y < WIN.top - 0.06;
+  if (inside) {
+    if (!inWin) z = Math.min(z, PLATE_IN - 0.02);
+    x = THREE.MathUtils.clamp(x, -W / 2 + T + 0.05, W / 2 - T - 0.05);
+    y = THREE.MathUtils.clamp(y, LIFT + T, N_TOP);
+    z = Math.max(z, NAPKIN_Z);
+    if (z > PLATE_OUT) inside = 0;          // ha salido por la ventana
+  } else {
+    const m = 0.04, bx = W / 2 + m, bt = TOP + m, bf = PLATE_OUT + m, bb = -D / 2 - m;
+    if (Math.abs(x) < bx && y < bt && z < bf && z > bb) {
+      if (inWin && z > PLATE_IN - 0.02) {
+        if (z < (PLATE_IN + PLATE_OUT) / 2) inside = 1;  // entra por la ventana
+      } else {
+        const pen = [bx - x, x + bx, bt - y, bf - z, z - bb];
+        const came = [px >= bx, px <= -bx, py >= bt, pz >= bf, pz <= bb];
+        let best = -1;
+        for (let k = 0; k < 5; k++) if (came[k] && (best < 0 || pen[k] < pen[best])) best = k;
+        if (best < 0) for (let k = 0; k < 5; k++) if (best < 0 || pen[k] < pen[best]) best = k;
+        if (best === 0) x = bx; else if (best === 1) x = -bx; else if (best === 2) y = bt; else if (best === 3) z = bf; else z = bb;
+      }
+    }
+  }
+  out[0] = x; out[1] = y; out[2] = z;
+  return inside;
+}
+solid.out = new Float32Array(3);
 
 class Sheet {
   constructor() {
@@ -439,6 +518,7 @@ class Sheet {
         if (iy < NY - 4) link(i, idx(ix, iy + 4), 0.45);
       }
     }
+    this.obstacles = [];
     this.pairs = Int32Array.from(c.filter((_, j) => j % 3 !== 2));
     this.stiff = Float32Array.from(c.filter((_, j) => j % 3 === 2));
     this.len = new Float32Array(this.stiff.length);
@@ -598,25 +678,20 @@ class Sheet {
   }
 
   collide() {
-    const p = this.pos;
+    const p = this.pos, q = this.prev, out = solid.out;
     for (let i = 0; i < N; i++) {
       if (this.mode[i] !== FREE) continue;
       const j = i * 3;
-      let x = p[j], y = p[j + 1], z = p[j + 2];
-      const inWindow = Math.abs(x) < WIN.x - 0.06 && y > WIN.bottom + 0.06 && y < WIN.top - 0.06;
-      const inFootprint = Math.abs(x) < W / 2 + 0.1 && y < TOP + 0.1;
-      // la chapa con ventana: fuera del hueco, el papel se queda del lado en que está
-      if (!inWindow && inFootprint && z > PLATE_IN - 0.02 && z < PLATE_OUT + 0.03) {
-        z = z < (PLATE_IN + PLATE_OUT) / 2 ? PLATE_IN - 0.02 : PLATE_OUT + 0.03;
+      this.inside[i] = solid(p[j], p[j + 1], p[j + 2], this.inside[i], q[j], q[j + 1], q[j + 2]);
+      let x = out[0], y = out[1], z = out[2];
+      // las bolas del suelo tampoco se atraviesan
+      for (const o of this.obstacles) {
+        const dx = x - o.x, dy = y - o.y, dz = z - o.z, d2 = dx * dx + dy * dy + dz * dz;
+        if (d2 >= o.r2 || d2 < 1e-8) continue;
+        const k = o.r / Math.sqrt(d2);
+        x = o.x + dx * k; y = o.y + dy * k; z = o.z + dz * k;
       }
-      this.inside[i] = inFootprint && z < (PLATE_IN + PLATE_OUT) / 2 ? 1 : 0;
-      if (this.inside[i]) {
-        z = Math.max(z, NAPKIN_Z);           // el taco
-        y = Math.min(y, N_TOP);              // el techo
-        x = THREE.MathUtils.clamp(x, -W / 2 + T + 0.05, W / 2 - T - 0.05);
-      }
-      y = Math.max(y, 0.03);                 // la mesa
-      p[j] = x; p[j + 1] = y; p[j + 2] = z;
+      p[j] = x; p[j + 1] = Math.max(y, 0.03); p[j + 2] = z;
     }
   }
 }
@@ -644,12 +719,6 @@ for (const [id, s] of [['A', 1], ['B', -1]]) {
   for (const m of [front, back]) { m.castShadow = true; m.receiveShadow = true; group.add(m); }
 
   faces[id] = { id, s, group, stack, sheet, geo, front, back, settled: true };
-  if (state.taken[id]) setTaken(faces[id]);
-}
-
-function setTaken(face) {
-  face.front.visible = face.back.visible = false;
-  face.stack.visible = false;
 }
 
 function syncGeometry(face) {
@@ -688,10 +757,9 @@ function facingFace() {
 }
 
 function updateUI() {
-  const left = ['A', 'B'].filter((k) => !state.taken[k]).length;
-  document.querySelectorAll('.dots i').forEach((el) => el.classList.toggle('taken', state.taken[el.dataset.side]));
-  $('turn').hidden = left === 0;
-  $('hint').classList.toggle('gone', state.taken[facingFace().id] || !!drag || busy);
+  // la pista se va cuando ya se ha pillado el gesto
+  $('hint').classList.toggle('gone', state.count >= 3 || !!drag || busy);
+  $('sound').setAttribute('aria-pressed', String(sound.isOn()));
 }
 
 const raycaster = new THREE.Raycaster();
@@ -703,7 +771,7 @@ function setRay(e) {
 function pick(e) {
   setRay(e);
   const face = facingFace();
-  if (state.taken[face.id] || !face.front.visible) return null;
+  if (!face.front.visible) return null;
   const hits = raycaster.intersectObjects([face.front, face.back, face.stack, ...pickables], false);
   const hit = hits[0];
   if (hit && (hit.object === face.front || hit.object === face.back || hit.object === face.stack)) return { face, point: hit.point };
@@ -721,6 +789,9 @@ function pointerOnPlane(face, z) {
   return face.group.worldToLocal(out);
 }
 
+// el audio se desbloquea con el primer gesto, antes que nada más
+for (const ev of ['pointerdown', 'touchend', 'keydown']) window.addEventListener(ev, sound.unlock, { capture: true, passive: true });
+
 canvas.addEventListener('pointerdown', (e) => {
   if (busy) return;
   const hit = pick(e);
@@ -730,7 +801,10 @@ canvas.addEventListener('pointerdown', (e) => {
     gsap.killTweensOf(hit.face);
     hit.face.sheet.grab(local.x, local.y);
     hit.face.settled = false;
-    drag = { mode: 'pull', face: hit.face, sx: e.clientX, sy: e.clientY, z0: hit.face.sheet.grabTarget.z, out: 0 };
+    sound.grab();
+    sound.rubStart();
+    onboard.grabbed();
+    drag = { mode: 'pull', face: hit.face, sx: e.clientX, sy: e.clientY, z0: hit.face.sheet.grabTarget.z, out: 0, last: null, inside: 1 };
     canvas.style.cursor = 'grabbing';
   } else {
     drag = { mode: 'rotate', lastX: e.clientX };
@@ -759,7 +833,12 @@ canvas.addEventListener('pointermove', (e) => {
   setRay(e);
   const z = drag.z0 + (PLATE_OUT + 1.4 - drag.z0) * drag.out;
   const p = pointerOnPlane(drag.face, z);
-  if (p) drag.face.sheet.grabTarget.copy(drag.face.sheet.pull(p));
+  const sheet = drag.face.sheet;
+  if (p && sheet.grabTarget) {
+    const t = sheet.pull(p), o = sheet.grabTarget;
+    drag.inside = solid(t.x, t.y, t.z, drag.inside, o.x, o.y, o.z);
+    o.fromArray(solid.out);
+  }
 });
 
 function endDrag() {
@@ -768,9 +847,11 @@ function endDrag() {
     rotTarget = BASE_ROT + Math.round((rot - BASE_ROT) / Math.PI) * Math.PI;
   } else if (!busy) {
     // se suelta a medias: el papel cae y vuelve a meterse en el servilletero
+    sound.rubStop();
     const face = drag.face;
     face.sheet.release();
     gsap.delayedCall(0.45, () => tuckBack(face));
+    onboard.released();
   }
   drag = null;
   canvas.style.cursor = 'default';
@@ -787,7 +868,7 @@ function tuckBack(face) {
   const o = { t: 0 };
   face.tween = gsap.to(o, {
     t: 1, duration: 0.7, ease: 'power2.inOut',
-    onStart: () => { sheet.mode.fill(GRABBED); sheet.grabTarget = null; },
+    onStart: () => { sheet.mode.fill(GRABBED); sheet.grabTarget = null; sound.tuck(); },
     onUpdate: () => {
       for (let i = 0; i < N * 3; i++) sheet.pos[i] = from[i] + (sheet.rest[i] - from[i]) * o.t;
       sheet.prev.set(sheet.pos);
@@ -799,8 +880,8 @@ function tuckBack(face) {
 
 function extract(face) {
   busy = true;
-  state.taken[face.id] = true;
-  saveState();
+  const item = nextNapkin();
+  sound.pull();
   if (navigator.vibrate) navigator.vibrate(18);
   updateUI();
   // la servilleta cuelga un momento de los dedos y se la lleva la cámara
@@ -809,14 +890,23 @@ function extract(face) {
     if (drag && drag.face === face) drag = null;
     for (const m of [face.front, face.back]) {
       m.material.transparent = true;
-      gsap.to(m.material, { opacity: 0, duration: 0.25, delay: 0.1 });
+      gsap.to(m.material, { opacity: 0, duration: 0.25, delay: 0.1, onComplete: () => refill(face) });
     }
-    gsap.to(face.stack.scale, {
-      z: 0.001, duration: 0.6, ease: 'power3.inOut',
-      onComplete: () => setTaken(face),
-    });
-    showReveal(face.id);
+    showReveal(item);
   });
+}
+
+// el muelle coloca la siguiente servilleta en la ventana: el taco no se acaba nunca
+function refill(face) {
+  // si alguien ya la estaba agarrando (cerró muy rápido), el muelle gana: se suelta
+  if (drag?.face === face) { drag = null; sound.rubStop(); }
+  face.sheet.reset();
+  syncGeometry(face);
+  face.settled = true;
+  for (const m of [face.front, face.back]) {
+    m.material.opacity = 1;
+    m.material.transparent = false;
+  }
 }
 
 function turn() {
@@ -825,68 +915,594 @@ function turn() {
 }
 $('turn').addEventListener('click', turn);
 
+// ---------- Bolas en el suelo ----------
+// Al cerrar la servilleta se arruga en una bola y se tira al suelo, como en la barra de un bar.
+// Las bolas ruedan, chocan entre ellas, con el servilletero y con el papel que cuelga,
+// y se quedan ahí hasta el día siguiente. No se pueden coger: el rayo de pick() solo mira
+// el servilletero, así que nunca estorban.
+const BALL_R = 1.15;
+const BALL_G = 700;          // cm/s²: el papel cae algo frenado
+const MAX_BALLS = 24;
+const FLOOR_KEY = 'cafecita.suelo.v1';
+const balls = [];
+const UP = new THREE.Vector3(0, 1, 0);
+const blankBallMat = paperMaterial(blankTex, THREE.DoubleSide);
+
+// a dónde cae cada punto de la hoja al hacerla una bola: el centro delante, los bordes detrás,
+// con abolladuras de baja frecuencia para que no sea una esfera perfecta
+function crumpleTargets(rest, seed) {
+  const rnd = prng(seed);
+  const n = rest.length / 3;
+  let maxR = 0;
+  for (let i = 0; i < n; i++) maxR = Math.max(maxR, Math.hypot(rest[i * 3], rest[i * 3 + 1]));
+  const k = [rnd() * 6, rnd() * 6, 1.5 + rnd() * 2, 1.5 + rnd() * 2];
+  const out = new Float32Array(rest.length), rr = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const x = rest[i * 3], y = rest[i * 3 + 1];
+    rr[i] = Math.hypot(x, y) / maxR;
+    const wob = Math.sin(x * k[2] + k[0]) * Math.sin(y * k[3] + k[1]);
+    const a = Math.atan2(y, x) + wob * 0.5, th = rr[i] * Math.PI * 0.97;
+    const r = BALL_R * (0.8 + 0.2 * wob + 0.16 * (rnd() - 0.5));
+    out.set([r * Math.sin(th) * Math.cos(a), r * Math.sin(th) * Math.sin(a), r * Math.cos(th)], i * 3);
+  }
+  return { out, rr };
+}
+
+function addBall(mesh, v, w) {
+  // choca con lo que de verdad mide la bola, no con una esfera de compromiso
+  const a = mesh.geometry.attributes.position.array;
+  let r = 0;
+  for (let i = 0; i < a.length; i += 3) r = Math.max(r, Math.hypot(a[i], a[i + 1], a[i + 2]));
+  const b = { mesh, v, w, r: r * 0.95, asleep: false, ground: false };
+  balls.push(b);
+  // el suelo no se llena del todo: la más vieja se desvanece
+  while (balls.length > MAX_BALLS) {
+    const old = balls.shift();
+    gsap.to(old.mesh.scale, { x: 0.01, y: 0.01, z: 0.01, duration: 0.4, onComplete: () => disposeBall(old.mesh) });
+  }
+  return b;
+}
+
+function disposeBall(mesh) {
+  scene.remove(mesh);
+  mesh.geometry.dispose();
+  if (mesh.material !== blankBallMat) { mesh.material.map?.dispose(); mesh.material.dispose(); }
+}
+
+function saveFloor() {
+  const list = balls.filter((b) => b.asleep).map((b) => ({
+    s: b.mesh.userData.seed,
+    p: b.mesh.position.toArray().map((x) => +x.toFixed(2)),
+    q: b.mesh.quaternion.toArray().map((x) => +x.toFixed(3)),
+  }));
+  try { localStorage.setItem(FLOOR_KEY, JSON.stringify({ day: today(), balls: list })); } catch {}
+}
+
+// las bolas de hoy siguen en el suelo al volver (se ven en blanco: el papel arrugado no deja leer nada)
+function restoreFloor() {
+  let saved;
+  try { saved = JSON.parse(localStorage.getItem(FLOOR_KEY)); } catch {}
+  if (!saved || saved.day !== today() || !Array.isArray(saved.balls)) return;
+  for (const { s: seed, p, q } of saved.balls.slice(-MAX_BALLS)) {
+    if (!Number.isInteger(seed) || p?.length !== 3 || q?.length !== 4) continue;
+    const geo = new THREE.PlaneGeometry(5.7, 8.2, 18, 26);
+    geo.attributes.position.array.set(crumpleTargets(geo.attributes.position.array, seed).out);
+    geo.computeVertexNormals();
+    const mesh = new THREE.Mesh(geo, blankBallMat);
+    mesh.castShadow = mesh.receiveShadow = true;
+    mesh.userData.seed = seed;
+    mesh.position.fromArray(p);
+    mesh.position.x = THREE.MathUtils.clamp(mesh.position.x, -8.5, 8.5);
+    mesh.position.z = THREE.MathUtils.clamp(mesh.position.z, -10, 8);
+    mesh.quaternion.fromArray(q).normalize();
+    scene.add(mesh);
+    // despierta: si se guardó metida en otra o en el servilletero, la física la saca
+    addBall(mesh, new THREE.Vector3(), new THREE.Vector3());
+  }
+}
+
+// ---------- Arrugar ----------
+// La servilleta que se estaba leyendo pasa a la escena 3D justo donde se veía en pantalla.
+// paper.t va de hoja lisa (0) a bola (1); k son las arrugas de ir arrastrándola (0…1).
+function paperFromCard(el) {
+  const nw = el.naturalWidth || el.width, nh = el.naturalHeight || el.height;
+  if (!nw || !nh) return null;
+  // tamaño de lo pintado dentro de la caja (object-fit: contain)
+  const r = el.getBoundingClientRect(), bw = el.offsetWidth, bh = el.offsetHeight;
+  const fitW = Math.min(bw, bh * nw / nh), fitH = fitW * nh / nw;
+  const c = document.createElement('canvas');
+  c.width = 384;
+  c.height = Math.round(384 * nh / nw);
+  c.getContext('2d').drawImage(el, 0, 0, c.width, c.height);
+  const tex = canvasTexture(c);
+
+  const dist = 25, perPx = 2 * dist * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) / window.innerHeight;
+  const geo = new THREE.PlaneGeometry(fitW * perPx, fitH * perPx, 18, 26);
+  const rest = Float32Array.from(geo.attributes.position.array);
+  const seed = crypto.getRandomValues(new Uint32Array(1))[0] | 0;
+  const { out: target, rr } = crumpleTargets(rest, seed);
+  const mat = paperMaterial(tex, THREE.DoubleSide);
+  mat.alphaTest = 0.5;
+  // menos brillo propio que el papel del servilletero: así se ven las sombras de las arrugas
+  mat.emissiveIntensity = 0.2;
+  mat.normalScale.set(0.6, 0.6);
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.castShadow = mesh.receiveShadow = true;
+  mesh.userData.seed = seed;
+  ndc.set(((r.left + r.width / 2) / window.innerWidth) * 2 - 1, -((r.top + r.height / 2) / window.innerHeight) * 2 + 1);
+  raycaster.setFromCamera(ndc, camera);
+  const fwd = camera.getWorldDirection(new THREE.Vector3());
+  mesh.position.copy(raycaster.ray.origin).addScaledVector(raycaster.ray.direction, dist / raycaster.ray.direction.dot(fwd));
+  mesh.quaternion.copy(camera.quaternion);
+  mesh.rotateZ(THREE.MathUtils.degToRad(-1.5));
+  scene.add(mesh);
+  return {
+    mesh, geo, rest, target, rr, seed, perPx, t: 0, k: 0,
+    size: Math.max(fitW, fitH) * perPx,
+    base: mesh.position.clone(), baseQ: mesh.quaternion.clone(),
+  };
+}
+
+function setCrumple(paper, t, k) {
+  const { geo, rest, target, rr, size, seed } = paper;
+  paper.t = t;
+  paper.k = k;
+  const pos = geo.attributes.position.array;
+  const squeeze = 1 - 0.12 * k;
+  for (let i = 0; i < rr.length; i++) {
+    // los bordes se doblan antes que el centro; mientras se aprieta, el papel se ondula
+    const ti = THREE.MathUtils.clamp(t * 1.3 - rr[i] * 0.3, 0, 1);
+    const e = ti * ti * (3 - 2 * ti);
+    const j = i * 3, x = rest[j], y = rest[j + 1];
+    const wave = Math.sin(e * Math.PI) * size * 0.05 * Math.sin(x * 1.7 + y * 2.3 + seed);
+    // arrugas de arrastrar: crestas cruzadas, más marcadas hacia los bordes
+    const ridge = k * size * 0.065 * (0.4 + rr[i]) *
+      (Math.sin(x * 2.1 + seed) * Math.cos(y * 1.7 - seed) + 0.6 * Math.abs(Math.sin(x * 4.3 - y * 3.1 + seed * 2)) - 0.3);
+    pos[j] = (x + (target[j] - x) * e) * (e < 1 ? squeeze : 1);
+    pos[j + 1] = (y + (target[j + 1] - y) * e) * (e < 1 ? squeeze : 1);
+    pos[j + 2] = rest[j + 2] + (target[j + 2] - rest[j + 2]) * e + wave + ridge * (1 - e);
+  }
+  geo.attributes.position.needsUpdate = true;
+  geo.computeVertexNormals();
+  geo.computeBoundingSphere();
+}
+
+// de donde esté (lisa o a medio arrugar) hasta bola, y al suelo
+function finishCrumple(paper) {
+  const left = 1 - paper.t;
+  sound.crumple(0.6 * left);
+  const o = { t: paper.t, k: paper.k };
+  gsap.to(o, {
+    t: 1, k: 0, duration: 0.6 * left + 0.05, ease: 'none',
+    onUpdate: () => { setCrumple(paper, o.t, o.k); paper.mesh.rotateZ(0.012); },
+    onComplete: () => throwBall(paper.mesh),
+  });
+}
+
+// tiro con parábola hasta un hueco del suelo, a izquierda o derecha (nunca delante de la ventana)
+function throwBall(mesh) {
+  const side = Math.random() < 0.5 ? -1 : 1;
+  const land = new THREE.Vector3(side * (5.8 + Math.random() * 1.8), BALL_R, -3 + Math.random() * 8);
+  mesh.position.y = Math.max(mesh.position.y, BALL_R + 2);
+  const tau = THREE.MathUtils.clamp(mesh.position.distanceTo(land) / 55, 0.45, 0.8);
+  const v = land.clone().sub(mesh.position).addScaledVector(UP, 0.5 * BALL_G * tau * tau).divideScalar(tau);
+  const w = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).setLength(8 + Math.random() * 8);
+  addBall(mesh, v, w);
+  sound.toss();
+}
+
+function crumpleAndThrow(el) {
+  const paper = paperFromCard(el);
+  if (paper) finishCrumple(paper);
+}
+
+// ---------- Física de las bolas ----------
+// choque con el servilletero: una caja maciza que gira con él
+const local = new THREE.Vector3(), closest = new THREE.Vector3(), lv = new THREE.Vector3(), nrm = new THREE.Vector3();
+function hitDispenser(b) {
+  const ry = dispenser.rotation.y;
+  local.copy(b.mesh.position).applyAxisAngle(UP, -ry);
+  closest.set(
+    THREE.MathUtils.clamp(local.x, -W / 2, W / 2),
+    THREE.MathUtils.clamp(local.y, 0, TOP),
+    THREE.MathUtils.clamp(local.z, -D / 2 - 0.03, D / 2 + 0.03),
+  );
+  nrm.subVectors(local, closest);
+  const d = nrm.length();
+  if (d >= b.r) return false;
+  if (d < 1e-4) {
+    // el centro ya está dentro: sale por la cara más cercana
+    const px = W / 2 - Math.abs(local.x), pz = D / 2 - Math.abs(local.z), py = TOP - local.y;
+    if (py < px && py < pz) nrm.set(0, 1, 0);
+    else if (px < pz) nrm.set(Math.sign(local.x) || 1, 0, 0);
+    else nrm.set(0, 0, Math.sign(local.z) || 1);
+    local.copy(closest).addScaledVector(nrm, b.r);
+  } else {
+    nrm.divideScalar(d);
+    local.addScaledVector(nrm, b.r - d);
+  }
+  b.mesh.position.copy(local.applyAxisAngle(UP, ry));
+  lv.copy(b.v).applyAxisAngle(UP, -ry);
+  const vn = lv.dot(nrm);
+  if (vn < 0) lv.addScaledVector(nrm, -1.3 * vn);
+  b.v.copy(lv.applyAxisAngle(UP, ry));
+  return true;
+}
+
+// el punto más bajo de la bola tal como está girada: apoya en el suelo por ahí, sin hundirse
+const tmpV = new THREE.Vector3();
+function lowest(b) {
+  const a = b.mesh.geometry.attributes.position.array, q = b.mesh.quaternion;
+  let min = Infinity;
+  for (let i = 0; i < a.length; i += 9) min = Math.min(min, tmpV.set(a[i], a[i + 1], a[i + 2]).applyQuaternion(q).y);
+  return min;
+}
+
+// el papel que cuelga del servilletero también es sólido para las bolas
+function hitSheets(b) {
+  for (const f of Object.values(faces)) {
+    if (f.settled || !f.front.visible) continue;
+    const c = f.group.worldToLocal(tmpV.copy(b.mesh.position));
+    const p = f.sheet.pos;
+    for (let i = 0; i < N; i += 2) {
+      const dx = c.x - p[i * 3], dy = c.y - p[i * 3 + 1], dz = c.z - p[i * 3 + 2];
+      const d2 = dx * dx + dy * dy + dz * dz;
+      if (d2 >= b.r * b.r || d2 < 1e-8) continue;
+      const d = Math.sqrt(d2), s = (b.r - d) / d;
+      c.x += dx * s; c.y += dy * s; c.z += dz * s;
+      b.asleep = false;
+    }
+    b.mesh.position.copy(f.group.localToWorld(c));
+  }
+}
+
+const dq = new THREE.Quaternion(), axis = new THREE.Vector3(), sep = new THREE.Vector3();
+function stepBalls(dt) {
+  let slept = false;
+  for (const b of balls) {
+    if (b.asleep) {
+      // si el servilletero gira encima de una bola, la empuja
+      if (hitDispenser(b)) b.asleep = false;
+      continue;
+    }
+    const p = b.mesh.position;
+    b.v.y -= BALL_G * dt;
+    p.addScaledVector(b.v, dt);
+    b.ground = false;
+    const low = lowest(b);
+    if (p.y + low < 0) {
+      p.y = -low;
+      if (b.v.y < -60) {
+        sound.thud(-b.v.y);
+        // el papel arrugado no rebota ni rueda mucho: cada bote se come casi todo el impulso
+        b.v.x *= 0.35; b.v.z *= 0.35;
+      }
+      b.v.y = b.v.y < -40 ? -b.v.y * 0.3 : 0;
+      b.ground = true;
+    }
+    if (b.ground) {
+      // rueda frenando por el roce del papel
+      const k = Math.exp(-7 * dt);
+      b.v.x *= k; b.v.z *= k;
+      b.w.set(b.v.z, 0, -b.v.x).divideScalar(b.r);
+    }
+    hitDispenser(b);
+    hitSheets(b);
+    // que no se salgan de lo que se ve
+    if (Math.abs(p.x) > 8.5) { p.x = Math.sign(p.x) * 8.5; b.v.x *= -0.3; }
+    if (p.z < -10 || p.z > 8) { p.z = THREE.MathUtils.clamp(p.z, -10, 8); b.v.z *= -0.3; }
+    const wl = b.w.length();
+    if (wl > 1e-3) b.mesh.quaternion.premultiply(dq.setFromAxisAngle(axis.copy(b.w).divideScalar(wl), wl * dt));
+    if (b.ground && b.v.lengthSq() < 2) { b.asleep = true; b.v.set(0, 0, 0); slept = true; }
+  }
+  // bola contra bola: no se meten una en otra
+  for (let i = 0; i < balls.length; i++) {
+    for (let j = i + 1; j < balls.length; j++) {
+      const a = balls[i], b = balls[j];
+      if (a.asleep && b.asleep) continue;
+      sep.subVectors(b.mesh.position, a.mesh.position);
+      const d = sep.length(), min = a.r + b.r;
+      if (d >= min || d < 1e-4) continue;
+      sep.divideScalar(d);
+      // la que está quieta pesa más: la que llega es la que se aparta
+      const wa = a.asleep ? 0.2 : 0.5, wb = b.asleep ? 0.2 : 0.5, sum = wa + wb;
+      a.mesh.position.addScaledVector(sep, -(min - d) * wa / sum);
+      b.mesh.position.addScaledVector(sep, (min - d) * wb / sum);
+      const rel = b.v.dot(sep) - a.v.dot(sep);
+      if (rel < 0) { a.v.addScaledVector(sep, rel * 0.6); b.v.addScaledVector(sep, -rel * 0.6); }
+      a.asleep = b.asleep = false;
+    }
+  }
+  if (slept) saveFloor();
+}
+restoreFloor();
+
 // ---------- Revelado ----------
 const reveal = $('reveal');
 const napkinImg = $('napkinImg');
-let currentSide = 'A';
+const napkinCanvas = $('napkinCanvas');
+const source = $('source');
+let current = null; // la servilleta que hay en la mesa
+let shareFile = null;
 
-async function showReveal(id) {
-  currentSide = id;
-  const n = todays[id];
-  napkinImg.src = n.napkin;
-  napkinImg.alt = `“${n.quote}” — ${n.author}`;
-  try { await napkinImg.decode(); } catch {}
+// adónde lleva el botón: la noticia en la web del periódico, o la del anunciante
+function linkFor(item) {
+  if (item.kind === 'news') return { href: item.news.url, text: `Leer en ${item.news.fuente}`, rel: 'noopener' };
+  if (item.kind === 'ad' && item.ad.url) return { href: item.ad.url, text: item.ad.cta || item.ad.marca, rel: 'sponsored noopener' };
+  return null;
+}
+
+const LABEL = {
+  news: (i) => `${i.news.titular} — ${i.news.fuente}`,
+  ad: (i) => `Publicidad: ${i.ad.texto} — ${i.ad.marca}`,
+  empty: () => 'Espere a que el personal reponga las servilletas. Gracias por su paciencia.',
+};
+
+async function showReveal(item) {
+  current = item;
+  gsap.killTweensOf(['#revealBg', '.actions', '#close', '#napkinCard']);
+  reveal.classList.remove('leaving');
+  if (item.kind === 'quote') {
+    napkinImg.src = item.quote.napkin;
+    napkinImg.alt = `“${item.quote.quote}” — ${item.quote.author}`;
+    try { await napkinImg.decode(); } catch {}
+  } else {
+    await paintNapkin(napkinCanvas, item, { logo: inkLogo });
+    napkinCanvas.setAttribute('aria-label', LABEL[item.kind](item));
+  }
+  napkinImg.hidden = item.kind !== 'quote';
+  napkinCanvas.hidden = item.kind === 'quote';
+  const link = linkFor(item);
+  source.hidden = !link;
+  if (link) {
+    source.href = link.href;
+    source.rel = link.rel;
+    $('sourceLabel').textContent = link.text;
+  }
+  // la imagen para compartir se prepara ya: en iPhone, navigator.share tiene que ir pegado al toque
+  shareFile = null;
+  storyBlob(item).then((blob) => { if (current === item) shareFile = new File([blob], fileName(item), { type: 'image/jpeg' }); });
+
   reveal.hidden = false;
   gsap.fromTo('#revealBg', { opacity: 0 }, { opacity: 1, duration: 0.4 });
   gsap.fromTo('#napkinCard',
-    { opacity: 0, scale: 0.6, rotateX: 40, rotateZ: 8, y: 120 },
+    { opacity: 0, scale: 0.6, rotateX: 40, rotateZ: 8, x: 0, y: 120 },
     { opacity: 1, scale: 1, rotateX: 0, rotateZ: -1.5, y: 0, duration: 0.9, ease: 'back.out(1.2)' });
   gsap.fromTo(['.actions', '#close'], { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, stagger: 0.08, delay: 0.5 });
+  onboard.revealed();
 }
 
-function hideReveal() {
-  gsap.to('#napkinCard', { opacity: 0, scale: 0.9, y: 30, duration: 0.25 });
+// Al salir, la servilleta se arruga y va al suelo. Ya se puede sacar otra desde el primer instante.
+// paper: la servilleta 3D si ya se estaba arrastrando (y arrugando) con el dedo.
+function hideReveal(paper = null) {
+  if (reveal.hidden || reveal.classList.contains('leaving')) return;
+  reveal.classList.add('leaving');
+  busy = false;
+  updateUI();
+  gsap.killTweensOf('#napkinCard');
+  gsap.set('#napkinCard', { opacity: 0 });
+  if (paper) { unlift(); finishCrumple(paper); } else crumpleAndThrow(activeEl());
+  onboard.thrown();
   gsap.to(['#revealBg', '.actions', '#close'], {
-    opacity: 0, duration: 0.3,
+    opacity: 0, duration: 0.25,
     onComplete: () => {
       reveal.hidden = true;
-      busy = false;
-      updateUI();
-      // si queda servilleta al otro lado, el servilletero se gira solo
-      const other = facingFace().id === 'A' ? 'B' : 'A';
-      if (state.taken[facingFace().id] && !state.taken[other]) gsap.delayedCall(0.4, turn);
+      reveal.classList.remove('leaving');
+      canvas.classList.remove('lifted');
     },
   });
 }
-$('close').addEventListener('click', hideReveal);
-$('revealBg').addEventListener('click', hideReveal);
+$('close').addEventListener('click', () => hideReveal());
+$('revealBg').addEventListener('click', () => hideReveal());
 window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !reveal.hidden) hideReveal(); });
 
-// Lo que se descarga y se comparte es la story (servilleta sobre azul + @cafecita.app)
-const slug = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
-const fileName = () => `cafecita-${state.date}-${slug(todays[currentSide].author)}.jpg`;
-const storyBlob = () => fetch(todays[currentSide].story).then((r) => r.blob());
+// Deslizar la servilleta hacia abajo la tira, igual que cerrar. Mientras se arrastra es ya la
+// servilleta 3D (el lienzo se pone encima del velo azul y se esconde lo demás), así que se va
+// arrugando bajo el dedo. Si no llega, se alisa y vuelve a su sitio.
+const card = $('napkinCard');
+const activeEl = () => (current.kind === 'quote' ? napkinImg : napkinCanvas);
+const lifted = [];
+function lift(keep) {
+  for (const o of scene.children) if (o !== keep && !o.isLight && o.visible) { o.visible = false; lifted.push(o); }
+  canvas.classList.add('lifted');
+}
+function unlift() {
+  for (const o of lifted) o.visible = true;
+  lifted.length = 0;
+}
 
-$('download').addEventListener('click', async () => {
-  const url = URL.createObjectURL(await storyBlob());
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = fileName();
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
+let swipe = null;
+const camUp = new THREE.Vector3(), camRight = new THREE.Vector3();
+card.addEventListener('pointerdown', (e) => {
+  if (reveal.hidden || reveal.classList.contains('leaving') || swipe) return;
+  gsap.killTweensOf(card);
+  gsap.set(card, { opacity: 1, scale: 1, rotateX: 0, rotateZ: -1.5, x: 0, y: 0 });
+  swipe = { id: e.pointerId, x0: e.clientX, y0: e.clientY, dy: 0, v: 0, t: performance.now(), paper: null };
+  try { card.setPointerCapture(e.pointerId); } catch {}
+  card.classList.add('dragging');
 });
-
-if (navigator.share) {
-  $('share').hidden = false;
-  $('share').addEventListener('click', async () => {
-    const file = new File([await storyBlob()], fileName(), { type: 'image/jpeg' });
-    try {
-      const text = 'Gracias por su visita.';
-      if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: 'Mi servilleta de hoy', text });
-      else await navigator.share({ title: 'CAFECITA', text, url: 'https://cafecita.app/' });
-    } catch {}
+card.addEventListener('pointermove', (e) => {
+  if (!swipe || e.pointerId !== swipe.id) return;
+  const raw = e.clientY - swipe.y0, dx = (e.clientX - swipe.x0) * 0.35;
+  if (!swipe.paper) {
+    if (Math.hypot(dx, raw) < 6) return;
+    swipe.paper = paperFromCard(activeEl());
+    if (!swipe.paper) return;
+    lift(swipe.paper.mesh);
+    gsap.set(card, { opacity: 0 });
+    camUp.set(0, 1, 0).applyQuaternion(camera.quaternion);
+    camRight.set(1, 0, 0).applyQuaternion(camera.quaternion);
+  }
+  const now = performance.now();
+  const dy = raw > 0 ? raw : raw * 0.2; // hacia arriba cuesta
+  swipe.v = (dy - swipe.dy) / Math.max(1, now - swipe.t);
+  swipe.dy = dy;
+  swipe.t = now;
+  const P = swipe.paper;
+  P.mesh.position.copy(P.base).addScaledVector(camUp, -dy * P.perPx).addScaledVector(camRight, dx * P.perPx);
+  P.mesh.quaternion.copy(P.baseQ);
+  P.mesh.rotateX(-Math.max(0, dy) * 0.0012);
+  P.mesh.rotateZ(-dx * 0.002);
+  const k = THREE.MathUtils.clamp(dy / 280, 0, 1);
+  sound.wrinkle(k - P.k);
+  setCrumple(P, 0, k);
+});
+function endSwipe(e) {
+  if (!swipe || e.pointerId !== swipe.id) return;
+  const { dy, v, paper: P } = swipe;
+  swipe = null;
+  card.classList.remove('dragging');
+  if (!P) return; // un toque, sin arrastrar
+  if (dy > 110 || (dy > 30 && v > 0.6)) { hideReveal(P); return; }
+  // se alisa y vuelve a su sitio; entonces se cambia otra vez por la de la pantalla
+  const from = P.mesh.position.clone(), q0 = P.mesh.quaternion.clone(), o = { u: 0 };
+  gsap.to(o, {
+    u: 1, duration: 0.35, ease: 'back.out(1.6)',
+    onUpdate: () => {
+      P.mesh.position.lerpVectors(from, P.base, o.u);
+      P.mesh.quaternion.slerpQuaternions(q0, P.baseQ, Math.min(1, o.u));
+      setCrumple(P, 0, P.k * (1 - Math.min(1, o.u)));
+    },
+    onComplete: () => {
+      disposeBall(P.mesh);
+      unlift();
+      canvas.classList.remove('lifted');
+      gsap.set(card, { opacity: 1 });
+    },
   });
 }
+card.addEventListener('pointerup', endSwipe);
+card.addEventListener('pointercancel', endSwipe);
+
+// ---------- Onboarding ----------
+// La primera visita: bienvenida, un dedo que enseña el gesto sobre la solapa,
+// el aviso de deslizar para tirar la servilleta y, al final, una nota sobre las bolas del suelo.
+const onboard = (() => {
+  const KEY = 'cafecita.onboarding.v1';
+  let step = 'done';
+  try { if (localStorage.getItem(KEY) !== 'done') step = 'welcome'; } catch {}
+  const hand = $('hand'), welcome = $('welcome'), coach = $('coachSwipe'), toast = $('toast');
+  let loop = null;
+
+  // un dedo que pulsa, recorre los puntos y se levanta; points() se recalcula en cada vuelta
+  function demo(points) {
+    stopDemo();
+    const run = () => {
+      const [p0, ...rest] = points();
+      hand.hidden = false;
+      loop = gsap.timeline({ onComplete: () => { loop = gsap.delayedCall(0.8, run); } })
+        .set(hand, { x: p0[0], y: p0[1], opacity: 0, scale: 1.5 })
+        .to(hand, { opacity: 1, scale: 1, duration: 0.3, ease: 'power2.out' });
+      for (const [x, y, d] of rest) loop.to(hand, { x, y, duration: d, ease: 'power1.inOut' });
+      loop.to(hand, { opacity: 0, scale: 1.3, duration: 0.25 });
+    };
+    run();
+  }
+  function stopDemo() {
+    loop?.kill();
+    loop = null;
+    gsap.killTweensOf(hand);
+    hand.hidden = true;
+  }
+
+  // dónde está la solapa de la servilleta que mira a cámara, en píxeles
+  function flapOnScreen() {
+    const p = facingFace().group.localToWorld(new THREE.Vector3(0, WIN.bottom + 1.3, PLATE_OUT)).project(camera);
+    return [(p.x + 1) / 2 * window.innerWidth, (1 - p.y) / 2 * window.innerHeight];
+  }
+  function showPull() {
+    step = 'pull';
+    demo(() => {
+      const [x, y] = flapOnScreen(), u = window.innerHeight / 100;
+      return [[x, y], [x, y - 9 * u, 0.55], [x, y + 16 * u, 0.7]];
+    });
+  }
+  function finish() {
+    step = 'done';
+    try { localStorage.setItem(KEY, 'done'); } catch {}
+  }
+
+  $('welcomeGo').addEventListener('click', () => {
+    gsap.to(welcome, { opacity: 0, duration: 0.3, onComplete: () => { welcome.hidden = true; } });
+    showPull();
+  });
+
+  return {
+    // en cuanto se ve el servilletero
+    start() {
+      if (step !== 'welcome') return;
+      welcome.hidden = false;
+      gsap.fromTo(welcome, { opacity: 0 }, { opacity: 1, duration: 0.4 });
+      gsap.fromTo('.welcome-card', { y: 24 }, { y: 0, duration: 0.6, ease: 'back.out(1.4)' });
+    },
+    grabbed() { if (step === 'pull') stopDemo(); },
+    released() { if (step === 'pull') gsap.delayedCall(1.2, () => { if (step === 'pull' && !drag) showPull(); }); },
+    revealed() {
+      if (step !== 'pull') return;
+      step = 'swipe';
+      stopDemo();
+      coach.hidden = false;
+      gsap.fromTo(coach, { opacity: 0 }, { opacity: 1, duration: 0.4, delay: 1 });
+      gsap.delayedCall(1, () => {
+        if (step !== 'swipe') return;
+        demo(() => {
+          const r = card.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height * 0.45;
+          return [[x, y], [x, y + r.height * 0.4, 0.6]];
+        });
+      });
+    },
+    thrown() {
+      if (step !== 'swipe') return;
+      stopDemo();
+      coach.hidden = true;
+      finish();
+      toast.textContent = 'Las bolas se quedan en el suelo hasta mañana. Entre las noticias se esconden dos citas al día.';
+      toast.hidden = false;
+      gsap.timeline()
+        .fromTo(toast, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, delay: 0.8 })
+        .to(toast, { opacity: 0, duration: 0.4, delay: 4.5, onComplete: () => { toast.hidden = true; } });
+    },
+  };
+})();
+
+$('sound').addEventListener('click', () => {
+  sound.setOn(!sound.isOn());
+  sound.unlock();
+  updateUI();
+});
+
+// Lo que se comparte es la story (servilleta sobre azul + marca)
+const slug = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+function fileName(item) {
+  const name = item.kind === 'quote' ? item.quote.author
+    : item.kind === 'news' ? `${item.news.fuente} ${item.news.titular.split(' ').slice(0, 6).join(' ')}`
+    : item.kind === 'ad' ? item.ad.marca : 'reponiendo';
+  return `cafecita-${today()}-${slug(name)}.jpg`;
+}
+const storyBlob = (item) => (item.kind === 'quote'
+  ? fetch(item.quote.story).then((r) => r.blob())
+  : paintStory(napkinCanvas, paperLogo));
+
+function saveFile(file) {
+  const url = URL.createObjectURL(file);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = file.name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+// con hoja de compartir (móvil) se comparte la imagen; sin ella (escritorio), se descarga
+$('share').addEventListener('click', async () => {
+  const item = current;
+  const file = shareFile || new File([await storyBlob(item)], fileName(item), { type: 'image/jpeg' });
+  const text = item.kind === 'news' ? `${item.news.titular} (${item.news.fuente}) ${item.news.url}` : 'Gracias por su visita.';
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: 'Mi servilleta', text }); } catch {}
+  } else {
+    saveFile(file);
+  }
+});
 
 // ---------- Bucle ----------
 const clock = new THREE.Clock();
@@ -902,7 +1518,7 @@ function frame(dt) {
   if (face !== lastFacing) { lastFacing = face; updateUI(); }
 
   // invita a tirar: de vez en cuando la solapa de abajo se despega un poco
-  if (!drag && !busy && face.settled && !state.taken[face.id] && t > nextHint) {
+  if (!drag && !busy && face.settled && t > nextHint) {
     nextHint = t + 3.2;
     face.settled = false;
     const sheet = face.sheet;
@@ -918,9 +1534,26 @@ function frame(dt) {
     acc -= SUB;
     for (const f of Object.values(faces)) {
       if (f.settled || !f.front.visible || f.tween?.isActive()) continue;
+      // las bolas, en las coordenadas de esta cara
+      f.sheet.obstacles = balls.map((b) => {
+        const c = f.group.worldToLocal(b.mesh.position.clone());
+        return { x: c.x, y: c.y, z: c.z, r: b.r, r2: b.r * b.r };
+      });
       f.sheet.step(SUB, f.sheet.grabTarget ? 0 : 160);
     }
+    stepBalls(SUB);
   }
+  // el roce suena según lo rápido que sale el papel por la boca (y un poco según se dobla)
+  if (drag?.mode === 'pull' && !busy && dt > 0) {
+    const sheet = drag.face.sheet;
+    const now = { slide: sheet.slide, p: sheet.grabTarget?.clone() };
+    if (drag.last) {
+      const bend = now.p && drag.last.p ? now.p.distanceTo(drag.last.p) : 0;
+      sound.rub((now.slide - drag.last.slide + bend * 0.3) / dt);
+    }
+    drag.last = now;
+  }
+
   for (const f of Object.values(faces)) {
     if (!f.front.visible) continue;
     syncGeometry(f);
