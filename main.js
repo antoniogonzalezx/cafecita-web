@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { gsap } from 'gsap';
-import { paintNapkin, paintStory } from './napkin.js?v=7';
-import * as sound from './sound.js?v=7';
+import { paintNapkin, paintStory, wrinkle } from './napkin.js?v=8';
+import * as sound from './sound.js?v=8';
 
 // ---------- Medidas (cm, iguales que tools/blender_servilletero.py) ----------
 const W = 9.0;      // ancho
@@ -768,6 +768,19 @@ function setRay(e) {
   ndc.set((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
   raycaster.setFromCamera(ndc, camera);
 }
+// la bola del suelo bajo el dedo, con margen (son pequeñas) y si no la tapa el servilletero
+function pickBall(e) {
+  setRay(e);
+  const wall = raycaster.intersectObjects(pickables, false)[0]?.distance ?? Infinity;
+  let best = null, bd = Infinity;
+  for (const b of balls) {
+    const c = b.mesh.position, along = tmpV.subVectors(c, raycaster.ray.origin).dot(raycaster.ray.direction);
+    if (along <= 0 || along > wall) continue;
+    if (raycaster.ray.distanceSqToPoint(c) < (b.r * 1.7) ** 2 && along < bd) { bd = along; best = b; }
+  }
+  return best;
+}
+
 function pick(e) {
   setRay(e);
   const face = facingFace();
@@ -806,6 +819,15 @@ canvas.addEventListener('pointerdown', (e) => {
     onboard.grabbed();
     drag = { mode: 'pull', face: hit.face, sx: e.clientX, sy: e.clientY, z0: hit.face.sheet.grabTarget.z, out: 0, last: null, inside: 1 };
     canvas.style.cursor = 'grabbing';
+  } else if (!busy && pickBall(e)) {
+    const ball = pickBall(e);
+    ball.held = true;
+    ball.asleep = false;
+    ball.target = ball.mesh.position.clone();
+    ball.target.y = ball.r + 1.6;
+    sound.grab();
+    drag = { mode: 'ball', ball, sx: e.clientX, sy: e.clientY, t0: performance.now(), moved: false };
+    canvas.style.cursor = 'grabbing';
   } else {
     drag = { mode: 'rotate', lastX: e.clientX };
   }
@@ -815,8 +837,17 @@ canvas.addEventListener('pointerdown', (e) => {
 canvas.addEventListener('pointermove', (e) => {
   if (!drag) {
     if (e.pointerType === 'mouse') {
-      canvas.style.cursor = !busy && pick(e) ? 'grab' : 'default';
+      canvas.style.cursor = !busy && (pick(e) || pickBall(e)) ? 'grab' : 'default';
       parallax = ((e.clientX / window.innerWidth) - 0.5) * 0.1;
+    }
+    return;
+  }
+  if (drag.mode === 'ball') {
+    if (Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) > 8) drag.moved = true;
+    setRay(e);
+    const b = drag.ball, h = b.r + 1.6;
+    if (raycaster.ray.intersectPlane(plane.set(UP, -h), tmpV)) {
+      b.target.set(THREE.MathUtils.clamp(tmpV.x, -8.5, 8.5), h, THREE.MathUtils.clamp(tmpV.z, -10, 8));
     }
     return;
   }
@@ -843,7 +874,14 @@ canvas.addEventListener('pointermove', (e) => {
 
 function endDrag() {
   if (!drag) return;
-  if (drag.mode === 'rotate') {
+  if (drag.mode === 'ball') {
+    const b = drag.ball;
+    b.held = false;
+    b.target = null;
+    // un toque sin arrastrar la abre; si no, se suelta con la velocidad que lleve
+    if (!drag.moved && performance.now() - drag.t0 < 400) openBall(b);
+    else if (b.v.length() > 120) sound.toss();
+  } else if (drag.mode === 'rotate') {
     rotTarget = BASE_ROT + Math.round((rot - BASE_ROT) / Math.PI) * Math.PI;
   } else if (!busy) {
     // se suelta a medias: el papel cae y vuelve a meterse en el servilletero
@@ -969,9 +1007,26 @@ function disposeBall(mesh) {
   if (mesh.material !== blankBallMat) { mesh.material.map?.dispose(); mesh.material.dispose(); }
 }
 
+// qué servilleta era cada bola, para poder volver a abrirla
+const packItem = (it) => (!it ? null
+  : it.kind === 'news' ? { k: 'news', n: it.news }
+  : it.kind === 'quote' ? { k: 'quote', id: it.quote.id }
+  : it.kind === 'ad' ? { k: 'ad', id: it.ad.id }
+  : { k: 'empty' });
+function unpackItem(x) {
+  if (!x) return null;
+  if (x.k === 'news' && x.n && typeof x.n.titular === 'string' && /^https:\/\//.test(x.n.url)) return { kind: 'news', id: x.n.id, news: x.n };
+  if (x.k === 'quote') { const q = NAPKINS.find((n) => n.id === x.id); return q ? { kind: 'quote', id: q.id, quote: q } : null; }
+  if (x.k === 'ad') { const ad = ADS.find((a) => a.id === x.id); return ad ? { kind: 'ad', id: ad.id, ad } : null; }
+  if (x.k === 'empty') return { kind: 'empty', id: 'vacio-suelo' };
+  return null;
+}
+
 function saveFloor() {
-  const list = balls.filter((b) => b.asleep).map((b) => ({
+  const list = balls.filter((b) => !b.held).map((b) => ({
     s: b.mesh.userData.seed,
+    d: b.mesh.userData.dims.map((x) => +x.toFixed(2)),
+    it: packItem(b.mesh.userData.item),
     p: b.mesh.position.toArray().map((x) => +x.toFixed(2)),
     q: b.mesh.quaternion.toArray().map((x) => +x.toFixed(3)),
   }));
@@ -983,14 +1038,17 @@ function restoreFloor() {
   let saved;
   try { saved = JSON.parse(localStorage.getItem(FLOOR_KEY)); } catch {}
   if (!saved || saved.day !== today() || !Array.isArray(saved.balls)) return;
-  for (const { s: seed, p, q } of saved.balls.slice(-MAX_BALLS)) {
+  for (const { s: seed, d, it, p, q } of saved.balls.slice(-MAX_BALLS)) {
     if (!Number.isInteger(seed) || p?.length !== 3 || q?.length !== 4) continue;
-    const geo = new THREE.PlaneGeometry(5.7, 8.2, 18, 26);
+    const dims = d?.length === 2 && d.every((x) => x > 1 && x < 20) ? d : [5.7, 8.2];
+    const geo = new THREE.PlaneGeometry(dims[0], dims[1], 18, 26);
     geo.attributes.position.array.set(crumpleTargets(geo.attributes.position.array, seed).out);
     geo.computeVertexNormals();
     const mesh = new THREE.Mesh(geo, blankBallMat);
     mesh.castShadow = mesh.receiveShadow = true;
     mesh.userData.seed = seed;
+    mesh.userData.dims = dims;
+    mesh.userData.item = unpackItem(it);
     mesh.position.fromArray(p);
     mesh.position.x = THREE.MathUtils.clamp(mesh.position.x, -8.5, 8.5);
     mesh.position.z = THREE.MathUtils.clamp(mesh.position.z, -10, 8);
@@ -1029,6 +1087,8 @@ function paperFromCard(el) {
   const mesh = new THREE.Mesh(geo, mat);
   mesh.castShadow = mesh.receiveShadow = true;
   mesh.userData.seed = seed;
+  mesh.userData.dims = [fitW * perPx, fitH * perPx];
+  mesh.userData.item = current && { ...current, wrinkled: false };
   ndc.set(((r.left + r.width / 2) / window.innerWidth) * 2 - 1, -((r.top + r.height / 2) / window.innerHeight) * 2 + 1);
   raycaster.setFromCamera(ndc, camera);
   const fwd = camera.getWorldDirection(new THREE.Vector3());
@@ -1166,8 +1226,16 @@ function stepBalls(dt) {
       continue;
     }
     const p = b.mesh.position;
-    b.v.y -= BALL_G * dt;
-    p.addScaledVector(b.v, dt);
+    if (b.held) {
+      // la lleva el dedo con un muelle: así sigue chocando con todo lo que encuentra
+      b.v.subVectors(b.target, p).multiplyScalar(18);
+      if (b.v.length() > 400) b.v.setLength(400);
+      p.addScaledVector(b.v, dt);
+      b.w.set(b.v.z, 0, -b.v.x).divideScalar(b.r * 2);
+    } else {
+      b.v.y -= BALL_G * dt;
+      p.addScaledVector(b.v, dt);
+    }
     b.ground = false;
     const low = lowest(b);
     if (p.y + low < 0) {
@@ -1193,7 +1261,7 @@ function stepBalls(dt) {
     if (p.z < -10 || p.z > 8) { p.z = THREE.MathUtils.clamp(p.z, -10, 8); b.v.z *= -0.3; }
     const wl = b.w.length();
     if (wl > 1e-3) b.mesh.quaternion.premultiply(dq.setFromAxisAngle(axis.copy(b.w).divideScalar(wl), wl * dt));
-    if (b.ground && b.v.lengthSq() < 2) { b.asleep = true; b.v.set(0, 0, 0); slept = true; }
+    if (!b.held && b.ground && b.v.lengthSq() < 2) { b.asleep = true; b.v.set(0, 0, 0); slept = true; }
   }
   // bola contra bola: no se meten una en otra
   for (let i = 0; i < balls.length; i++) {
@@ -1205,7 +1273,8 @@ function stepBalls(dt) {
       if (d >= min || d < 1e-4) continue;
       sep.divideScalar(d);
       // la que está quieta pesa más: la que llega es la que se aparta
-      const wa = a.asleep ? 0.2 : 0.5, wb = b.asleep ? 0.2 : 0.5, sum = wa + wb;
+      // la que lleva el dedo aparta a las demás; la quieta pesa más que la que llega
+      const wa = a.held ? 0.02 : a.asleep ? 0.2 : 0.5, wb = b.held ? 0.02 : b.asleep ? 0.2 : 0.5, sum = wa + wb;
       a.mesh.position.addScaledVector(sep, -(min - d) * wa / sum);
       b.mesh.position.addScaledVector(sep, (min - d) * wb / sum);
       const rel = b.v.dot(sep) - a.v.dot(sep);
@@ -1216,6 +1285,8 @@ function stepBalls(dt) {
   if (slept) saveFloor();
 }
 restoreFloor();
+// si se cierra o se recarga con una bola aún rodando, también se queda en el suelo
+window.addEventListener('pagehide', saveFloor);
 
 // ---------- Revelado ----------
 const reveal = $('reveal');
@@ -1238,11 +1309,97 @@ const LABEL = {
   empty: () => 'Espere a que el personal reponga las servilletas. Gracias por su paciencia.',
 };
 
-async function showReveal(item) {
+// Tocar una bola del suelo la abre: se despliega en 3D hasta donde se lee y queda arrugada.
+// Las bolas de antes de esta versión no saben qué servilleta eran: dan un saltito y ya.
+let opening = false;
+async function openBall(b) {
+  const item = b.mesh.userData.item;
+  if (opening || busy || !reveal.hidden) return;
+  if (!item) { b.asleep = false; b.v.set(0, 160, 0); sound.wrinkle(0.3); return; }
+  opening = true;
+  busy = true;
+  updateUI();
+  const mesh = b.mesh, seed = mesh.userData.seed, [w, h] = mesh.userData.dims;
+  balls.splice(balls.indexOf(b), 1);
+  saveFloor();
+
+  // la servilleta tal como quedará: pintada y con los pliegues de haber sido una bola
+  const c = document.createElement('canvas');
+  if (item.kind === 'quote') {
+    const img = new Image();
+    img.src = item.quote.napkin;
+    try { await img.decode(); } catch {}
+    c.width = Math.round(img.naturalWidth * 1.5);
+    c.height = Math.round(img.naturalHeight * 1.5);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  } else {
+    await paintNapkin(c, item, { logo: inkLogo });
+  }
+  wrinkle(c, seed);
+  const small = document.createElement('canvas');
+  small.width = 384;
+  small.height = Math.round(384 * c.height / c.width);
+  small.getContext('2d').drawImage(c, 0, 0, small.width, small.height);
+  const mat = paperMaterial(canvasTexture(small), THREE.DoubleSide);
+  mat.alphaTest = 0.5;
+  mat.emissiveIntensity = 0.2;
+  if (mesh.material !== blankBallMat) { mesh.material.map?.dispose(); mesh.material.dispose(); }
+  mesh.material = mat;
+
+  // dónde y de qué tamaño se verá en pantalla
+  napkinCanvas.width = c.width;
+  napkinCanvas.height = c.height;
+  napkinImg.hidden = true;
+  napkinCanvas.hidden = false;
+  reveal.style.visibility = 'hidden';
+  reveal.hidden = false;
+  gsap.set('#napkinCard', { opacity: 1, scale: 1, rotateX: 0, rotateZ: -1.5, x: 0, y: 0 });
+  const r = napkinCanvas.getBoundingClientRect();
+  const fitH = Math.min(napkinCanvas.offsetHeight, napkinCanvas.offsetWidth * c.height / c.width);
+  reveal.hidden = true;
+  reveal.style.visibility = '';
+  const dist = 25, perPx = 2 * dist * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) / window.innerHeight;
+  ndc.set(((r.left + r.width / 2) / window.innerWidth) * 2 - 1, -((r.top + r.height / 2) / window.innerHeight) * 2 + 1);
+  raycaster.setFromCamera(ndc, camera);
+  const fwd = camera.getWorldDirection(new THREE.Vector3());
+  const pT = raycaster.ray.origin.clone().addScaledVector(raycaster.ray.direction, dist / raycaster.ray.direction.dot(fwd));
+  const qT = camera.quaternion.clone().multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), THREE.MathUtils.degToRad(-1.5)));
+  const sT = fitH * perPx / h;
+
+  const rest = Float32Array.from(new THREE.PlaneGeometry(w, h, 18, 26).attributes.position.array);
+  const { out: target, rr } = crumpleTargets(rest, seed);
+  const paper = { geo: mesh.geometry, rest, target, rr, seed, size: Math.max(w, h), t: 1, k: 0 };
+  const p0 = mesh.position.clone(), q0 = mesh.quaternion.clone(), o = { u: 0 };
+  sound.crumple(0.5);
+  gsap.to(o, {
+    u: 1, duration: 0.75, ease: 'power2.inOut',
+    onUpdate: () => {
+      mesh.position.lerpVectors(p0, pT, o.u);
+      mesh.position.y += Math.sin(o.u * Math.PI) * 3;
+      mesh.quaternion.slerpQuaternions(q0, qT, o.u);
+      mesh.scale.setScalar(1 + (sT - 1) * o.u);
+      setCrumple(paper, 1 - o.u, 0.75 * o.u);
+    },
+    onComplete: () => {
+      opening = false;
+      disposeBall(mesh);
+      showReveal({ ...item, wrinkled: true }, { from: c });
+    },
+  });
+}
+
+async function showReveal(item, { from } = {}) {
   current = item;
   gsap.killTweensOf(['#revealBg', '.actions', '#close', '#napkinCard']);
   reveal.classList.remove('leaving');
-  if (item.kind === 'quote') {
+  if (from) {
+    // una servilleta del suelo, ya pintada y arrugada
+    napkinCanvas.width = from.width;
+    napkinCanvas.height = from.height;
+    napkinCanvas.getContext('2d').drawImage(from, 0, 0);
+    napkinCanvas.dataset.box = from.dataset.box || '';
+    napkinCanvas.setAttribute('aria-label', item.kind === 'quote' ? `“${item.quote.quote}” — ${item.quote.author}` : LABEL[item.kind](item));
+  } else if (item.kind === 'quote') {
     napkinImg.src = item.quote.napkin;
     napkinImg.alt = `“${item.quote.quote}” — ${item.quote.author}`;
     try { await napkinImg.decode(); } catch {}
@@ -1250,8 +1407,8 @@ async function showReveal(item) {
     await paintNapkin(napkinCanvas, item, { logo: inkLogo });
     napkinCanvas.setAttribute('aria-label', LABEL[item.kind](item));
   }
-  napkinImg.hidden = item.kind !== 'quote';
-  napkinCanvas.hidden = item.kind === 'quote';
+  napkinImg.hidden = !!from || item.kind !== 'quote';
+  napkinCanvas.hidden = !napkinImg.hidden;
   const link = linkFor(item);
   source.hidden = !link;
   if (link) {
@@ -1265,7 +1422,9 @@ async function showReveal(item) {
 
   reveal.hidden = false;
   gsap.fromTo('#revealBg', { opacity: 0 }, { opacity: 1, duration: 0.4 });
-  gsap.fromTo('#napkinCard',
+  // la que viene del suelo ya está en su sitio (la ha traído la animación 3D)
+  if (from) gsap.set('#napkinCard', { opacity: 1, scale: 1, rotateX: 0, rotateZ: -1.5, x: 0, y: 0 });
+  else gsap.fromTo('#napkinCard',
     { opacity: 0, scale: 0.6, rotateX: 40, rotateZ: 8, x: 0, y: 120 },
     { opacity: 1, scale: 1, rotateX: 0, rotateZ: -1.5, y: 0, duration: 0.9, ease: 'back.out(1.2)' });
   gsap.fromTo(['.actions', '#close'], { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, stagger: 0.08, delay: 0.5 });
@@ -1300,7 +1459,7 @@ window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !reveal.hi
 // servilleta 3D (el lienzo se pone encima del velo azul y se esconde lo demás), así que se va
 // arrugando bajo el dedo. Si no llega, se alisa y vuelve a su sitio.
 const card = $('napkinCard');
-const activeEl = () => (current.kind === 'quote' ? napkinImg : napkinCanvas);
+const activeEl = () => (napkinImg.hidden ? napkinCanvas : napkinImg);
 const lifted = [];
 function lift(keep) {
   for (const o of scene.children) if (o !== keep && !o.isLight && o.visible) { o.visible = false; lifted.push(o); }
@@ -1456,7 +1615,7 @@ const onboard = (() => {
       stopDemo();
       coach.hidden = true;
       finish();
-      toast.textContent = 'Las bolas se quedan en el suelo hasta mañana. Entre las noticias se esconden dos citas al día.';
+      toast.textContent = 'Las bolas se quedan en el suelo hasta mañana: arrástralas o tócalas para volver a abrirlas.';
       toast.hidden = false;
       gsap.timeline()
         .fromTo(toast, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, delay: 0.8 })
@@ -1479,7 +1638,7 @@ function fileName(item) {
     : item.kind === 'ad' ? item.ad.marca : 'reponiendo';
   return `cafecita-${today()}-${slug(name)}.jpg`;
 }
-const storyBlob = (item) => (item.kind === 'quote'
+const storyBlob = (item) => (item.kind === 'quote' && !item.wrinkled
   ? fetch(item.quote.story).then((r) => r.blob())
   : paintStory(napkinCanvas, paperLogo));
 

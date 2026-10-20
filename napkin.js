@@ -156,3 +156,57 @@ export function paintStory(napkin, logo) {
   g.fillText('Gracias por su visita', 450, 1474);
   return new Promise((resolve) => c.toBlob(resolve, 'image/jpeg', 0.9));
 }
+
+// ---------- Arrugada ----------
+// Una servilleta que ya se hizo bola y se vuelve a abrir: el papel queda en facetas con sus
+// pliegues (Voronoi a baja resolución, que luego se suaviza al ampliarlo) y se funde con
+// luz suave sobre lo pintado, sin tocar la silueta.
+function prng(seed) { // mulberry32
+  return () => {
+    seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+export function wrinkle(canvas, seed) {
+  const W = canvas.width, H = canvas.height;
+  const sw = Math.round(W / 4), sh = Math.round(H / 4);
+  const rnd = prng(seed);
+  const pts = Array.from({ length: 80 }, () => ({ x: rnd() * sw, y: rnd() * sh, n: (rnd() - 0.5) * 2 }));
+  const small = document.createElement('canvas');
+  small.width = sw;
+  small.height = sh;
+  const sg = small.getContext('2d');
+  const img = sg.createImageData(sw, sh), d = img.data;
+  for (let y = 0; y < sh; y++) {
+    for (let x = 0; x < sw; x++) {
+      let d1 = Infinity, d2 = Infinity, best = null;
+      for (const p of pts) {
+        const dd = (p.x - x) ** 2 + (p.y - y) ** 2;
+        if (dd < d1) { d2 = d1; d1 = dd; best = p; } else if (dd < d2) d2 = dd;
+      }
+      // cada faceta mira a un lado; en la arista entre dos, el pliegue
+      const edge = Math.exp(-(Math.sqrt(d2) - Math.sqrt(d1)) / 1.2);
+      const v = 128 + best.n * 52 - edge * 70 + (rnd() - 0.5) * 6;
+      const i = (y * sw + x) * 4;
+      d[i] = d[i + 1] = d[i + 2] = v;
+      d[i + 3] = 255;
+    }
+  }
+  sg.putImageData(img, 0, 0);
+  const g = canvas.getContext('2d');
+  const shape = document.createElement('canvas');
+  shape.width = W;
+  shape.height = H;
+  shape.getContext('2d').drawImage(canvas, 0, 0);
+  g.save();
+  g.imageSmoothingEnabled = true;
+  g.globalCompositeOperation = 'soft-light';
+  g.drawImage(small, 0, 0, W, H);
+  g.globalCompositeOperation = 'destination-in';
+  g.drawImage(shape, 0, 0);
+  g.restore();
+  return canvas;
+}
