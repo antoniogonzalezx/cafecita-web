@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { gsap } from 'gsap';
-import { paintNapkin, paintStory, wrinkle } from './napkin.js?v=11';
-import * as sound from './sound.js?v=11';
+import { paintNapkin, paintStory, wrinkle } from './napkin.js?v=12';
+import * as sound from './sound.js?v=12';
 
 // ---------- Medidas (cm, iguales que tools/blender_servilletero.py) ----------
 const W = 9.0;      // ancho
@@ -1226,7 +1226,7 @@ function hitDispenser(b) {
   b.mesh.position.copy(local.applyAxisAngle(UP, ry));
   lv.copy(b.v).applyAxisAngle(UP, -ry);
   const vn = lv.dot(nrm);
-  if (vn < -60) { sound.thud(-vn); sound.clink(-vn); }
+  if (vn < -60) sound.thud(-vn * 0.6); // papel contra inox: suena el papel, no el metal
   // si llega rápido rebota un poco; si ya va despacio, se queda pegada a la cara
   if (vn < 0) lv.addScaledVector(nrm, -(vn < -40 ? 1.3 : 1) * vn);
   b.v.copy(lv.applyAxisAngle(UP, ry));

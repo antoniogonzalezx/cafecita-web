@@ -1,7 +1,7 @@
 // ---------- Sonido de servilleta ----------
-// Sintetizado con Web Audio, sin ficheros: el roce del papel contra el inox mientras se tira,
-// los crujidos de la fibra, el «fsss» al sacarla, el «tic» del muelle colocando la siguiente
-// y, al acabar, arrugarla y tirarla al suelo.
+// Sintetizado con Web Audio, sin ficheros: el roce del papel mientras se tira, los crujidos de
+// la fibra, el «fsss» al sacarla y, al acabar, arrugarla y tirarla al suelo.
+// Todo suave: suena el papel, nunca el servilletero (es papel contra inox, no metal contra metal).
 // El navegador solo deja sonar después de un gesto: unlock() va en el primer toque.
 const KEY = 'cafecita.sonido';
 let on = true;
@@ -27,8 +27,12 @@ export function unlock() {
     comp.threshold.value = -16;
     comp.ratio.value = 4;
     out = ctx.createGain();
-    out.gain.value = 0.9;
-    out.connect(comp).connect(ctx.destination);
+    out.gain.value = 0.55;
+    // sin agudos cortantes: el papel de servilleta es blando
+    const soft = ctx.createBiquadFilter();
+    soft.type = 'lowpass';
+    soft.frequency.value = 6000;
+    out.connect(soft).connect(comp).connect(ctx.destination);
     noise = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
     const d = noise.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
@@ -46,43 +50,29 @@ function filter(type, freq, q = 0.7) {
   return f;
 }
 
-function burst(when, dur, nodes, level) {
+function burst(when, dur, nodes, level, attack = 0.012) {
   const src = ctx.createBufferSource();
   src.buffer = noise;
   const g = ctx.createGain();
   g.gain.setValueAtTime(0, when);
-  g.gain.linearRampToValueAtTime(level, when + Math.min(0.012, dur / 4));
+  g.gain.linearRampToValueAtTime(level, when + Math.min(attack, dur / 3));
   g.gain.exponentialRampToValueAtTime(0.0005, when + dur);
   nodes.reduce((a, n) => a.connect(n), src).connect(g).connect(out);
   src.start(when, Math.random() * 1.5, dur + 0.05);
   return src;
 }
 
-// un crujido de fibra: chasquido muy corto y agudo
+// un crujido de fibra: chasquido corto, más papel que chispa
 function crackle(level, when = ctx.currentTime) {
-  burst(when, 0.006 + Math.random() * 0.02, [filter('highpass', 2400 + Math.random() * 3600, 0.9)], level);
-}
-
-// el muelle aprieta la siguiente servilleta contra la chapa: un «tic» de inox, muy flojo
-function tink(when, level = 1) {
-  for (const [f, a, d] of [[2950, 0.035, 0.14], [4420, 0.02, 0.09], [6870, 0.01, 0.05]]) {
-    const o = ctx.createOscillator();
-    o.frequency.value = f * (0.98 + Math.random() * 0.04);
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(a * level, when);
-    g.gain.exponentialRampToValueAtTime(0.0001, when + d);
-    o.connect(g).connect(out);
-    o.start(when);
-    o.stop(when + d + 0.02);
-  }
+  burst(when, 0.01 + Math.random() * 0.02, [filter('bandpass', 1600 + Math.random() * 2000, 0.8)], level);
 }
 
 // al abrir la solapa, el papel se despega con un par de crujidos
 export function grab() {
   if (!ready()) return;
   const t = ctx.currentTime;
-  crackle(0.25, t);
-  crackle(0.15, t + 0.03 + Math.random() * 0.04);
+  crackle(0.1, t);
+  crackle(0.06, t + 0.03 + Math.random() * 0.04);
 }
 
 // roce continuo mientras se tira: sube con la velocidad del papel
@@ -106,9 +96,9 @@ export function rub(v) {
   if (!rubbing || !ready()) return;
   const k = Math.min(1, Math.max(0, v) / 45);
   const t = ctx.currentTime;
-  rubbing.g.gain.setTargetAtTime(0.4 * k * k, t, 0.035);
-  rubbing.bp.frequency.setTargetAtTime(1700 + 3200 * k, t, 0.05);
-  if (Math.random() < k * 0.3) crackle(0.08 + 0.3 * k);
+  rubbing.g.gain.setTargetAtTime(0.22 * k * k, t, 0.035);
+  rubbing.bp.frequency.setTargetAtTime(1400 + 2200 * k, t, 0.05);
+  if (Math.random() < k * 0.25) crackle(0.03 + 0.09 * k);
 }
 
 export function rubStop() {
@@ -121,78 +111,67 @@ export function rubStop() {
   src.stop(t + 0.3);
 }
 
-// la servilleta sale del todo: «fsss» que se abre a agudos, crujidos y el muelle
+// la servilleta sale del todo: un «fsss» suave y unos pocos crujidos
 export function pull() {
   if (!ready()) return;
   rubStop();
   const t = ctx.currentTime;
-  const bp = filter('bandpass', 1100, 0.9);
-  bp.frequency.setValueAtTime(1100, t);
-  bp.frequency.exponentialRampToValueAtTime(5200, t + 0.16);
-  burst(t, 0.28, [filter('highpass', 600), bp], 0.55);
-  for (let i = 0; i < 5; i++) crackle(0.2 + Math.random() * 0.3, t + Math.random() * 0.13);
-  tink(t + 0.34);
+  const bp = filter('bandpass', 1000, 0.8);
+  bp.frequency.setValueAtTime(1000, t);
+  bp.frequency.exponentialRampToValueAtTime(3200, t + 0.18);
+  burst(t, 0.3, [filter('highpass', 500), bp], 0.26, 0.03);
+  for (let i = 0; i < 4; i++) crackle(0.05 + Math.random() * 0.08, t + Math.random() * 0.14);
 }
 
 // soltada a medias: se vuelve a meter con un roce suave
 export function tuck() {
   if (!ready()) return;
-  const t = ctx.currentTime + 0.05;
-  burst(t, 0.32, [filter('bandpass', 1500, 0.5), filter('lowpass', 3200)], 0.14);
-  tink(t + 0.6, 0.6);
+  burst(ctx.currentTime + 0.05, 0.32, [filter('bandpass', 1300, 0.5), filter('lowpass', 2600)], 0.08, 0.05);
 }
 
-// arrugar la servilleta: una ráfaga de crujidos que se aprieta y se apaga, sobre un «crunch» grave
+// arrugar la servilleta: crujidos que se aprietan y se apagan, sobre un «crunch» blando
 export function crumple(dur = 0.6) {
   if (!ready()) return;
   const t = ctx.currentTime;
-  for (let i = 0; i < 48; i++) {
+  for (let i = 0; i < 26; i++) {
     const u = Math.random();
-    crackle(0.1 + Math.random() * 0.3 * (1 - u * 0.6), t + dur * Math.pow(u, 0.85));
+    crackle(0.03 + Math.random() * 0.08 * (1 - u * 0.6), t + dur * Math.pow(u, 0.85));
   }
-  for (const [at, len, f] of [[0, 0.22, 900], [0.18, 0.2, 1300], [0.36, 0.24, 1000]]) {
-    burst(t + at, len, [filter('bandpass', f, 0.7)], 0.14);
+  for (const [at, len, f] of [[0, 0.24, 700], [0.18, 0.22, 950], [0.36, 0.26, 800]]) {
+    burst(t + at, len, [filter('bandpass', f, 0.6), filter('lowpass', 2200)], 0.06, 0.04);
   }
 }
 
-// doblar la servilleta: dos pliegues secos, uno detrás de otro
+// doblar la servilleta: dos pliegues, uno detrás de otro
 export function fold() {
   if (!ready()) return;
   const t = ctx.currentTime;
   for (const at of [0.1, 0.55]) {
-    burst(t + at, 0.12, [filter('bandpass', 2200, 0.8)], 0.22);
-    for (let i = 0; i < 4; i++) crackle(0.15 + Math.random() * 0.2, t + at + Math.random() * 0.06);
+    burst(t + at, 0.14, [filter('bandpass', 1600, 0.7)], 0.09, 0.02);
+    for (let i = 0; i < 3; i++) crackle(0.04 + Math.random() * 0.06, t + at + Math.random() * 0.06);
   }
 }
 
 // la bola sale volando de la mano
 export function toss() {
   if (!ready()) return;
-  burst(ctx.currentTime, 0.16, [filter('bandpass', 700, 0.6)], 0.08);
+  burst(ctx.currentTime, 0.18, [filter('bandpass', 600, 0.5)], 0.04, 0.04);
 }
 
-// la bola da contra el inox: el «tic» del muelle, más fuerte cuanto más rápido llega
-let lastClink = 0;
-export function clink(v) {
-  if (!ready() || ctx.currentTime - lastClink < 0.12) return;
-  lastClink = ctx.currentTime;
-  tink(lastClink, Math.min(1.5, v / 200));
-}
-
-// la bola toca el suelo: golpe sordo de papel, más fuerte cuanto más rápido cae
+// la bola cae (al suelo o contra el servilletero): golpe acolchado de papel, sin chasquido,
+// más fuerte cuanto más rápido llega pero siempre flojo
 let lastThud = 0;
 export function thud(v) {
-  if (!ready() || ctx.currentTime - lastThud < 0.04) return;
+  if (!ready() || ctx.currentTime - lastThud < 0.06) return;
   const t = lastThud = ctx.currentTime;
   const k = Math.min(1, v / 500);
-  burst(t, 0.08, [filter('lowpass', 700 + 900 * k)], 0.45 * k);
-  crackle(0.12 * k, t + 0.01);
-  if (k > 0.5) crackle(0.08 * k, t + 0.03);
+  burst(t, 0.16, [filter('lowpass', 280 + 260 * k, 0.5)], 0.2 * k, 0.025);
+  if (k > 0.6) crackle(0.02 * k, t + 0.02);
 }
 
 // arrugar un poco al arrastrar la servilleta: crujidos según cuánto se ha arrugado de más
 export function wrinkle(dk) {
   if (!ready() || dk <= 0) return;
-  const t = ctx.currentTime, n = Math.floor(dk * 60 + Math.random());
-  for (let i = 0; i < n; i++) crackle(0.06 + Math.random() * 0.18, t + Math.random() * 0.06);
+  const t = ctx.currentTime, n = Math.floor(dk * 30 + Math.random());
+  for (let i = 0; i < n; i++) crackle(0.025 + Math.random() * 0.06, t + Math.random() * 0.08);
 }
