@@ -171,6 +171,14 @@ export function toss() {
   burst(ctx.currentTime, 0.16, [filter('bandpass', 700, 0.6)], 0.08);
 }
 
+// la bola da contra el inox: el «tic» del muelle, más fuerte cuanto más rápido llega
+let lastClink = 0;
+export function clink(v) {
+  if (!ready() || ctx.currentTime - lastClink < 0.12) return;
+  lastClink = ctx.currentTime;
+  tink(lastClink, Math.min(1.5, v / 200));
+}
+
 // la bola toca el suelo: golpe sordo de papel, más fuerte cuanto más rápido cae
 let lastThud = 0;
 export function thud(v) {

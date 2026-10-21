@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { gsap } from 'gsap';
-import { paintNapkin, paintStory, wrinkle } from './napkin.js?v=10';
-import * as sound from './sound.js?v=10';
+import { paintNapkin, paintStory, wrinkle } from './napkin.js?v=11';
+import * as sound from './sound.js?v=11';
 
 // ---------- Medidas (cm, iguales que tools/blender_servilletero.py) ----------
 const W = 9.0;      // ancho
@@ -826,7 +826,7 @@ canvas.addEventListener('pointerdown', (e) => {
     ball.target = ball.mesh.position.clone();
     ball.target.y = ball.r + 1.6;
     sound.grab();
-    drag = { mode: 'ball', ball, sx: e.clientX, sy: e.clientY, t0: performance.now(), moved: false };
+    drag = { mode: 'ball', ball, sx: e.clientX, sy: e.clientY, t0: performance.now(), moved: false, vy: 0, ly: e.clientY, lt: performance.now() };
     canvas.style.cursor = 'grabbing';
   } else {
     drag = { mode: 'rotate', lastX: e.clientX };
@@ -844,11 +844,24 @@ canvas.addEventListener('pointermove', (e) => {
   }
   if (drag.mode === 'ball') {
     if (Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) > 8) drag.moved = true;
+    // velocidad del dedo en vertical (px/ms), para saber si la lanza hacia arriba
+    const now = performance.now();
+    drag.vy = drag.vy * 0.5 + 0.5 * (e.clientY - drag.ly) / Math.max(1, now - drag.lt);
+    drag.ly = e.clientY;
+    drag.lt = now;
     setRay(e);
     const b = drag.ball, h = b.r + 1.6;
-    if (raycaster.ray.intersectPlane(plane.set(UP, -h), tmpV)) {
-      b.target.set(THREE.MathUtils.clamp(tmpV.x, -8.5, 8.5), h, THREE.MathUtils.clamp(tmpV.z, -1, 8));
+    // sobre la tapa del servilletero, la deja encima
+    const top = raycaster.intersectObjects(pickables, false)[0];
+    if (top && tmpV.copy(top.face.normal).transformDirection(top.object.matrixWorld).y > 0.7) {
+      b.target.copy(top.point).addScaledVector(UP, b.r + 0.8);
+    } else if (raycaster.ray.intersectPlane(plane.set(UP, -h), tmpV)) {
+      b.target.copy(tmpV);
+    } else {
+      b.target.set(b.target.x, h, -40); // el dedo apunta por encima del horizonte
     }
+    // la mano no saca la bola de la mesa (si el dedo sube mucho, se queda al fondo)
+    if (b.target.y <= h + 0.01) clampToScreen(b.target);
     return;
   }
   if (drag.mode === 'rotate') {
@@ -881,8 +894,15 @@ function endDrag() {
     // un toque sin arrastrar la abre; si no, se suelta con la velocidad que lleve
     if (!drag.moved && performance.now() - drag.t0 < 400) openBall(b);
     else {
-      // un lanzamiento con el dedo, pero sin mandarla fuera de la mesa
+      // un lanzamiento con el dedo: hacia los lados sin pasarse; hacia arriba, al aire
+      // (casi en vertical: lo que avanza es poco, para que vuelva a caer a la vista)
       if (b.v.length() > 220) b.v.setLength(220);
+      const upward = -drag.vy;
+      if (upward > 0.5) {
+        b.v.x *= 0.35;
+        b.v.z *= 0.35;
+        b.v.y = Math.min(300, upward * 220);
+      }
       if (b.v.length() > 120) sound.toss();
     }
   } else if (drag.mode === 'rotate') {
@@ -1053,9 +1073,8 @@ function restoreFloor() {
     mesh.userData.dims = dims;
     mesh.userData.item = unpackItem(it);
     mesh.position.fromArray(p);
-    mesh.position.x = THREE.MathUtils.clamp(mesh.position.x, -8.5, 8.5);
-    mesh.position.z = THREE.MathUtils.clamp(mesh.position.z, -1, 8);
     mesh.quaternion.fromArray(q).normalize();
+    if (mesh.position.y < TOP) clampToScreen(mesh.position);
     scene.add(mesh);
     // despierta: si se guardó metida en otra o en el servilletero, la física la saca
     addBall(mesh, new THREE.Vector3(), new THREE.Vector3());
@@ -1130,33 +1149,52 @@ function setCrumple(paper, t, k) {
   geo.computeBoundingSphere();
 }
 
-// de donde esté (lisa o a medio arrugar) hasta bola, y al suelo
-function finishCrumple(paper) {
+// de donde esté (lisa o a medio arrugar) hasta bola, y al suelo (o al aire)
+function finishCrumple(paper, opts) {
   const left = 1 - paper.t;
   sound.crumple(0.6 * left);
   const o = { t: paper.t, k: paper.k };
   gsap.to(o, {
     t: 1, k: 0, duration: 0.6 * left + 0.05, ease: 'none',
     onUpdate: () => { setCrumple(paper, o.t, o.k); paper.mesh.rotateZ(0.012); },
-    onComplete: () => throwBall(paper.mesh),
+    onComplete: () => throwBall(paper.mesh, opts),
   });
 }
 
-// tiro con parábola hasta un hueco del suelo, a izquierda o derecha (nunca delante de la ventana)
-function throwBall(mesh) {
-  const side = Math.random() < 0.5 ? -1 : 1;
-  const land = new THREE.Vector3(side * (5.8 + Math.random() * 1.8), BALL_R, 0.5 + Math.random() * 5.5);
+// Dónde cae: cualquier hueco de la mesa que se vea en pantalla (nunca delante de una ventana
+// ni tapado por el servilletero) y, con suerte, encima del servilletero.
+const landRay = new THREE.Raycaster(), landNdc = new THREE.Vector2();
+function pickLanding(up) {
+  dispenser.updateMatrixWorld();
+  if (Math.random() < (up ? 0.35 : 0.08)) {
+    return dispenser.localToWorld(new THREE.Vector3((Math.random() - 0.5) * (W - 3), TOP + BALL_R, (Math.random() - 0.5) * (D - 3)));
+  }
+  const floor = new THREE.Plane(UP, -BALL_R), out = new THREE.Vector3();
+  for (let i = 0; i < 16; i++) {
+    landRay.setFromCamera(landNdc.set((Math.random() * 2 - 1) * 0.82, -0.82 + Math.random() * 0.9), camera);
+    if (!landRay.ray.intersectPlane(floor, out)) continue;
+    local.copy(out).applyAxisAngle(UP, -dispenser.rotation.y);
+    if (Math.abs(local.x) < W / 2 + 2 && Math.abs(local.z) < D / 2 + 7) continue; // la caja y sus ventanas
+    if (pointHidden(out, BALL_R)) continue;
+    return out;
+  }
+  return new THREE.Vector3((Math.random() < 0.5 ? -1 : 1) * 7, BALL_R, 3);
+}
+
+// tiro con parábola; hacia arriba, más alto y más rato en el aire
+function throwBall(mesh, { up = false } = {}) {
+  const land = pickLanding(up);
   mesh.position.y = Math.max(mesh.position.y, BALL_R + 2);
-  const tau = THREE.MathUtils.clamp(mesh.position.distanceTo(land) / 55, 0.45, 0.8);
+  const tau = up ? 0.8 : THREE.MathUtils.clamp(mesh.position.distanceTo(land) / 55, 0.45, 0.8);
   const v = land.clone().sub(mesh.position).addScaledVector(UP, 0.5 * BALL_G * tau * tau).divideScalar(tau);
   const w = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).setLength(8 + Math.random() * 8);
   addBall(mesh, v, w);
   sound.toss();
 }
 
-function crumpleAndThrow(el) {
+function crumpleAndThrow(el, opts) {
   const paper = paperFromCard(el);
-  if (paper) finishCrumple(paper);
+  if (paper) finishCrumple(paper, opts);
 }
 
 // ---------- Física de las bolas ----------
@@ -1173,6 +1211,7 @@ function hitDispenser(b) {
   nrm.subVectors(local, closest);
   const d = nrm.length();
   if (d >= b.r) return false;
+  const pen = b.r - d;
   if (d < 1e-4) {
     // el centro ya está dentro: sale por la cara más cercana
     const px = W / 2 - Math.abs(local.x), pz = D / 2 - Math.abs(local.z), py = TOP - local.y;
@@ -1187,9 +1226,53 @@ function hitDispenser(b) {
   b.mesh.position.copy(local.applyAxisAngle(UP, ry));
   lv.copy(b.v).applyAxisAngle(UP, -ry);
   const vn = lv.dot(nrm);
-  if (vn < 0) lv.addScaledVector(nrm, -1.3 * vn);
+  if (vn < -60) { sound.thud(-vn); sound.clink(-vn); }
+  // si llega rápido rebota un poco; si ya va despacio, se queda pegada a la cara
+  if (vn < 0) lv.addScaledVector(nrm, -(vn < -40 ? 1.3 : 1) * vn);
   b.v.copy(lv.applyAxisAngle(UP, ry));
+  // encima del servilletero se apoya como en el suelo
+  if (nrm.y > 0.7) b.ground = true;
+  // apoyada sin moverse no cuenta como empujón (si no, nunca se dormiría)
+  return pen > 0.05;
+}
+
+// ¿tapa el servilletero este punto visto desde la cámara?
+function pointHidden(p, r = 0) {
+  dispenser.updateMatrixWorld();
+  const to = tmpV.subVectors(p, camera.position), d = to.length();
+  sight.set(camera.position, to.divideScalar(d));
+  const hit = sight.intersectObjects(pickables, false)[0];
+  return !!hit && hit.distance < d - r;
+}
+
+// La mesa es lo que se ve: de borde a borde de la pantalla y, hacia el fondo, hasta algo más arriba
+// de la mitad (más allá, sobre el azul liso, parecerían flotar). Devuelve si ha tenido que meter el punto dentro.
+const ndcV = new THREE.Vector3(), edge = new THREE.Plane(), edgeNdc = new THREE.Vector2();
+const SCREEN = { x: 0.9, bottom: -0.9, top: 0.12 };
+function clampToScreen(p) {
+  camera.updateMatrixWorld(); // al cargar aún no se ha pintado ningún fotograma
+  ndcV.copy(p).project(camera);
+  let x = 0, y = SCREEN.top; // detrás de la cámara o más lejos de lo que alcanza: al fondo, en el centro
+  if (ndcV.z <= 1) {
+    x = THREE.MathUtils.clamp(ndcV.x, -SCREEN.x, SCREEN.x);
+    y = THREE.MathUtils.clamp(ndcV.y, SCREEN.bottom, SCREEN.top);
+    if (x === ndcV.x && y === ndcV.y) return false;
+  }
+  landRay.setFromCamera(edgeNdc.set(x, y), camera);
+  if (landRay.ray.intersectPlane(edge.set(UP, -p.y), tmpV)) p.copy(tmpV);
   return true;
+}
+
+// Las que están en la mesa no se salen de ella; las que vuelan pueden salirse un momento por
+// arriba y volver a caer.
+const before = new THREE.Vector3();
+function keepOnScreen(b) {
+  if (!b.ground || b.mesh.position.y > TOP / 2) return; // encima del servilletero ya se ve
+  before.copy(b.mesh.position);
+  if (!clampToScreen(b.mesh.position)) return;
+  // choca con el borde: pierde la velocidad que la sacaba fuera
+  const out = before.sub(b.mesh.position).setY(0);
+  if (out.lengthSq() > 1e-6 && b.v.dot(out) > 0) b.v.addScaledVector(out.normalize(), -1.4 * b.v.dot(out));
 }
 
 // el punto más bajo de la bola tal como está girada: apoya en el suelo por ahí, sin hundirse
@@ -1283,23 +1366,22 @@ function stepBalls(dt) {
       b.v.y = b.v.y < -40 ? -b.v.y * 0.3 : 0;
       b.ground = true;
     }
+    hitDispenser(b);
     if (b.ground) {
-      // rueda frenando por el roce del papel
+      // rueda frenando por el roce del papel (en el suelo o encima del servilletero)
       const k = Math.exp(-7 * dt);
       b.v.x *= k; b.v.z *= k;
       b.w.set(b.v.z, 0, -b.v.x).divideScalar(b.r);
     }
-    hitDispenser(b);
     hitSheets(b);
-    if (!b.held && b.ground) clearWindows(b);
-    // que no se salgan de lo que se ve (detrás del servilletero quedarían tapadas)
-    if (Math.abs(p.x) > 8.5) { p.x = Math.sign(p.x) * 8.5; b.v.x *= -0.3; }
-    if (p.z < -1 || p.z > 8) { p.z = THREE.MathUtils.clamp(p.z, -1, 8); b.v.z *= -0.3; }
+    if (!b.held && b.ground && p.y < TOP) clearWindows(b);
+    if (!b.held) keepOnScreen(b);
     const wl = b.w.length();
     if (wl > 1e-3) b.mesh.quaternion.premultiply(dq.setFromAxisAngle(axis.copy(b.w).divideScalar(wl), wl * dt));
     if (!b.held && b.ground && b.v.lengthSq() < 2) {
-      // si se para donde el servilletero la tapa, rueda un poco hacia delante hasta que se vea
-      if (hidden(b)) b.v.set(Math.sign(p.x) * 25, 0, 45);
+      // si se para donde el servilletero la tapa, rueda hacia un lado (y un poco hacia delante)
+      // hasta que asome
+      if (p.y < TOP && hidden(b)) b.v.set((Math.sign(p.x) || (b.mesh.userData.seed & 1 ? 1 : -1)) * 45, 0, 20);
       else { b.asleep = true; b.v.set(0, 0, 0); slept = true; }
     }
   }
@@ -1486,14 +1568,14 @@ async function showReveal(item, { from } = {}) {
 
 // Al salir, la servilleta se arruga y va al suelo. Ya se puede sacar otra desde el primer instante.
 // paper: la servilleta 3D si ya se estaba arrastrando (y arrugando) con el dedo.
-function hideReveal(paper = null) {
+function hideReveal(paper = null, opts = {}) {
   if (reveal.hidden || reveal.classList.contains('leaving')) return;
   reveal.classList.add('leaving');
   busy = false;
   updateUI();
   gsap.killTweensOf('#napkinCard');
   gsap.set('#napkinCard', { opacity: 0 });
-  if (paper) { unlift(); finishCrumple(paper); } else crumpleAndThrow(activeEl());
+  if (paper) { unlift(); finishCrumple(paper, opts); } else crumpleAndThrow(activeEl(), opts);
   onboard.thrown();
   gsap.to(['#revealBg', '.actions', '#close'], {
     opacity: 0, duration: 0.25,
@@ -1546,7 +1628,7 @@ card.addEventListener('pointermove', (e) => {
     camRight.set(1, 0, 0).applyQuaternion(camera.quaternion);
   }
   const now = performance.now();
-  const dy = raw > 0 ? raw : raw * 0.2; // hacia arriba cuesta
+  const dy = raw > 0 ? raw : raw * 0.6; // hacia arriba cuesta un poco más
   swipe.v = (dy - swipe.dy) / Math.max(1, now - swipe.t);
   swipe.dy = dy;
   swipe.t = now;
@@ -1555,7 +1637,7 @@ card.addEventListener('pointermove', (e) => {
   P.mesh.quaternion.copy(P.baseQ);
   P.mesh.rotateX(-Math.max(0, dy) * 0.0012);
   P.mesh.rotateZ(-dx * 0.002);
-  const k = THREE.MathUtils.clamp(dy / 280, 0, 1);
+  const k = THREE.MathUtils.clamp(Math.abs(dy) / 280, 0, 1);
   sound.wrinkle(k - P.k);
   setCrumple(P, 0, k);
 });
@@ -1566,6 +1648,8 @@ function endSwipe(e) {
   card.classList.remove('dragging');
   if (!P) return; // un toque, sin arrastrar
   if (dy > 110 || (dy > 30 && v > 0.6)) { hideReveal(P); return; }
+  // hacia arriba: al aire, y con suerte acaba encima del servilletero
+  if (dy < -60 || (dy < -20 && v < -0.5)) { hideReveal(P, { up: true }); return; }
   // se alisa y vuelve a su sitio; entonces se cambia otra vez por la de la pantalla
   const from = P.mesh.position.clone(), q0 = P.mesh.quaternion.clone(), o = { u: 0 };
   gsap.to(o, {
@@ -1925,3 +2009,4 @@ function tick() {
 }
 updateUI();
 tick();
+
