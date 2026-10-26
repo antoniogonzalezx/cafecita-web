@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { gsap } from 'gsap';
-import { paintNapkin, paintStory, wrinkle } from './napkin.js?v=12';
-import * as sound from './sound.js?v=12';
+import { paintNapkin, paintStory, wrinkle } from './napkin.js?v=13';
+import * as sound from './sound.js?v=13';
+import { medir, visita, SUPABASE, KEY } from './medir.js?v=13';
 
 // ---------- Medidas (cm, iguales que tools/blender_servilletero.py) ----------
 const W = 9.0;      // ancho
@@ -46,7 +47,7 @@ let state = loadState();
 if (new URLSearchParams(location.search).has('reset')) {
   state = freshState();
   saveState();
-  try { ['cafecita.suelo.v1', 'cafecita.onboarding.v1'].forEach((k) => localStorage.removeItem(k)); } catch {}
+  try { ['cafecita.suelo.v1', 'cafecita.onboarding.v1', 'cafecita.dias.v1'].forEach((k) => localStorage.removeItem(k)); } catch {}
   history.replaceState(null, '', location.pathname);
 }
 
@@ -101,11 +102,9 @@ const AD_EVERY = 10;      // como mucho 1 de cada 10 (monetizacion.md)
 const QUOTES_PER_DAY = 2;
 const QUOTE_ODDS = 0.2;
 // Las noticias no viven en el repo: las sirve Supabase (proyecto «cafecita», tabla noticias), que
-// rellena cada media hora la función noticias-refrescar (supabase/). La clave es la publicable:
-// solo deja leer esa tabla.
-const NEWS_API = 'https://xnrjddrkecwdqgrjcqyr.supabase.co/rest/v1/noticias?select=id,titular,fuente,url,fecha&order=orden.asc';
-const NEWS_KEY = 'sb_publishable_Dez0B-jytDhNqQT08S1a6g_HbcG8Yzt';
-const getNews = () => fetch(NEWS_API, { headers: { apikey: NEWS_KEY }, signal: AbortSignal.timeout(8000) })
+// rellena cada media hora la función noticias-refrescar (supabase/).
+const NEWS_COLS = 'select=id,titular,fuente,url,fecha';
+const getNews = () => fetch(`${SUPABASE}/rest/v1/noticias?${NEWS_COLS}&order=orden.asc`, { headers: { apikey: KEY }, signal: AbortSignal.timeout(8000) })
   .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`noticias: HTTP ${r.status}`))));
 let [NAPKINS, NEWS, ADS] = await Promise.all([
   fetch('napkins.json').then((r) => r.json()),
@@ -113,6 +112,31 @@ let [NAPKINS, NEWS, ADS] = await Promise.all([
   fetch('anuncios.json').then((r) => r.json()).catch(() => []),
 ]);
 const deck = loadDeck();
+
+// ---------- Servilleta compartida ----------
+// Lo que se comparte lleva cafecita.app/?s=<id>: quien lo abre saca esa servilleta la primera.
+// Si la noticia ya ha salido de portada, se busca en la hemeroteca (guarda todas las que han pasado).
+// ?o=<origen> marca de dónde viene la visita (un QR, la bio de Instagram…) para la analítica.
+const params = new URLSearchParams(location.search);
+const sharedId = /^[\w-]{1,40}$/.test(params.get('s') || '') ? params.get('s') : null;
+const referrer = (() => { try { const h = new URL(document.referrer).hostname; return h === location.hostname ? '' : h; } catch { return ''; } })();
+const origen = sharedId ? 'compartida' : (params.get('o') || '').slice(0, 40) || referrer || 'directo';
+if (params.has('s') || params.has('o')) {
+  params.delete('s');
+  params.delete('o');
+  history.replaceState(null, '', location.pathname + (params.size ? `?${params}` : ''));
+}
+async function findShared(id) {
+  const quote = NAPKINS.find((q) => q.id === id);
+  if (quote) return { kind: 'quote', id, quote };
+  const news = NEWS.find((n) => n.id === id) || (await fetch(`${SUPABASE}/rest/v1/hemeroteca?${NEWS_COLS}&id=eq.${encodeURIComponent(id)}`,
+    { headers: { apikey: KEY }, signal: AbortSignal.timeout(5000) }).then((r) => (r.ok ? r.json() : [])).catch(() => []))[0];
+  return news ? { kind: 'news', id, news } : null;
+}
+let shared = sharedId ? await findShared(sharedId) : null;
+const sharedLink = (item) => (item.kind === 'news' || item.kind === 'quote' ? `${location.origin}/?s=${item.id}` : `${location.origin}/`);
+
+visita({ hoy: today(), conocido: state.count > 0, origen });
 
 // sin noticias nuevas, se vuelve a mirar si han llegado (como mucho una vez por minuto)
 let lastRefresh = Date.now();
@@ -128,7 +152,11 @@ function nextNapkin() {
   if (state.day !== today()) Object.assign(state, { day: today(), quotesToday: 0 });
   const fresh = NEWS.find((x) => !state.seen.includes(x.id));
   let item;
-  if (!fresh) {
+  if (shared) {
+    item = shared;
+    shared = null;
+    if (item.kind === 'news') state.seen = [...state.seen, item.id].slice(-600);
+  } else if (!fresh) {
     refreshNews();
     item = { kind: 'empty', id: `vacio-${state.count}` };
   } else if (ADS.length && ++state.served % AD_EVERY === 0) {
@@ -943,6 +971,7 @@ function tuckBack(face) {
 function extract(face) {
   busy = true;
   const item = nextNapkin();
+  medir('servilleta', { tipo: item.kind, ...detail(item), n: state.count });
   sound.pull();
   if (navigator.vibrate) navigator.vibrate(18);
   updateUI();
@@ -1425,6 +1454,10 @@ function linkFor(item) {
   return null;
 }
 
+// qué servilleta era, para la analítica: el periódico de la noticia o el id de la cita o del anuncio
+const detail = (item) => (item.kind === 'news' ? { fuente: item.news.fuente } : item.kind === 'empty' ? {} : { id: item.id });
+source.addEventListener('click', () => { if (current) medir('enlace', { tipo: current.kind, ...detail(current) }); });
+
 const LABEL = {
   news: (i) => `${i.news.titular} — ${i.news.fuente}`,
   ad: (i) => `Publicidad: ${i.ad.texto} — ${i.ad.marca}`,
@@ -1438,6 +1471,7 @@ async function openBall(b) {
   const item = b.mesh.userData.item;
   if (opening || busy || !reveal.hidden) return;
   if (!item) { b.asleep = false; b.v.set(0, 160, 0); sound.wrinkle(0.3); return; }
+  medir('bola', { tipo: item.kind });
   opening = true;
   busy = true;
   updateUI();
@@ -1869,6 +1903,7 @@ const onboard = (() => {
   }
 
   $('welcomeGo').addEventListener('click', () => {
+    medir('bienvenida');
     gsap.to(welcome, { opacity: 0, duration: 0.3, onComplete: () => { welcome.hidden = true; } });
     showPull();
   });
@@ -1911,6 +1946,23 @@ const onboard = (() => {
   };
 })();
 
+// quien llega por una servilleta compartida sabe que la primera que saque es esa
+if (shared) {
+  let first = true;
+  try { first = localStorage.getItem('cafecita.onboarding.v1') !== 'done'; } catch {}
+  if (first) {
+    document.querySelector('.welcome-kicker').textContent = 'Te han guardado una servilleta';
+    $('welcomeGo').textContent = 'Sacarla';
+  } else {
+    const toast = $('toast');
+    toast.textContent = 'Te han guardado una servilleta: es la primera que saques.';
+    toast.hidden = false;
+    gsap.timeline()
+      .fromTo(toast, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, delay: 1.5 })
+      .to(toast, { opacity: 0, duration: 0.4, delay: 4, onComplete: () => { toast.hidden = true; } });
+  }
+}
+
 $('sound').addEventListener('click', () => {
   sound.setOn(!sound.isOn());
   sound.unlock();
@@ -1942,11 +1994,18 @@ function saveFile(file) {
 $('share').addEventListener('click', async () => {
   const item = current;
   const file = shareFile || new File([await storyBlob(item)], fileName(item), { type: 'image/jpeg' });
-  const text = item.kind === 'news' ? `${item.news.titular} (${item.news.fuente}) ${item.news.url}` : 'Gracias por su visita.';
+  // el texto (lo que acompaña a la imagen en WhatsApp) lleva el enlace de vuelta a esta servilleta
+  const what = item.kind === 'news' ? `${item.news.titular} — ${item.news.fuente}`
+    : item.kind === 'quote' ? `«${item.quote.quote}» — ${item.quote.author}` : 'Gracias por su visita.';
+  const text = `${what}\n${sharedLink(item)}`;
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    try { await navigator.share({ files: [file], title: 'Mi servilleta', text }); } catch {}
+    try {
+      await navigator.share({ files: [file], title: 'Mi servilleta', text });
+      medir('compartir', { tipo: item.kind, ...detail(item), modo: 'hoja' });
+    } catch {}
   } else {
     saveFile(file);
+    medir('compartir', { tipo: item.kind, ...detail(item), modo: 'descarga' });
   }
 });
 
