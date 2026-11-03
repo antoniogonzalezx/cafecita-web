@@ -1,0 +1,54 @@
+{
+  "id": "barmanolo",
+  "nombre": "Bar Manolo",
+  "direccion": "Calle del Pez, 14 · Madrid",
+  "horario": "De lunes a sábado, de 8:00 a 24:00",
+  "plan": "pro",
+  "marca": {
+    "logo": "bares/barmanolo/logo.svg",
+    "color": "#1F6B45",
+    "servilletero": "inox"
+  },
+  "sugerencias": [
+    { "texto": "Bocata de calamares", "precio": 6 }
+  ],
+  "carta": [
+    {
+      "seccion": "Para picar",
+      "platos": [
+        { "nombre": "Patatas bravas", "precio": 5.5, "alergenos": ["huevos"] },
+        { "nombre": "Croquetas caseras de jamón (6)", "precio": 7.5, "alergenos": ["gluten", "huevos", "lacteos"] },
+        { "nombre": "Pimientos de Padrón", "precio": 6, "alergenos": [] },
+        { "nombre": "Boquerones en vinagre", "precio": 6.5, "alergenos": ["pescado", "sulfitos"] }
+      ]
+    },
+    {
+      "seccion": "Bocatas",
+      "platos": [
+        { "nombre": "Bocata de calamares", "precio": 6, "alergenos": ["gluten", "moluscos", "huevos"] },
+        { "nombre": "Pepito de ternera", "precio": 6.5, "alergenos": ["gluten"] },
+        { "nombre": "Bocata de tortilla", "precio": 4.5, "alergenos": ["gluten", "huevos"] },
+        { "nombre": "Montado de lomo con pimientos", "precio": 4, "alergenos": ["gluten"] }
+      ]
+    },
+    {
+      "seccion": "Raciones",
+      "platos": [
+        { "nombre": "Oreja a la plancha", "precio": 8, "alergenos": null },
+        { "nombre": "Calamares a la romana", "precio": 11, "alergenos": ["gluten", "huevos", "moluscos"] },
+        { "nombre": "Tortilla de patatas entera", "precio": 12, "alergenos": ["huevos"] },
+        { "nombre": "Pulpo a la gallega", "precio": 14, "alergenos": ["moluscos"], "agotado": true }
+      ]
+    },
+    {
+      "seccion": "Bebidas",
+      "platos": [
+        { "nombre": "Caña", "precio": 1.8, "alergenos": ["gluten"] },
+        { "nombre": "Vermut de grifo", "precio": 2.8, "alergenos": ["sulfitos"] },
+        { "nombre": "Tinto de verano", "precio": 2.5, "alergenos": ["sulfitos"] },
+        { "nombre": "Café con leche", "precio": 1.6, "alergenos": ["lacteos"] },
+        { "nombre": "Agua mineral", "precio": 1.5, "alergenos": [] }
+      ]
+    }
+  ]
+}

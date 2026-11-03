@@ -96,6 +96,13 @@ export async function paintNapkin(canvas, item, { logo } = {}) {
   g.textAlign = 'center';
   g.textBaseline = 'middle';
   const fy = H * t.fold;
+  if (item.kind === 'bar') {
+    penLines(g, item.lines, W, H, fy, hash(item.id || 'x'));
+    flap(g, W, H, fy, logo, false);
+    g.globalCompositeOperation = 'source-over';
+    if ('filter' in g) g.filter = 'none';
+    return canvas;
+  }
   const [title, signer, foot] = lines(item);
 
   // arriba: titular, el periódico en mayúsculas y la fecha
@@ -118,21 +125,8 @@ export async function paintNapkin(canvas, item, { logo } = {}) {
   g.font = SERIF(footSize);
   g.fillText(foot, W / 2, y);
 
-  // en la solapa: el clásico «Gracias por su visita» y el logo, como en el servilletero
-  const cy = fy + (H - fy) * 0.42;
-  g.globalAlpha = 0.9;
-  g.font = SERIF(Math.round(W * 0.078));
-  g.fillText('Gracias por su visita', W / 2, cy);
-  // dónde cae cada letra, para poder doblarla como en los bares (el easter egg de main.js)
-  const x0 = W / 2 - g.measureText('Gracias por su visita').width / 2;
-  canvas.dataset.thanks = ['Gracias p', 'Gracias por s', 'Gracias por su', 'Gracias por su visi']
-    .map((s) => Math.round(x0 + g.measureText(s).width)).join(',');
   canvas.dataset.fold = t.fold;
-  const ly = cy + W * 0.095, lH = W * 0.044;
-  if (logo) {
-    const lW = lH * logo.naturalWidth / logo.naturalHeight;
-    g.drawImage(logo, W / 2 - lW / 2, ly - lH / 2, lW, lH);
-  }
+  flap(g, W, H, fy, logo, canvas);
 
   g.globalAlpha = 1;
   g.globalCompositeOperation = 'source-over';
@@ -140,19 +134,80 @@ export async function paintNapkin(canvas, item, { logo } = {}) {
   return canvas;
 }
 
+// en la solapa: el clásico «Gracias por su visita» y el logo, como en el servilletero.
+// tall: el logo de un bar (casi cuadrado) va más alto que CAFECITA, que es una tira.
+// canvas: dónde guardar dónde cae cada letra, para el easter egg (en las de bar no hay)
+function flap(g, W, H, fy, logo, canvas) {
+  const tall = logo && logo.naturalWidth / logo.naturalHeight < 4;
+  const cy = fy + (H - fy) * (tall ? 0.28 : 0.42);
+  g.fillStyle = QUOTE;
+  g.globalAlpha = 0.9;
+  g.font = SERIF(Math.round(W * 0.078));
+  g.fillText('Gracias por su visita', W / 2, cy);
+  if (canvas) {
+    // dónde cae cada letra, para poder doblarla como en los bares (el easter egg de main.js)
+    const x0 = W / 2 - g.measureText('Gracias por su visita').width / 2;
+    canvas.dataset.thanks = ['Gracias p', 'Gracias por s', 'Gracias por su', 'Gracias por su visi']
+      .map((s) => Math.round(x0 + g.measureText(s).width)).join(',');
+  }
+  if (logo) {
+    const lH = tall ? Math.min(W * 0.2, (H - cy) * 0.55) : W * 0.044;
+    const ly = cy + W * (tall ? 0.08 : 0.073) + lH / 2;
+    const lW = lH * logo.naturalWidth / logo.naturalHeight;
+    g.drawImage(logo, W / 2 - lW / 2, ly - lH / 2, lW, lH);
+  }
+  g.globalAlpha = 1;
+}
+
+// Lo que escribe el bar, a boli: cada línea un pelín torcida y con la tinta desigual
+const PEN = '#21418A';
+const HAND = (s) => `400 ${s}px 'Reenie Beanie', 'Bradley Hand', cursive`;
+function penLines(g, rows, W, H, fy, seed) {
+  if (!rows.length) return;
+  const rnd = prng(seed || 1);
+  const left = W * 0.11, maxW = W * 0.8, top = H * 0.08, bottom = fy - H * 0.05;
+  let size = Math.round(W * 0.13);
+  for (; size > W * 0.06; size -= 2) {
+    g.font = HAND(size);
+    if (rows.length * size * 1.05 <= bottom - top && rows.every((r) => g.measureText(r).width <= maxW)) break;
+  }
+  g.font = HAND(size);
+  g.textAlign = 'left';
+  g.textBaseline = 'alphabetic';
+  let y = top + size * 0.95;
+  for (const row of rows) {
+    g.save();
+    g.translate(left + (rnd() - 0.5) * W * 0.02, y);
+    g.rotate((rnd() - 0.6) * 0.035);
+    // dos pasadas: el boli deja más tinta en unos trazos que en otros
+    g.fillStyle = PEN;
+    g.globalAlpha = 0.92;
+    g.fillText(row, 0, 0);
+    g.globalAlpha = 0.3;
+    g.fillText(row, 0.8, 0.5);
+    g.restore();
+    y += size * 1.05;
+  }
+  g.globalAlpha = 1;
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+}
+
 // La story para compartir: la servilleta sobre azul en el mismo sitio que en stories/*.jpg
-export function paintStory(napkin, logo) {
+export function paintStory(napkin, logo, bg = '#3F48F4') {
   const c = document.createElement('canvas');
   c.width = 900;
   c.height = 1600;
   const g = c.getContext('2d');
-  g.fillStyle = '#3F48F4';
+  g.fillStyle = bg;
   g.fillRect(0, 0, 900, 1600);
   const [x0, y0, x1, y1] = (napkin.dataset.box || '112,316,778,1283').split(',').map(Number);
   g.drawImage(napkin, x0, y0, x1 - x0, y1 - y0);
   if (logo) {
-    const lh = 52, lw = lh * logo.naturalWidth / logo.naturalHeight;
-    g.drawImage(logo, (900 - lw) / 2, 1392, lw, lh);
+    // CAFECITA es una tira; el logo de un bar, casi cuadrado, va más grande
+    const tall = logo.naturalWidth / logo.naturalHeight < 4;
+    const lh = tall ? 130 : 52, lw = Math.min(600, lh * logo.naturalWidth / logo.naturalHeight);
+    g.drawImage(logo, (900 - lw) / 2, tall ? 110 : 1392, lw, lw * logo.naturalHeight / logo.naturalWidth);
   }
   g.fillStyle = '#F7F3EA';
   g.textAlign = 'center';

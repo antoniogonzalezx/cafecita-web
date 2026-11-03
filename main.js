@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { gsap } from 'gsap';
-import { paintNapkin, paintStory, wrinkle } from './napkin.js?v=13';
+import { paintNapkin, paintStory, wrinkle } from './napkin.js?v=14';
 import * as sound from './sound.js?v=13';
 import { medir, visita, API } from './medir.js?v=14';
+import { loadBar, isPro, logoOf, logoImage, sugerencia, renderCarta, DEFAULT_COLOR } from './bar.js?v=1';
 
 // ---------- Medidas (cm, iguales que tools/blender_servilletero.py) ----------
 const W = 9.0;      // ancho
@@ -23,10 +24,20 @@ const NW = 2 * WIN.x - 0.2, NH = N_TOP - N_BOTTOM;
 const BASE_ROT = 0.55;
 const PAPER = '#FBF9F4';
 
+// ---------- Bar ----------
+// cafecita.app/<bar>/ es el servilletero de un bar (<body data-bar="<bar>">, ver bar.js): en vez
+// de noticias, sus sugerencias del día escritas a boli, y su carta. Con Pro, además, su logo,
+// su color y su servilletero. Lleva su propio estado y su propio suelo.
+const BAR_ID = document.body.dataset.bar || null;
+const BAR = BAR_ID ? await loadBar(BAR_ID) : null;
+const PRO = !!BAR && isPro(BAR);
+const BRAND = PRO ? BAR.marca.color : DEFAULT_COLOR;
+const KEY_SUFFIX = BAR_ID ? `.${BAR_ID}` : '';
+
 // ---------- Estado ----------
 // El servilletero no se acaba: cada dispositivo lleva la cuenta de las que ha sacado
 // y de las noticias que ya ha leído, para no repetirlas.
-const STORE_KEY = 'cafecita.servilletero.v2';
+const STORE_KEY = `cafecita.servilletero.v2${KEY_SUFFIX}`;
 const today = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -107,7 +118,7 @@ const getNews = () => fetch(`${API}/noticias`, { signal: AbortSignal.timeout(800
   .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`noticias: HTTP ${r.status}`))));
 let [NAPKINS, NEWS, ADS] = await Promise.all([
   fetch('napkins.json').then((r) => r.json()),
-  getNews().catch(() => []),
+  BAR ? [] : getNews().catch(() => []),
   fetch('anuncios.json').then((r) => r.json()).catch(() => []),
 ]);
 const deck = loadDeck();
@@ -133,21 +144,38 @@ async function findShared(id) {
   return news ? { kind: 'news', id, news } : null;
 }
 let shared = sharedId ? await findShared(sharedId) : null;
-const sharedLink = (item) => (item.kind === 'news' || item.kind === 'quote' ? `${location.origin}/?s=${item.id}` : `${location.origin}/`);
+const sharedLink = (item) => (BAR ? `${location.origin}/${BAR_ID}/`
+  : item.kind === 'news' || item.kind === 'quote' ? `${location.origin}/?s=${item.id}` : `${location.origin}/`);
 
-visita({ hoy: today(), conocido: state.count > 0, origen });
+visita({ hoy: today(), conocido: state.count > 0, origen: BAR ? `bar:${BAR_ID}` : origen });
 
 // sin noticias nuevas, se vuelve a mirar si han llegado (como mucho una vez por minuto)
 let lastRefresh = Date.now();
 function refreshNews() {
-  if (Date.now() - lastRefresh < 60000) return;
+  if (BAR || Date.now() - lastRefresh < 60000) return;
   lastRefresh = Date.now();
   getNews().then((n) => { if (n.length) NEWS = n; }).catch(() => {});
 }
 setInterval(refreshNews, 10 * 60000);
 
+// en un bar, siempre sus sugerencias del día (y, sin Pro, de vez en cuando un anuncio de Cafecita)
+function barNapkin() {
+  if (!PRO && ADS.length && ++state.served % AD_EVERY === 0) {
+    const ad = ADS[(state.served / AD_EVERY - 1) % ADS.length];
+    return { kind: 'ad', id: ad.id, ad };
+  }
+  const lines = (BAR.sugerencias || []).filter((x) => x.texto?.trim()).map(sugerencia);
+  return { kind: 'bar', id: `sugerencias-${today()}`, lines: lines.length ? lines : ['- Hoy, lo de siempre'] };
+}
+
 function nextNapkin() {
   state.count++;
+  if (BAR) {
+    const item = barNapkin();
+    state.last = item.kind;
+    saveState();
+    return item;
+  }
   if (state.day !== today()) Object.assign(state, { day: today(), quotesToday: 0 });
   const fresh = NEWS.find((x) => !state.seen.includes(x.id));
   let item;
@@ -183,12 +211,16 @@ const logoIn = (color) => logoSvg.then(async (svg) => {
   await img.decode();
   return img;
 }).catch(() => null);
+// el bar Pro pone su logo en la solapa (y en la story) en lugar de CAFECITA
+const barLogo = PRO ? await logoOf(BAR).catch(() => null) : null;
 const [inkLogo, paperLogo] = await Promise.all([
-  logoIn(INK),
-  logoIn('#F7F3EA'),
+  barLogo ? logoImage(barLogo, INK) : logoIn(INK),
+  barLogo ? logoImage(barLogo, '#F7F3EA') : logoIn('#F7F3EA'),
   document.fonts.load('italic 400 80px Fraunces').catch(() => {}),
   document.fonts.load("700 40px 'Bricolage Grotesque'").catch(() => {}),
+  BAR ? document.fonts.load("400 60px 'Reenie Beanie'").catch(() => {}) : null,
 ]);
+if (BAR) brandPage(paperLogo);
 
 // ---------- Render ----------
 const canvas = document.getElementById('scene');
@@ -248,6 +280,8 @@ scene.add(new THREE.HemisphereLight(0xffffff, 0xdfe1fb, 0.75));
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), new THREE.ShadowMaterial({ color: 0x0c0e2e, opacity: 0.22 }));
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
+// sobre el color de un bar, la sombra tira a ese color (azul marino sobre verde se vería sucia)
+if (PRO) ground.material.color.set(BRAND).multiplyScalar(0.25);
 scene.add(ground);
 
 // ---------- Texturas ----------
@@ -319,8 +353,9 @@ function flapTexture() {
   shade.addColorStop(1, 'rgba(90,80,60,0)');
   g.fillStyle = shade;
   g.fillRect(0, fy + 2, TEX_W, 40);
-  // rótulo
-  const cy = fy + (TEX_H - fy) * 0.44;
+  // rótulo (el logo de un bar, casi cuadrado, va más grande que la tira de CAFECITA)
+  const tall = inkLogo && inkLogo.naturalWidth / inkLogo.naturalHeight < 4;
+  const cy = fy + (TEX_H - fy) * (tall ? 0.28 : 0.44);
   g.textAlign = 'center';
   g.textBaseline = 'middle';
   g.fillStyle = INK;
@@ -328,7 +363,8 @@ function flapTexture() {
   g.filter = 'blur(0.4px)';
   g.font = `italic 400 ${Math.round(TEX_W * 0.082)}px Fraunces, Georgia, serif`;
   g.fillText('Gracias por su visita', TEX_W / 2, cy);
-  const ly = cy + TEX_W * 0.09, lh = TEX_W * 0.04;
+  const lh = tall ? Math.min(TEX_W * 0.2, (TEX_H - cy) * 0.55) : TEX_W * 0.04;
+  const ly = cy + TEX_W * (tall ? 0.08 : 0.07) + lh / 2;
   const lw = inkLogo ? lh * inkLogo.naturalWidth / inkLogo.naturalHeight : 0;
   if (inkLogo) g.drawImage(inkLogo, TEX_W / 2 - lw / 2, ly - lh / 2, lw, lh);
   g.filter = 'none';
@@ -439,6 +475,9 @@ const MATERIALS = {
   }),
   Goma: new THREE.MeshStandardMaterial({ color: '#111114', roughness: 0.6 }),
 };
+// el acabado que elige un bar Pro: blanco o negro lacado en vez de inox
+if (PRO && BAR.marca.servilletero === 'blanco') Object.assign(MATERIALS.Inox, { color: new THREE.Color('#F2F0EB'), map: null, roughnessMap: null, metalness: 0, roughness: 0.32, envMapIntensity: 0.9, anisotropy: 0 });
+if (PRO && BAR.marca.servilletero === 'negro') Object.assign(MATERIALS.Inox, { color: new THREE.Color('#1B1C20'), map: null, roughnessMap: null, metalness: 0.2, roughness: 0.36, envMapIntensity: 1, anisotropy: 0 });
 const paperNormal = paperNormalMap();
 const edgeTex = stackEdgeTexture();
 const stackFront = new THREE.MeshStandardMaterial({ color: PAPER, roughness: 0.95, envMapIntensity: 0.35, emissive: '#ffffff', emissiveIntensity: 0.3 });
@@ -1007,7 +1046,7 @@ function refill(face) {
 const BALL_R = 1.15;
 const BALL_G = 700;          // cm/s²: el papel cae algo frenado
 const MAX_BALLS = 24;
-const FLOOR_KEY = 'cafecita.suelo.v1';
+const FLOOR_KEY = `cafecita.suelo.v1${KEY_SUFFIX}`;
 const balls = [];
 const UP = new THREE.Vector3(0, 1, 0);
 const blankBallMat = paperMaterial(blankTex, THREE.DoubleSide);
@@ -1058,6 +1097,7 @@ const packItem = (it) => (!it ? null
   : it.kind === 'news' ? { k: 'news', n: it.news, f: it.folded ? 1 : 0 }
   : it.kind === 'quote' ? { k: 'quote', id: it.quote.id }
   : it.kind === 'ad' ? { k: 'ad', id: it.ad.id, f: it.folded ? 1 : 0 }
+  : it.kind === 'bar' ? { k: 'bar', l: it.lines }
   : { k: 'empty', f: it.folded ? 1 : 0 });
 function unpackItem(x) {
   const it = unpackKind(x);
@@ -1070,6 +1110,7 @@ function unpackKind(x) {
   if (x.k === 'quote') { const q = NAPKINS.find((n) => n.id === x.id); return q ? { kind: 'quote', id: q.id, quote: q } : null; }
   if (x.k === 'ad') { const ad = ADS.find((a) => a.id === x.id); return ad ? { kind: 'ad', id: ad.id, ad } : null; }
   if (x.k === 'empty') return { kind: 'empty', id: 'vacio-suelo' };
+  if (x.k === 'bar' && Array.isArray(x.l)) return { kind: 'bar', id: 'sugerencias-suelo', lines: x.l.map(String) };
   return null;
 }
 
@@ -1448,19 +1489,27 @@ let shareFile = null;
 
 // adónde lleva el botón: la noticia en la web del periódico, o la del anunciante
 function linkFor(item) {
+  if (item.kind === 'bar') return { href: `${location.pathname}#carta`, text: 'Ver la carta', rel: '', carta: true };
   if (item.kind === 'news') return { href: item.news.url, text: `Leer en ${item.news.fuente}`, rel: 'noopener' };
   if (item.kind === 'ad' && item.ad.url) return { href: item.ad.url, text: item.ad.cta || item.ad.marca, rel: 'sponsored noopener' };
   return null;
 }
 
 // qué servilleta era, para la analítica: el periódico de la noticia o el id de la cita o del anuncio
-const detail = (item) => (item.kind === 'news' ? { fuente: item.news.fuente } : item.kind === 'empty' ? {} : { id: item.id });
-source.addEventListener('click', () => { if (current) medir('enlace', { tipo: current.kind, ...detail(current) }); });
+const detail = (item) => (item.kind === 'news' ? { fuente: item.news.fuente } : item.kind === 'bar' ? { bar: BAR_ID }
+  : item.kind === 'empty' ? {} : { id: item.id });
+source.addEventListener('click', (e) => {
+  if (!current) return;
+  medir('enlace', { tipo: current.kind, ...detail(current) });
+  // la de sugerencias lleva a la carta del bar, encima de la servilleta
+  if (current.kind === 'bar') { e.preventDefault(); openCarta(); }
+});
 
 const LABEL = {
   news: (i) => `${i.news.titular} — ${i.news.fuente}`,
   ad: (i) => `Publicidad: ${i.ad.texto} — ${i.ad.marca}`,
   empty: () => 'Espere a que el personal reponga las servilletas. Gracias por su paciencia.',
+  bar: (i) => `Sugerencias del día: ${i.lines.map((l) => l.replace(/^- /, '')).join('; ')}`,
 };
 
 // Tocar una bola del suelo la abre: se despliega en 3D hasta donde se lee y queda arrugada.
@@ -1582,6 +1631,8 @@ async function showReveal(item, { from } = {}) {
   if (link) {
     source.href = link.href;
     source.rel = link.rel;
+    if (link.carta) source.removeAttribute('target'); else source.target = '_blank';
+    source.classList.toggle('internal', !!link.carta); // la carta no sale de la página: sin flecha
     $('sourceLabel').textContent = link.text;
   }
   // la imagen para compartir se prepara ya: en iPhone, navigator.share tiene que ir pegado al toque
@@ -1776,7 +1827,7 @@ const prank = (() => {
   let span0 = 0, wheel = 0, wheelAt = 0, typed = '';
 
   const ready = () => !reveal.hidden && !reveal.classList.contains('leaving') && !napkinCanvas.hidden &&
-    !!napkinCanvas.dataset.thanks && !napkinCanvas.dataset.folded;
+    !BAR && !!napkinCanvas.dataset.thanks && !napkinCanvas.dataset.folded;
   const onFlap = (y) => {
     const r = napkinCanvas.getBoundingClientRect();
     return y > r.top + r.height * (+napkinCanvas.dataset.fold || 0.6);
@@ -1859,7 +1910,8 @@ const prank = (() => {
 const onboard = (() => {
   const KEY = 'cafecita.onboarding.v1';
   let step = 'done';
-  try { if (localStorage.getItem(KEY) !== 'done') step = 'welcome'; } catch {}
+  // en los bares no hay bienvenida: allí la servilleta trae las sugerencias, no noticias
+  try { if (!BAR && localStorage.getItem(KEY) !== 'done') step = 'welcome'; } catch {}
   const hand = $('hand'), welcome = $('welcome'), coach = $('coachSwipe'), toast = $('toast');
   let loop = null;
 
@@ -1973,12 +2025,12 @@ const slug = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().rep
 function fileName(item) {
   const name = item.kind === 'quote' ? item.quote.author
     : item.kind === 'news' ? `${item.news.fuente} ${item.news.titular.split(' ').slice(0, 6).join(' ')}`
-    : item.kind === 'ad' ? item.ad.marca : 'reponiendo';
-  return `cafecita-${today()}-${slug(name)}.jpg`;
+    : item.kind === 'ad' ? item.ad.marca : item.kind === 'bar' ? 'sugerencias' : 'reponiendo';
+  return `${BAR_ID || 'cafecita'}-${today()}-${slug(name)}.jpg`;
 }
 const storyBlob = (item) => (item.kind === 'quote' && !item.wrinkled
   ? fetch(item.quote.story).then((r) => r.blob())
-  : paintStory(napkinCanvas, paperLogo));
+  : paintStory(napkinCanvas, paperLogo, BRAND));
 
 function saveFile(file) {
   const url = URL.createObjectURL(file);
@@ -1994,7 +2046,8 @@ $('share').addEventListener('click', async () => {
   const item = current;
   const file = shareFile || new File([await storyBlob(item)], fileName(item), { type: 'image/jpeg' });
   // el texto (lo que acompaña a la imagen en WhatsApp) lleva el enlace de vuelta a esta servilleta
-  const what = item.kind === 'news' ? `${item.news.titular} — ${item.news.fuente}`
+  const what = item.kind === 'bar' ? `Sugerencias de hoy en ${BAR.nombre}`
+    : item.kind === 'news' ? `${item.news.titular} — ${item.news.fuente}`
     : item.kind === 'quote' ? `«${item.quote.quote}» — ${item.quote.author}` : 'Gracias por su visita.';
   const text = `${what}\n${sharedLink(item)}`;
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -2007,6 +2060,60 @@ $('share').addEventListener('click', async () => {
     medir('compartir', { tipo: item.kind, ...detail(item), modo: 'descarga' });
   }
 });
+
+// ---------- La página del bar ----------
+// Su color de fondo, su logo arriba (sin Pro, CAFECITA y debajo su nombre) y su carta, que se abre
+// con el botón de abajo o desde la servilleta de sugerencias. Va antes de que exista $():
+// se llama nada más cargar los logos.
+function brandPage(logo) {
+  document.body.classList.add('bar');
+  document.title = `${BAR.nombre} · Carta y sugerencias`;
+  const css = document.documentElement.style;
+  css.setProperty('--azul', BRAND);
+  css.setProperty('--azul-hover', `color-mix(in srgb, ${BRAND} 86%, black)`);
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', BRAND);
+  const head = document.querySelector('.logo');
+  head.setAttribute('aria-label', BAR.nombre);
+  if (PRO && barLogo && logo) {
+    logo.alt = '';
+    head.classList.add('bar-logo');
+    head.replaceChildren(logo);
+  } else {
+    const name = document.createElement('p');
+    name.className = 'bar-name';
+    name.textContent = BAR.nombre;
+    head.after(name);
+  }
+}
+
+const carta = document.getElementById('carta');
+let cartaDrawn = false;
+function openCarta() {
+  if (!BAR || !carta.hidden) return;
+  if (!cartaDrawn) { renderCarta($('cartaBody'), BAR); cartaDrawn = true; }
+  carta.hidden = false;
+  $('cartaBody').scrollTop = 0;
+  gsap.fromTo('.carta-sheet', { yPercent: 100 }, { yPercent: 0, duration: 0.45, ease: 'power3.out' });
+  gsap.fromTo('.carta-veil', { opacity: 0 }, { opacity: 1, duration: 0.3 });
+  medir('carta', { bar: BAR_ID });
+  $('cartaClose').focus({ preventScroll: true });
+}
+function closeCarta() {
+  if (carta.hidden) return;
+  gsap.to('.carta-veil', { opacity: 0, duration: 0.25 });
+  gsap.to('.carta-sheet', { yPercent: 100, duration: 0.3, ease: 'power2.in', onComplete: () => { carta.hidden = true; } });
+  if (location.hash === '#carta') history.replaceState(null, '', location.pathname + location.search);
+}
+if (BAR) {
+  $('cartaBtn').addEventListener('click', openCarta);
+  $('cartaClose').addEventListener('click', closeCarta);
+  carta.querySelector('.carta-veil').addEventListener('click', closeCarta);
+  // con la carta abierta, Escape solo cierra la carta (la servilleta sigue debajo)
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !carta.hidden) { e.stopImmediatePropagation(); closeCarta(); }
+  }, { capture: true });
+  if (location.hash === '#carta') gsap.delayedCall(0.8, openCarta);
+}
 
 // ---------- Bucle ----------
 const clock = new THREE.Clock();

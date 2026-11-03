@@ -175,7 +175,7 @@ body:not(.loading) .skeleton { opacity: 0; }
 .reveal-bg {
   position: absolute;
   inset: 0;
-  background: rgba(63, 72, 244, .86);
+  background: color-mix(in srgb, var(--azul) 86%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -313,3 +313,85 @@ body:not(.loading) .skeleton { opacity: 0; }
 
 /* mientras se arrastra la servilleta abierta, el 3D va por encima del velo azul */
 #scene.lifted { z-index: 11; pointer-events: none; }
+
+/* ---------- Página de un bar (cafecita.app/<bar>/, ver bar.js) ---------- */
+body.bar .top { flex-direction: column; align-items: center; gap: 6px; }
+.logo.bar-logo { height: 68px; }
+.logo.bar-logo img { height: 100%; width: auto; display: block; }
+@media (max-width: 600px) { .logo.bar-logo { height: 58px; } }
+.bar-name {
+  margin: 0;
+  font: 400 30px/1 'Reenie Beanie', cursive;
+  color: #fff;
+}
+body.bar .hint { bottom: calc(max(28px, env(safe-area-inset-bottom)) + 84px); }
+
+.source.internal svg { display: none; }
+
+.carta-btn {
+  position: fixed;
+  left: 50%;
+  bottom: max(24px, env(safe-area-inset-bottom));
+  z-index: 3;
+  translate: -50% 0;
+  box-shadow: 0 10px 24px rgba(12, 14, 46, .22);
+}
+.carta-btn:active { transform: scale(.97); }
+
+/* la carta: una libreta de comandas que sube desde abajo */
+.carta { position: fixed; inset: 0; z-index: 30; }
+.carta[hidden] { display: none; }
+.carta-veil { position: absolute; inset: 0; background: rgba(12, 14, 46, .45); }
+.carta-sheet {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  max-width: 560px;
+  max-height: calc(100% - 48px);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  border-radius: 22px 22px 0 0;
+  background: var(--papel);
+  color: var(--noche);
+  box-shadow: 0 -10px 40px rgba(12, 14, 46, .25);
+}
+.carta-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 16px 6px 22px;
+  border-bottom: 1px dashed rgba(12, 14, 46, .18);
+}
+.carta-head h2 { margin: 0; font: 400 40px/1 'Reenie Beanie', cursive; color: var(--azul); }
+.carta-close { border-color: rgba(12, 14, 46, .25); color: var(--noche); width: 42px; height: 42px; }
+.carta-close:hover { background: rgba(12, 14, 46, .06); border-color: rgba(12, 14, 46, .5); }
+.carta-body { overflow-y: auto; padding: 8px 22px 12px; overscroll-behavior: contain; }
+.carta-sec { padding: 14px 0 6px; }
+.carta-sec-title { margin: 0 0 6px; font: 400 32px/1 'Reenie Beanie', cursive; color: var(--azul); }
+.carta-list { list-style: none; margin: 0; padding: 0; }
+.carta-item { padding: 10px 0; border-bottom: 1px solid rgba(12, 14, 46, .08); }
+.carta-item:last-child { border-bottom: 0; }
+.carta-row { display: flex; align-items: baseline; gap: 12px; font: 500 17px/1.3 var(--sans); }
+.carta-name { flex: 1; }
+.carta-price { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.carta-al { margin: 3px 0 0; font: 400 13px/1.35 var(--sans); color: rgba(12, 14, 46, .6); }
+.agotado .carta-name, .agotado .carta-price { text-decoration: line-through; color: rgba(12, 14, 46, .45); }
+.carta-out {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 1px 7px;
+  border-radius: 6px;
+  background: #B3261E;
+  color: #fff;
+  font-weight: 600;
+  font-size: 12px;
+}
+.carta-foot { padding: 14px 0 4px; font: 400 14px/1.45 var(--sans); color: rgba(12, 14, 46, .7); }
+.carta-foot p { margin: 0; }
+.carta-credit {
+  margin: 0;
+  padding: 10px 22px max(16px, env(safe-area-inset-bottom));
+  font: 400 12px/1.3 var(--sans);
+  color: rgba(12, 14, 46, .5);
+}
+.carta-credit a { color: inherit; }
