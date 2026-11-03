@@ -30,6 +30,7 @@ body {
 h1, h2, h3 { margin: 0; text-wrap: balance; }
 p { margin: 0; text-wrap: pretty; }
 a { color: inherit; }
+[hidden] { display: none !important; }
 em { font-family: var(--serif); font-style: italic; font-weight: 400; }
 :focus-visible { outline: 2px solid var(--azul); outline-offset: 3px; border-radius: 6px; }
 
@@ -282,6 +283,18 @@ em { font-family: var(--serif); font-style: italic; font-weight: 400; }
   text-transform: uppercase;
 }
 .l-price { margin-top: 18px; font-size: 18px; }
+.l-promo { margin-top: 18px; font: italic 400 19px/1.25 var(--serif); text-wrap: balance; }
+.l-promo::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 10px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, .18);
+  vertical-align: .12em;
+}
 .l-price b { font: 700 52px/1 var(--sans); letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
 .l-plan-sub { margin-top: 8px; font-size: 15px; color: var(--suave); }
 .l-feats { grid-column: 1 / -1; margin: 0; padding: 0; list-style: none; }

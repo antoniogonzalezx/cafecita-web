@@ -24,6 +24,12 @@ for (const b of document.querySelectorAll('[data-pago]')) {
   });
 }
 
+// ---------- Lo que caduca ----------
+// el piloto (Pro gratis hasta el 31 de enero) desaparece solo al día siguiente
+for (const e of document.querySelectorAll('[data-hasta]')) {
+  if (Date.now() > Date.parse(`${e.dataset.hasta}T23:59:59+01:00`)) e.hidden = true;
+}
+
 // ---------- El QR de la demo ----------
 $('lQr').innerHTML = qrSvg('https://cafecita.app/barmanolo/?o=qr-landing', '#0C0E2E');
 

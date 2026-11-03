@@ -5,6 +5,7 @@
 // La vista previa de la derecha es su página de verdad, que se recarga al guardar.
 import { loadBar, saveBar, resetBar, entrar, guardarRemoto, isPro, logoOf, logoImage, servilletas, titulo, precio, ALERGENOS, COLORES, ACABADOS, TIPOS, DEFAULT_COLOR, LETRAS, letraCss } from './bar.js?v=7';
 import { paintNapkin, BAR_INK } from './napkin.js?v=21';
+import { medir } from './medir.js?v=14';
 
 const ID = document.body.dataset.bar;
 // la vista previa es la página entera (con su 3D): solo se carga donde se ve, no en el móvil,
@@ -196,8 +197,32 @@ function drawTabs(list, on) {
 }
 
 // ---------- Secciones ----------
+// Piloto: los bares que empiezan antes del 31 de enero de 2027 tienen Pro gratis hasta entonces.
+// En enero cada uno dice si sigue con Pro (pagando) o pasa a Basic; nadie paga sin decirlo.
+const PILOTO = Date.parse('2027-01-31T23:59:59+01:00');
+const enPiloto = () => Date.now() <= PILOTO;
+const SEGUIR_KEY = `cafecita.pro.seguir.${ID}`;
+
+function seguirConPro() {
+  const hecho = el('p', { class: 'g-note' }, 'Apuntado. En enero te escribimos para dejarlo listo.');
+  let ya = false;
+  try { ya = localStorage.getItem(SEGUIR_KEY) === '1'; } catch {}
+  if (ya) return hecho;
+  const b = el('button', { type: 'button', class: 'g-btn g-btn-seguir', onclick: () => {
+    medir('enlace', { a: 'pro:seguir', bar: ID });
+    try { localStorage.setItem(SEGUIR_KEY, '1'); } catch {}
+    b.replaceWith(hecho);
+  } }, 'Quiero seguir con Pro en febrero');
+  return b;
+}
+
 function planCard() {
   const pro = isPro(bar);
+  if (!DEMO && pro && enPiloto()) {
+    return card('Tu plan', 'Tienes Cafecita Pro gratis hasta el 31 de enero: tu logo, tu color, tu servilletero y tu letra, sin anuncios.',
+      el('p', { class: 'g-note' }, 'Después, Pro cuesta 9,99 € al mes o 99 € al año. Si no quieres seguir, pasas a Basic, gratis, y no pierdes nada. No te cobramos nada sin que nos lo digas.'),
+      seguirConPro());
+  }
   // un bar dado de alta no se cambia el plan: lo pone Cafecita
   if (!DEMO) {
     return card('Tu plan', pro ? 'Tienes Cafecita Pro: tu logo, tu color, tu servilletero y tu letra, sin anuncios.'
@@ -213,7 +238,8 @@ function planCard() {
     el('div', { class: 'g-plans' },
       opt('gratis', 'Basic', 'Gratis', 'Tu página, tus sugerencias y tu carta, con el color y el logo de Cafecita.'),
       opt('pro', 'Pro', '9,99 €/mes', 'Tu logo, tu color, tu servilletero y tu letra. Sin anuncios. O 99 € al año: dos meses gratis.')),
-    !pro && el('p', { class: 'g-note' }, 'Con Basic, de vez en cuando sale un anuncio de Cafecita en tu servilletero.'));
+    !pro && el('p', { class: 'g-note' }, 'Con Basic, de vez en cuando sale un anuncio de Cafecita en tu servilletero.'),
+    enPiloto() && el('p', { class: 'g-note' }, 'Si empiezas antes del 31 de enero, Pro es gratis hasta entonces.'));
 }
 
 // Lo de hoy: cada línea es una sugerencia del día o algo fuera de carta, y cada tipo sale en
@@ -410,7 +436,8 @@ function datosCard() {
 function render() {
   $('gForm').replaceChildren(
     hoyCard(), cartaCard(), imprimirCard(), marcaCard(), datosCard(), planCard(),
-    DEMO && el('p', { class: 'g-reset' }, el('button', { type: 'button', class: 'g-link', onclick: async (e) => {
+    // replaceChildren no se salta los false: pondría «false» en la página
+    DEMO ? el('p', { class: 'g-reset' }, el('button', { type: 'button', class: 'g-link', onclick: async (e) => {
       // dos toques: el primero pregunta, sin ventanas del navegador
       const b = e.currentTarget;
       if (!b.dataset.sure) {
@@ -424,7 +451,7 @@ function render() {
       await paintBrand();
       render();
       if (frame().getAttribute('src')) frame().contentWindow?.location.reload();
-    } }, 'Restablecer la demo')));
+    } }, 'Restablecer la demo')) : '');
   for (const d of document.querySelectorAll('.g-swatch-dot')) d.style.background = d.dataset.c;
   paintPreview();
 }

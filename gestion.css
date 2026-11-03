@@ -111,6 +111,7 @@ button, input, select { font: inherit; color: inherit; }
 .g-sub { margin: 4px 0 0; color: var(--suave); font-size: 14px; }
 .g-note { margin: 12px 0 0; font-size: 13px; color: var(--suave); }
 .g-note a { color: var(--noche); font-weight: 600; text-underline-offset: 3px; }
+.g-btn.g-btn-seguir { margin-top: 14px; border-color: transparent; background: var(--brand); color: #fff; }
 
 .g-field { display: block; margin-top: 16px; }
 .g-field:first-child { margin-top: 0; }
