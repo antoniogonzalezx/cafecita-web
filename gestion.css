@@ -358,3 +358,22 @@ button, input, select { font: inherit; color: inherit; }
 /* foco visible en todo lo que se toca con el teclado */
 button:focus-visible, a:focus-visible, select:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 .g-top a:focus-visible { outline-color: #fff; }
+
+/* para imprimir */
+.g-prints { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.g-print {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px;
+  border: 1.5px solid var(--linea);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--noche);
+  text-decoration: none;
+  transition: border-color .2s, transform .2s;
+}
+.g-print:hover { border-color: var(--brand); transform: translateY(-1px); }
+.g-print-t { font-weight: 700; font-size: 14px; }
+.g-print-s { font-size: 12px; color: var(--suave); }
+@media (max-width: 560px) { .g-prints { grid-template-columns: 1fr; } }

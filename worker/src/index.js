@@ -25,7 +25,8 @@ const FEEDS = [
 ];
 
 const UA = 'Mozilla/5.0 (compatible; CafecitaBot/1.0; +https://cafecita.app/)';
-const EVENTOS = new Set(['visita', 'dia', 'servilleta', 'enlace', 'compartir', 'bola', 'bienvenida']);
+// «carta»: alguien abre la carta de un bar (con su id en los datos, como el resto de eventos de bar)
+const EVENTOS = new Set(['visita', 'dia', 'servilleta', 'enlace', 'compartir', 'bola', 'bienvenida', 'carta']);
 const BATCH = 25;
 
 // ---------- Respuestas ----------
