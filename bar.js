@@ -109,6 +109,11 @@ const h = (tag, cls, text) => {
   return el;
 };
 
+// lo que dice la carta de los alérgenos: lo marcado o, si no lo está, que se pregunte
+const alergenosTexto = (list) => (Array.isArray(list)
+  ? (list.length ? `Contiene: ${list.map((a) => ALERGENOS[a] || a).join(', ')}` : 'Sin alérgenos declarados')
+  : 'Alérgenos: pregunta al personal');
+
 export function renderCarta(root, bar) {
   root.replaceChildren();
   // arriba, lo de hoy: lo mismo que sale en las servilletas
@@ -122,8 +127,7 @@ export function renderCarta(root, bar) {
       const row = h('div', 'carta-row');
       row.append(h('span', 'carta-name', x.texto), h('span', 'carta-dots'), h('span', 'carta-price', precio(x.precio, true)));
       const tag = h('p', 'carta-al');
-      // lo de hoy aún no lleva alérgenos marcados: nunca se supone, se pregunta
-      tag.append(h('span', `carta-tag tag-${tipoDe(x)}`, TIPOS[tipoDe(x)]), 'Alérgenos: pregunta al personal');
+      tag.append(h('span', `carta-tag tag-${tipoDe(x)}`, TIPOS[tipoDe(x)]), alergenosTexto(x.alergenos));
       li.append(row, tag);
       list.append(li);
     }
@@ -143,9 +147,7 @@ export function renderCarta(root, bar) {
       const al = h('p', 'carta-al');
       if (p.agotado) al.append(h('span', 'carta-out', 'Agotado'));
       else if (p.destacado) al.append(h('span', 'carta-tag tag-estrella', TIPOS.estrella));
-      al.append(Array.isArray(p.alergenos)
-        ? (p.alergenos.length ? `Contiene: ${p.alergenos.map((a) => ALERGENOS[a] || a).join(', ')}` : 'Sin alérgenos declarados')
-        : 'Alérgenos: pregunta al personal');
+      al.append(alergenosTexto(p.alergenos));
       li.append(al);
       list.append(li);
     }

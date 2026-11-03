@@ -81,9 +81,9 @@ button, input, select { font: inherit; color: inherit; }
   .g-card { padding: 16px; }
 }
 @media (max-width: 560px) {
-  .g-saved { display: none; }
+  .g-saved { font-size: 12px; }
+  .g-kicker { display: none; }
   .g-logo { height: 34px; }
-  .g-kicker { font-size: 11px; white-space: nowrap; }
   .g-top h1 { font-size: 17px; }
   .g-top .g-btn { padding: 8px 12px; }
 }
@@ -312,3 +312,38 @@ button, input, select { font: inherit; color: inherit; }
 .g-letra.on { border-color: var(--brand); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 18%, transparent); }
 .g-letra-muestra { font-size: 22px; line-height: 1.15; color: #2F4C82; }
 .g-letra-nombre { font-size: 12px; font-weight: 600; color: var(--suave); }
+
+/* lo de hoy: sus alérgenos, debajo de toda la línea */
+.g-hoy-al { order: 4; flex-basis: 100%; }
+.g-hoy-al .g-al-btn { margin-top: 2px; }
+
+/* errores en línea y precios que no son números */
+.g-error { margin: 8px 0 0; font-size: 13px; color: #A4262C; }
+.g-error[hidden] { display: none; }
+.g-input[aria-invalid="true"] { outline: 2px solid #A4262C; outline-offset: -1px; }
+
+/* «quitado · Deshacer»: abajo, unos segundos */
+.g-toast {
+  position: fixed;
+  left: 50%;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  z-index: 20;
+  translate: -50% 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: calc(100% - 32px);
+  padding: 12px 12px 12px 18px;
+  border-radius: 14px;
+  background: var(--noche);
+  color: #fff;
+  font-size: 14px;
+  box-shadow: 0 16px 36px -12px rgba(12, 14, 46, .5);
+}
+.g-toast[hidden] { display: none; }
+.g-toast-undo { flex: none; padding: 8px 12px; border: 0; border-radius: 9px; background: rgba(255, 255, 255, .14); color: #fff; font-weight: 600; cursor: pointer; }
+.g-toast-undo:hover { background: rgba(255, 255, 255, .22); }
+
+/* foco visible en todo lo que se toca con el teclado */
+button:focus-visible, a:focus-visible, select:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.g-top a:focus-visible { outline-color: #fff; }

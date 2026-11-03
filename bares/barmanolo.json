@@ -14,12 +14,21 @@
     {
       "tipo": "sugerencia",
       "texto": "Bocata de calamares",
-      "precio": 6
+      "precio": 6,
+      "alergenos": [
+        "gluten",
+        "moluscos",
+        "huevos"
+      ]
     },
     {
       "tipo": "fuera",
       "texto": "Rabo de toro estofado",
-      "precio": 14
+      "precio": 14,
+      "alergenos": [
+        "sulfitos",
+        "apio"
+      ]
     }
   ],
   "carta": [

@@ -3,7 +3,7 @@
 // del bar (sin un instante del azul de Cafecita) y la carta ya funciona, también con la Wi-Fi
 // lenta de un bar: el cliente viene a ver qué hay. El servilletero llega después (main.js),
 // que abre la carta desde la servilleta con el evento «carta:abrir».
-import { loadBar, isPro, logoOf, logoImage, renderCarta, DEFAULT_COLOR, LETRAS } from './bar.js?v=4';
+import { loadBar, isPro, logoOf, logoImage, renderCarta, DEFAULT_COLOR, LETRAS } from './bar.js?v=5';
 import { medir } from './medir.js?v=14';
 
 const $ = (id) => document.getElementById(id);

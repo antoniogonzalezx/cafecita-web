@@ -2,7 +2,7 @@
 // Lo que el bar cambia de su página: sugerencias del día, carta y datos (gratis) y, con Pro,
 // su logo, su color y el acabado del servilletero. En la demo se guarda en este navegador
 // (bar.js) y la vista previa de la derecha es su página de verdad, que se recarga al guardar.
-import { loadBar, saveBar, resetBar, isPro, logoOf, logoImage, servilletas, titulo, precio, ALERGENOS, COLORES, ACABADOS, TIPOS, DEFAULT_COLOR, LETRAS, letraCss } from './bar.js?v=4';
+import { loadBar, saveBar, resetBar, isPro, logoOf, logoImage, servilletas, titulo, precio, ALERGENOS, COLORES, ACABADOS, TIPOS, DEFAULT_COLOR, LETRAS, letraCss } from './bar.js?v=5';
 import { paintNapkin, BAR_INK } from './napkin.js?v=20';
 
 const ID = document.body.dataset.bar;
@@ -58,6 +58,23 @@ function changed({ redraw = false, napkin = false, brand = false } = {}) {
   // el logo y el color se cargan antes de redibujar, que los usan
   const after = () => { if (redraw) render(); else if (napkin || brand) paintPreview(); };
   if (brand) paintBrand().then(after); else after();
+}
+
+// Quitar algo no pregunta: se quita y, durante unos segundos, se puede deshacer
+let toastTimer = null;
+function undoable(msg, mutate) {
+  const before = structuredClone(bar);
+  mutate();
+  changed({ redraw: true, napkin: true });
+  const toast = $('gToast');
+  toast.replaceChildren(el('span', {}, msg), el('button', { type: 'button', class: 'g-toast-undo', onclick: () => {
+    bar = before;
+    toast.hidden = true;
+    changed({ redraw: true, napkin: true });
+  } }, 'Deshacer'));
+  toast.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { toast.hidden = true; }, 6000);
 }
 
 // ---------- Cabecera y colores de la propia gestión ----------
@@ -138,7 +155,8 @@ function hoyCard() {
       el('input', { class: 'g-input grow', value: s.texto, placeholder: s.tipo === 'fuera' ? 'Rabo de toro estofado' : 'Bocata de calamares',
         'aria-label': 'Plato', oninput: (e) => { s.texto = e.target.value; changed({ napkin: true }); } }),
       priceInput(s, () => changed({ napkin: true })),
-      removeBtn('Quitar', () => { bar.sugerencias.splice(i, 1); draw(); changed({ napkin: true }); }))));
+      removeBtn('Quitar', () => undoable(`«${s.texto || 'Línea'}» quitada`, () => bar.sugerencias.splice(i, 1))),
+      el('div', { class: 'g-hoy-al' }, ...alergenosUI(s)))));
   };
   draw();
   const add = (tipo, label) => el('button', { type: 'button', class: 'g-btn g-btn-add', onclick: () => {
@@ -162,10 +180,12 @@ function marcaCard() {
   const m = bar.marca;
   const file = el('input', { type: 'file', accept: '.svg,image/svg+xml,image/png,image/jpeg,image/webp', hidden: true, onchange: (e) => upload(e.target.files[0]) });
   const logoBox = el('div', { class: 'g-logo-box' });
+  const logoErr = el('p', { class: 'g-error', role: 'alert', hidden: true }, 'El logo pesa demasiado: tiene que ocupar menos de 400 KB.');
   logoImage(logo, '#F7F3EA').then((img) => logoBox.replaceChildren(img || el('span', {}, 'Sin logo')));
   async function upload(f) {
     if (!f) return;
-    if (f.size > 400 * 1024) { alert('El logo tiene que pesar menos de 400 KB.'); return; }
+    logoErr.hidden = f.size <= 400 * 1024;
+    if (!logoErr.hidden) return;
     m.logo = f.type === 'image/svg+xml' || f.name.endsWith('.svg')
       ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(await f.text())}`
       : await new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(f); });
@@ -185,7 +205,7 @@ function marcaCard() {
       el('div', { class: 'g-logo-actions' },
         el('button', { type: 'button', class: 'g-btn', onclick: () => file.click() }, 'Subir logo'),
         el('button', { type: 'button', class: 'g-btn g-btn-ghost', onclick: () => { m.logo = `bares/${ID}/logo.svg`; changed({ redraw: true, brand: true }); } }, 'Usar el de ejemplo'),
-        file)),
+        file), logoErr),
       'SVG de un color (se pinta en la tinta de la servilleta) o PNG. Sale arriba de tu página y en la solapa.'),
     field('Color de tu página', el('div', { class: 'g-swatches' }, COLORES.map(swatch),
       el('input', { type: 'color', class: 'g-color', value: m.color, 'aria-label': 'Otro color', disabled: !pro,
@@ -213,11 +233,8 @@ function cartaCard() {
     el('div', { class: 'g-sec-head' },
       el('input', { class: 'g-input g-sec-name', value: sec.seccion, 'aria-label': 'Nombre de la sección', placeholder: 'Sección',
         oninput: (e) => { sec.seccion = e.target.value; changed(); } }),
-      removeBtn('Quitar la sección', () => {
-        if (sec.platos.length && !confirm(`¿Quitar «${sec.seccion}» y sus ${sec.platos.length} platos?`)) return;
-        bar.carta.splice(si, 1); draw(); changed();
-      })),
-    el('div', { class: 'g-items' }, sec.platos.map((p, pi) => itemRow(p, () => { sec.platos.splice(pi, 1); draw(); changed(); }))),
+      removeBtn('Quitar la sección', () => undoable(`Sección «${sec.seccion}» quitada`, () => bar.carta.splice(si, 1)))),
+    el('div', { class: 'g-items' }, sec.platos.map((p, pi) => itemRow(p, () => undoable(`«${p.nombre || 'Plato'}» quitado`, () => sec.platos.splice(pi, 1))))),
     el('button', { type: 'button', class: 'g-btn g-btn-add', onclick: () => {
       sec.platos.push({ nombre: '', precio: '', alergenos: null });
       draw();
@@ -230,7 +247,9 @@ function cartaCard() {
     } }, '+ Añadir sección'));
 }
 
-function itemRow(p, remove) {
+// Los 14 alérgenos de un plato (o de lo de hoy): un resumen que se despliega en botones.
+// «No lo sé» deja que la carta diga «pregunta al personal», nunca una suposición.
+function alergenosUI(p) {
   const al = el('div', { class: 'g-al', hidden: true });
   const summary = el('button', { type: 'button', class: 'g-al-btn', 'aria-expanded': 'false' });
   const sum = () => {
@@ -257,6 +276,10 @@ function itemRow(p, remove) {
       onclick: () => { p.alergenos = null; chips(); sum(); changed(); } }, 'No lo sé'));
   chips();
   sum();
+  return [summary, al];
+}
+
+function itemRow(p, remove) {
   const row = el('div', { class: `g-item${p.agotado ? ' out' : ''}` },
     el('div', { class: 'g-row' },
       el('input', { class: 'g-input grow', value: p.nombre, placeholder: 'Nombre del plato', 'aria-label': 'Plato',
@@ -269,7 +292,7 @@ function itemRow(p, remove) {
         el('input', { type: 'checkbox', checked: !!p.agotado, onchange: (e) => { p.agotado = e.target.checked; row.classList.toggle('out', p.agotado); changed({ napkin: true }); } }),
         el('span', {}, 'Agotado')),
       removeBtn('Quitar el plato', remove)),
-    summary, al);
+    ...alergenosUI(p));
   return row;
 }
 
@@ -277,7 +300,16 @@ function priceInput(o, onChange) {
   return el('span', { class: 'g-price' },
     el('input', { class: 'g-input', inputmode: 'decimal', value: o.precio === '' || o.precio == null ? '' : precio(o.precio).replace('€', ''),
       placeholder: '0', 'aria-label': 'Precio en euros',
-      oninput: (e) => { const v = e.target.value.trim(); o.precio = v === '' ? '' : num(v); onChange(); } }),
+      oninput: (e) => {
+        const v = e.target.value.trim(), n = v === '' ? '' : num(v);
+        // solo números (con coma o punto): si no, se marca y no se guarda
+        const bad = n !== '' && Number.isNaN(n);
+        e.target.setAttribute('aria-invalid', String(bad));
+        e.target.title = bad ? 'Solo números, por ejemplo 7,50' : '';
+        if (bad) return;
+        o.precio = n;
+        onChange();
+      } }),
     el('span', { class: 'g-euro' }, '€'));
 }
 const removeBtn = (label, onclick) => el('button', { type: 'button', class: 'g-remove', 'aria-label': label, title: label, onclick }, '×');
@@ -293,9 +325,16 @@ function datosCard() {
 
 function render() {
   $('gForm').replaceChildren(
-    planCard(), hoyCard(), marcaCard(), cartaCard(), datosCard(),
-    el('p', { class: 'g-reset' }, el('button', { type: 'button', class: 'g-link', onclick: async () => {
-      if (!confirm('¿Volver a dejar la demo como estaba?')) return;
+    hoyCard(), cartaCard(), marcaCard(), datosCard(), planCard(),
+    el('p', { class: 'g-reset' }, el('button', { type: 'button', class: 'g-link', onclick: async (e) => {
+      // dos toques: el primero pregunta, sin ventanas del navegador
+      const b = e.currentTarget;
+      if (!b.dataset.sure) {
+        b.dataset.sure = '1';
+        b.textContent = '¿Seguro? Pulsa otra vez para restablecer';
+        setTimeout(() => { delete b.dataset.sure; b.textContent = 'Restablecer la demo'; }, 4000);
+        return;
+      }
       resetBar(ID);
       bar = await loadBar(ID);
       await paintBrand();
