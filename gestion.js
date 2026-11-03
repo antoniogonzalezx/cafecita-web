@@ -3,7 +3,7 @@
 // su logo, su color y el acabado del servilletero. En la demo se guarda en este navegador
 // (bar.js) y la vista previa de la derecha es su página de verdad, que se recarga al guardar.
 import { loadBar, saveBar, resetBar, isPro, logoOf, logoImage, servilletas, titulo, precio, ALERGENOS, COLORES, ACABADOS, TIPOS, DEFAULT_COLOR } from './bar.js?v=2';
-import { paintNapkin, BAR_INK } from './napkin.js?v=18';
+import { paintNapkin, BAR_INK, LETRAS, letraCss } from './napkin.js?v=19';
 
 const ID = document.body.dataset.bar;
 // la vista previa es la página entera (con su 3D): solo se carga donde se ve, no en el móvil,
@@ -18,7 +18,7 @@ WIDE.addEventListener('change', syncFrame);
 syncFrame();
 const INK = BAR_INK; // la misma tinta que la servilleta de verdad
 let bar = await loadBar(ID);
-document.fonts.load("400 60px 'Walter Turncoat'").catch(() => {});
+const letraDe = (b) => (isPro(b) && LETRAS[b.marca.letra] ? b.marca.letra : 'clasica');
 
 // ---------- DOM ----------
 function el(tag, props = {}, ...kids) {
@@ -65,6 +65,10 @@ let logo = null;
 async function paintBrand() {
   const pro = isPro(bar);
   document.documentElement.style.setProperty('--brand', pro ? bar.marca.color : DEFAULT_COLOR);
+  const l = LETRAS[letraDe(bar)];
+  document.documentElement.style.setProperty('--boli', `'${l.family}', Georgia, serif`);
+  document.documentElement.style.setProperty('--boli-style', l.style || 'normal');
+  document.documentElement.style.setProperty('--boli-case', l.caps ? 'uppercase' : 'none');
   $('gName').textContent = bar.nombre || 'Tu bar';
   document.title = `Gestión · ${bar.nombre || 'Tu bar'}`;
   logo = await logoOf(bar).catch(() => null);
@@ -82,14 +86,15 @@ async function paintPreview() {
   const pro = isPro(bar);
   const src = pro && logo ? logo : { svg: await fetch('logo.svg').then((r) => r.text()) };
   const img = await logoImage(src, INK);
-  await document.fonts.load("400 60px 'Walter Turncoat'").catch(() => {});
+  const letra = letraDe(bar);
+  await document.fonts.load(letraCss(LETRAS[letra], 60)).catch(() => {});
   // la que esté elegida en las pestañas de encima (o la primera que haya)
   const list = servilletas(bar);
   const n = list.find((x) => x.tipo === previewTipo) || list[0]
     || { tipo: 'sugerencia', title: titulo('sugerencia'), lines: ['- Hoy, lo de siempre'] };
   drawTabs(list, n.tipo);
   const tmp = document.createElement('canvas');
-  await paintNapkin(tmp, { kind: 'bar', id: `${n.tipo}-gestion`, title: n.title, lines: n.lines }, { logo: img, ink: INK });
+  await paintNapkin(tmp, { kind: 'bar', id: `${n.tipo}-gestion`, title: n.title, lines: n.lines }, { logo: img, ink: INK, letra });
   if (seq !== previewSeq) return;
   c.width = tmp.width;
   c.height = tmp.height;
@@ -185,7 +190,16 @@ function marcaCard() {
     field('Color de tu página', el('div', { class: 'g-swatches' }, COLORES.map(swatch),
       el('input', { type: 'color', class: 'g-color', value: m.color, 'aria-label': 'Otro color', disabled: !pro,
         onchange: (e) => { m.color = e.target.value; changed({ redraw: true, brand: true }); } }))),
-    field('Servilletero', el('div', { class: 'g-finishes' }, Object.keys(ACABADOS).map(finish))));
+    field('Servilletero', el('div', { class: 'g-finishes' }, Object.keys(ACABADOS).map(finish))),
+    field('Letra de lo que escribes', el('div', { class: 'g-letras' }, Object.entries(LETRAS).map(([k, l]) => {
+      const on = (m.letra || 'clasica') === k;
+      const muestra = el('span', { class: 'g-letra-muestra' }, l.caps ? 'SUGERENCIA DEL DÍA' : 'Sugerencia del día');
+      muestra.style.fontFamily = `'${l.family}', Georgia, serif`;
+      muestra.style.fontStyle = l.style || 'normal';
+      return el('button', { type: 'button', class: `g-letra${on ? ' on' : ''}`, 'aria-pressed': String(on), disabled: !pro,
+        onclick: () => { m.letra = k; changed({ redraw: true, brand: true }); } },
+      muestra, el('span', { class: 'g-letra-nombre' }, k === 'clasica' ? `${l.nombre} (la de la frase)` : l.nombre));
+    })), 'La de las servilletas y los títulos de tu carta.'));
   return card('Tu marca', pro ? 'Lo que hace que tu página sea tuya.' : null,
     !pro && el('div', { class: 'g-lock' },
       el('p', {}, el('b', {}, 'Con Cafecita Pro'), ' tu página lleva tu logo, tu color y tu servilletero, en vez de los de Cafecita.'),

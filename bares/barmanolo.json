@@ -7,7 +7,8 @@
   "marca": {
     "logo": "bares/barmanolo/logo.svg",
     "color": "#1F6B45",
-    "servilletero": "inox"
+    "servilletero": "inox",
+    "letra": "clasica"
   },
   "sugerencias": [
     {

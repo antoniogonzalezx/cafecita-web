@@ -6,7 +6,9 @@
   --linea: rgba(12, 14, 46, .12);
   --suave: rgba(12, 14, 46, .6);
   --sans: 'Bricolage Grotesque', system-ui, sans-serif;
-  --boli: 'Walter Turncoat', cursive;
+  --boli: 'Fraunces', Georgia, serif;
+  --boli-style: italic;
+  --boli-case: none;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
@@ -234,7 +236,7 @@ button, input, select { font: inherit; color: inherit; }
 .g-carta { display: flex; flex-direction: column; gap: 18px; }
 .g-sec { padding-top: 4px; }
 .g-sec-head { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
-.g-sec-name { font: 400 18px/1.2 var(--boli); text-transform: uppercase; color: var(--brand); border-color: transparent; background: transparent; padding-left: 4px; }
+.g-sec-name { font: 400 20px/1.2 var(--boli); font-style: var(--boli-style); text-transform: var(--boli-case); color: var(--brand); border-color: transparent; background: transparent; padding-left: 4px; }
 .g-sec-name:hover { border-color: var(--linea); }
 .g-item { padding: 8px; border-radius: 12px; background: #fff; border: 1px solid var(--linea); }
 .g-item .g-input { border-color: transparent; background: rgba(12, 14, 46, .03); }
@@ -292,3 +294,21 @@ button, input, select { font: inherit; color: inherit; }
 .g-tab.on { background: var(--brand); border-color: var(--brand); color: #fff; }
 .g-star input { accent-color: #B7791F; }
 
+
+/* la letra de lo que escribe el bar: cada opción, escrita con ella */
+.g-letras { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.g-letra {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--linea);
+  border-radius: 12px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+.g-letra.on { border-color: var(--brand); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 18%, transparent); }
+.g-letra-muestra { font-size: 22px; line-height: 1.15; color: #2F4C82; }
+.g-letra-nombre { font-size: 12px; font-weight: 600; color: var(--suave); }

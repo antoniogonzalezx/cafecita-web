@@ -80,7 +80,8 @@ function lines(item) {
 //     | { kind: 'bar', title: 'Sugerencia del día', lines: ['- Bocata de calamares 6€', …] } (lo de hoy en un bar)
 // La plantilla sale del id: la misma noticia cae siempre en la misma servilleta.
 // ink: en las de bar, la única tinta de la servilleta (lo escrito, la frase y el logo, que ya viene pintado de ella)
-export async function paintNapkin(canvas, item, { logo, ink = BAR_INK } = {}) {
+// letra: la que el bar ha elegido para lo que escribe (LETRAS; por defecto, la de la frase)
+export async function paintNapkin(canvas, item, { logo, ink = BAR_INK, letra = 'clasica' } = {}) {
   const list = await TEMPLATES;
   const t = list[hash(item.id || 'x') % list.length];
   const img = await t.img;
@@ -99,7 +100,7 @@ export async function paintNapkin(canvas, item, { logo, ink = BAR_INK } = {}) {
   g.textBaseline = 'middle';
   const fy = H * t.fold;
   if (item.kind === 'bar') {
-    penLines(g, item.lines, W, fy, ink, hash(item.id || 'x'), item.title);
+    penLines(g, item.lines, W, fy, ink, hash(item.id || 'x'), item.title, LETRAS[letra] || LETRAS.clasica);
     barFlap(g, W, fy, H, logo, ink);
     g.globalAlpha = 1;
     g.globalCompositeOperation = 'source-over';
@@ -199,19 +200,34 @@ function penWrap(g, text, maxW) {
   }
   return best;
 }
-const HAND = (s) => `400 ${s}px 'Walter Turncoat', 'Marker Felt', 'Comic Sans MS', cursive`;
-function penLines(g, rows, W, fy, ink, seed, title) {
+
+// Las letras para lo que escribe el bar. Por defecto, la misma que «Gracias por su visita»;
+// con Pro, el bar elige una a mano (esas van en mayúsculas, como se rotula una pizarra).
+// size: lo grande que se escribe con ella (las estrechas, más; las anchas, algo menos).
+export const LETRAS = {
+  clasica: { nombre: 'Clásica', family: 'Fraunces', style: 'italic', caps: false, size: 1 },
+  rotulador: { nombre: 'Rotulador', family: 'Shantell Sans', caps: true, size: 0.92 },
+  pizarra: { nombre: 'Pizarra', family: 'Just Another Hand', caps: true, size: 1.25 },
+  pincel: { nombre: 'Pincel', family: 'Caveat Brush', caps: true, size: 1.05 },
+};
+export const letraCss = (l, s) => `${l.style || 'normal'} 400 ${s}px '${l.family}', Georgia, serif`;
+
+// Lo que escribe el bar, grande y cada línea un pelín torcida. Si una sugerencia no cabe en
+// una línea, sigue en la siguiente con sangría (detrás del guion).
+function penLines(g, rows, W, fy, ink, seed, title, letra) {
   if (!rows.length) return;
+  const HAND = (sz) => letraCss(letra, sz);
   const rnd = prng(seed || 1);
-  const text = rows.map((r) => r.toUpperCase());
+  const up = (t) => (letra.caps ? t.toUpperCase() : t);
+  const text = rows.map(up);
   const left = W * 0.1, maxW = W * 0.8, lh = 1.25, bottom = fy * 0.9;
   let top = fy * 0.09;
   // arriba, qué es: «SUGERENCIA DEL DÍA», «FUERA DE CARTA» o «LO MÁS PEDIDO», subrayado a mano
   if (title) {
     g.save();
-    let ts = Math.round(W * 0.08);
+    let ts = Math.round(W * 0.08 * letra.size);
     g.font = HAND(ts);
-    const tt = title.toUpperCase();
+    const tt = up(title);
     while (g.measureText(tt).width > maxW && ts > W * 0.04) g.font = HAND(--ts);
     g.fillStyle = ink;
     g.textAlign = 'left';
@@ -233,7 +249,7 @@ function penLines(g, rows, W, fy, ink, seed, title) {
   }
   // el tamaño más grande al que cada sugerencia cabe en una o dos líneas y todas caben en la servilleta
   const min = Math.round(W * 0.05);
-  let size = Math.round(W * 0.13), out = null;
+  let size = Math.round(W * 0.13 * letra.size), out = null;
   for (; size >= min && !out; size -= 2) {
     g.font = HAND(size);
     const indent = g.measureText('- ').width;

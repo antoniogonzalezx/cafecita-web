@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { gsap } from 'gsap';
-import { paintNapkin, paintStory, wrinkle, barFlap, BAR_INK } from './napkin.js?v=18';
+import { paintNapkin, paintStory, wrinkle, barFlap, BAR_INK, LETRAS, letraCss } from './napkin.js?v=19';
 import * as sound from './sound.js?v=13';
 import { medir, visita, API } from './medir.js?v=14';
 import { loadBar, isPro, logoOf, logoImage, servilletas, titulo, renderCarta, DEFAULT_COLOR } from './bar.js?v=2';
@@ -33,6 +33,8 @@ const BAR = BAR_ID ? await loadBar(BAR_ID) : null;
 const PRO = !!BAR && isPro(BAR);
 const BRAND = PRO ? BAR.marca.color : DEFAULT_COLOR;
 const KEY_SUFFIX = BAR_ID ? `.${BAR_ID}` : '';
+// la letra de lo que escribe el bar: la que elija con Pro; si no, la de «Gracias por su visita»
+const LETRA = PRO && LETRAS[BAR.marca.letra] ? BAR.marca.letra : 'clasica';
 
 // ---------- Estado ----------
 // El servilletero no se acaba: cada dispositivo lleva la cuenta de las que ha sacado
@@ -224,7 +226,7 @@ const [inkLogo, paperLogo] = await Promise.all([
   barLogo ? logoImage(barLogo, '#F7F3EA') : logoIn('#F7F3EA'),
   document.fonts.load('italic 400 80px Fraunces').catch(() => {}),
   document.fonts.load("700 40px 'Bricolage Grotesque'").catch(() => {}),
-  BAR ? document.fonts.load("400 60px 'Walter Turncoat'").catch(() => {}) : null,
+  BAR ? document.fonts.load(letraCss(LETRAS[LETRA], 60)).catch(() => {}) : null,
 ]);
 if (BAR) brandPage(paperLogo);
 
@@ -1548,7 +1550,7 @@ async function openBall(b) {
     c.height = Math.round(img.naturalHeight * 1.5);
     c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
   } else {
-    await paintNapkin(c, item, { logo: inkLogo, ink: INK });
+    await paintNapkin(c, item, { logo: inkLogo, ink: INK, letra: LETRA });
     // si se tiró doblada como «Gracias puta», así sigue
     if (item.folded && c.dataset.thanks) {
       const src = document.createElement('canvas');
@@ -1632,7 +1634,7 @@ async function showReveal(item, { from } = {}) {
     napkinImg.alt = `“${item.quote.quote}” — ${item.quote.author}`;
     try { await napkinImg.decode(); } catch {}
   } else {
-    await paintNapkin(napkinCanvas, item, { logo: inkLogo, ink: INK });
+    await paintNapkin(napkinCanvas, item, { logo: inkLogo, ink: INK, letra: LETRA });
     napkinCanvas.setAttribute('aria-label', LABEL[item.kind](item));
   }
   napkinImg.hidden = !!from || item.kind !== 'quote';
@@ -2083,6 +2085,11 @@ function brandPage(logo) {
   css.setProperty('--azul', BRAND);
   css.setProperty('--azul-hover', `color-mix(in srgb, ${BRAND} 86%, black)`);
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', BRAND);
+  // la carta y el nombre del bar, con la misma letra que sus servilletas
+  const l = LETRAS[LETRA];
+  css.setProperty('--bar-font', `'${l.family}'`);
+  css.setProperty('--bar-style', l.style || 'normal');
+  css.setProperty('--bar-case', l.caps ? 'uppercase' : 'none');
   const head = document.querySelector('.logo');
   head.setAttribute('aria-label', BAR.nombre);
   if (PRO && barLogo && logo) {

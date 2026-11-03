@@ -321,8 +321,9 @@ body.bar .top { flex-direction: column; align-items: center; gap: 6px; }
 @media (max-width: 600px) { .logo.bar-logo { height: 58px; } }
 .bar-name {
   margin: 0;
-  font: 400 18px/1.1 'Walter Turncoat', cursive;
-  letter-spacing: .02em;
+  font: 400 22px/1.1 var(--bar-font, 'Fraunces'), Georgia, serif;
+  font-style: var(--bar-style, italic);
+  text-transform: var(--bar-case, none);
   color: #fff;
 }
 body.bar .hint { bottom: calc(max(28px, env(safe-area-inset-bottom)) + 84px); }
@@ -363,12 +364,12 @@ body.bar .hint { bottom: calc(max(28px, env(safe-area-inset-bottom)) + 84px); }
   padding: 18px 16px 6px 22px;
   border-bottom: 1px dashed rgba(12, 14, 46, .18);
 }
-.carta-head h2 { margin: 0; font: 400 26px/1.1 'Walter Turncoat', cursive; color: var(--azul); }
+.carta-head h2 { margin: 0; font: 400 30px/1.1 var(--bar-font, 'Fraunces'), Georgia, serif; font-style: var(--bar-style, italic); text-transform: var(--bar-case, none); color: var(--azul); }
 .carta-close { border-color: rgba(12, 14, 46, .25); color: var(--noche); width: 42px; height: 42px; }
 .carta-close:hover { background: rgba(12, 14, 46, .06); border-color: rgba(12, 14, 46, .5); }
 .carta-body { overflow-y: auto; padding: 8px 22px 12px; overscroll-behavior: contain; }
 .carta-sec { padding: 14px 0 6px; }
-.carta-sec-title { margin: 0 0 4px; font: 400 20px/1.2 'Walter Turncoat', cursive; color: var(--azul); text-transform: uppercase; }
+.carta-sec-title { margin: 0 0 4px; font: 400 23px/1.2 var(--bar-font, 'Fraunces'), Georgia, serif; font-style: var(--bar-style, italic); text-transform: var(--bar-case, none); color: var(--azul); }
 .carta-list { list-style: none; margin: 0; padding: 0; }
 .carta-item { padding: 10px 0; border-bottom: 1px solid rgba(12, 14, 46, .08); }
 .carta-item:last-child { border-bottom: 0; }
