@@ -1,0 +1,15 @@
+name = "cafecita-api"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+# refresca la portada a los minutos 7 y 37 de cada hora (UTC)
+[triggers]
+crons = ["7,37 * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "cafecita"
+database_id = "1c77e1ab-9e5d-4e83-9107-23696b9c242a"
+
+[observability]
+enabled = true

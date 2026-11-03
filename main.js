@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { gsap } from 'gsap';
 import { paintNapkin, paintStory, wrinkle } from './napkin.js?v=13';
 import * as sound from './sound.js?v=13';
-import { medir, visita, SUPABASE, KEY } from './medir.js?v=13';
+import { medir, visita, API } from './medir.js?v=14';
 
 // ---------- Medidas (cm, iguales que tools/blender_servilletero.py) ----------
 const W = 9.0;      // ancho
@@ -101,10 +101,9 @@ function drawCard(cards, salt, n) {
 const AD_EVERY = 10;      // como mucho 1 de cada 10 (monetizacion.md)
 const QUOTES_PER_DAY = 2;
 const QUOTE_ODDS = 0.2;
-// Las noticias no viven en el repo: las sirve Supabase (proyecto «cafecita», tabla noticias), que
-// rellena cada media hora la función noticias-refrescar (supabase/).
-const NEWS_COLS = 'select=id,titular,fuente,url,fecha';
-const getNews = () => fetch(`${SUPABASE}/rest/v1/noticias?${NEWS_COLS}&order=orden.asc`, { headers: { apikey: KEY }, signal: AbortSignal.timeout(8000) })
+// Las noticias no viven en el repo: las sirve la API de Cloudflare (worker/), que rehace la
+// portada cada media hora con los RSS de los periódicos.
+const getNews = () => fetch(`${API}/noticias`, { signal: AbortSignal.timeout(8000) })
   .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`noticias: HTTP ${r.status}`))));
 let [NAPKINS, NEWS, ADS] = await Promise.all([
   fetch('napkins.json').then((r) => r.json()),
@@ -129,8 +128,8 @@ if (params.has('s') || params.has('o')) {
 async function findShared(id) {
   const quote = NAPKINS.find((q) => q.id === id);
   if (quote) return { kind: 'quote', id, quote };
-  const news = NEWS.find((n) => n.id === id) || (await fetch(`${SUPABASE}/rest/v1/hemeroteca?${NEWS_COLS}&id=eq.${encodeURIComponent(id)}`,
-    { headers: { apikey: KEY }, signal: AbortSignal.timeout(5000) }).then((r) => (r.ok ? r.json() : [])).catch(() => []))[0];
+  const news = NEWS.find((n) => n.id === id) || (await fetch(`${API}/hemeroteca?id=${encodeURIComponent(id)}`,
+    { signal: AbortSignal.timeout(5000) }).then((r) => (r.ok ? r.json() : [])).catch(() => []))[0];
   return news ? { kind: 'news', id, news } : null;
 }
 let shared = sharedId ? await findShared(sharedId) : null;

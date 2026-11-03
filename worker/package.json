@@ -1,0 +1,13 @@
+{
+  "name": "cafecita-api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --test-scheduled",
+    "deploy": "wrangler deploy",
+    "esquema": "wrangler d1 execute cafecita --remote --file=schema.sql"
+  },
+  "devDependencies": {
+    "wrangler": "^4.156.2"
+  }
+}

@@ -1,11 +1,9 @@
 // ---------- Analítica propia, sin cookies ----------
-// Eventos sueltos a Supabase (función public.registrar, ver supabase/migrations/…analitica…), sin IP
-// ni identificador. Para saber cuántos vuelven, el dispositivo solo guarda el día de su primera visita:
+// Eventos sueltos a la API de Cloudflare (POST /registrar, ver worker/), sin IP ni identificador.
+// Para saber cuántos vuelven, el dispositivo solo guarda el día de su primera visita:
 // la primera vez que abre cada día manda un «dia» con los días que han pasado desde entonces.
 // En local no manda nada (lo enseña en la consola) salvo con ?medir.
-export const SUPABASE = 'https://xnrjddrkecwdqgrjcqyr.supabase.co';
-// la clave publicable: solo deja leer noticias y hemeroteca, y llamar a registrar()
-export const KEY = 'sb_publishable_Dez0B-jytDhNqQT08S1a6g_HbcG8Yzt';
+export const API = 'https://cafecita-api.cafecita-api.workers.dev';
 
 const LOCAL = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
 const ON = !LOCAL || new URLSearchParams(location.search).has('medir');
@@ -18,12 +16,9 @@ function flush() {
   while (queue.length) {
     const eventos = queue.splice(0, BATCH);
     if (!ON) { console.debug('[medir]', eventos); continue; }
-    fetch(`${SUPABASE}/rest/v1/rpc/registrar`, {
-      method: 'POST',
-      keepalive: true,
-      headers: { apikey: KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ eventos }),
-    }).catch(() => {});
+    // como texto plano y sin cabeceras: así el navegador no manda antes una petición OPTIONS,
+    // que también contaría en el cupo diario del Worker
+    fetch(`${API}/registrar`, { method: 'POST', keepalive: true, body: JSON.stringify({ eventos }) }).catch(() => {});
   }
 }
 // al cambiar de app o cerrar la pestaña sale lo que quede

@@ -1,3 +1,5 @@
 .DS_Store
 __pycache__/
 *.blend1
+node_modules/
+.wrangler/
