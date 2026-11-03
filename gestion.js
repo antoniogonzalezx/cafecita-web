@@ -3,12 +3,22 @@
 // su logo, su color y el acabado del servilletero. En la demo se guarda en este navegador
 // (bar.js) y la vista previa de la derecha es su página de verdad, que se recarga al guardar.
 import { loadBar, saveBar, resetBar, isPro, logoOf, logoImage, sugerencia, precio, ALERGENOS, COLORES, ACABADOS, DEFAULT_COLOR } from './bar.js?v=1';
-import { paintNapkin } from './napkin.js?v=14';
+import { paintNapkin, BAR_INK } from './napkin.js?v=17';
 
 const ID = document.body.dataset.bar;
-const INK = '#4A6789';
+// la vista previa es la página entera (con su 3D): solo se carga donde se ve, no en el móvil,
+// que ya tiene «Ver mi página» y la servilleta de muestra
+const WIDE = matchMedia('(min-width: 761px)');
+const frame = () => document.getElementById('gFrame');
+function syncFrame() {
+  const f = frame();
+  if (WIDE.matches && !f.getAttribute('src')) f.src = f.dataset.src;
+}
+WIDE.addEventListener('change', syncFrame);
+syncFrame();
+const INK = BAR_INK; // la misma tinta que la servilleta de verdad
 let bar = await loadBar(ID);
-document.fonts.load("400 60px 'Reenie Beanie'").catch(() => {});
+document.fonts.load("400 60px 'Walter Turncoat'").catch(() => {});
 
 // ---------- DOM ----------
 function el(tag, props = {}, ...kids) {
@@ -43,7 +53,7 @@ function changed({ redraw = false, napkin = false, brand = false } = {}) {
       $('gSaved').textContent = 'No se ha podido guardar (¿logo muy grande?)';
     }
     clearTimeout(frameTimer);
-    frameTimer = setTimeout(() => $('gFrame').contentWindow?.location.reload(), 500);
+    frameTimer = setTimeout(() => { if (frame().getAttribute('src')) frame().contentWindow?.location.reload(); }, 500);
   }, 350);
   // el logo y el color se cargan antes de redibujar, que los usan
   const after = () => { if (redraw) render(); else if (napkin || brand) paintPreview(); };
@@ -72,10 +82,10 @@ async function paintPreview() {
   const pro = isPro(bar);
   const src = pro && logo ? logo : { svg: await fetch('logo.svg').then((r) => r.text()) };
   const img = await logoImage(src, INK);
-  await document.fonts.load("400 60px 'Reenie Beanie'").catch(() => {});
+  await document.fonts.load("400 60px 'Walter Turncoat'").catch(() => {});
   const lines = bar.sugerencias.filter((s) => s.texto.trim()).map(sugerencia);
   const tmp = document.createElement('canvas');
-  await paintNapkin(tmp, { kind: 'bar', id: 'sugerencias-gestion', lines: lines.length ? lines : ['- Hoy, lo de siempre'] }, { logo: img });
+  await paintNapkin(tmp, { kind: 'bar', id: 'sugerencias-gestion', lines: lines.length ? lines : ['- Hoy, lo de siempre'] }, { logo: img, ink: INK });
   if (seq !== previewSeq) return;
   c.width = tmp.width;
   c.height = tmp.height;
@@ -224,7 +234,7 @@ function itemRow(p, remove) {
 
 function priceInput(o, onChange) {
   return el('span', { class: 'g-price' },
-    el('input', { class: 'g-input', inputmode: 'decimal', value: o.precio === '' || o.precio == null ? '' : String(o.precio).replace('.', ','),
+    el('input', { class: 'g-input', inputmode: 'decimal', value: o.precio === '' || o.precio == null ? '' : precio(o.precio).replace('€', ''),
       placeholder: '0', 'aria-label': 'Precio en euros',
       oninput: (e) => { const v = e.target.value.trim(); o.precio = v === '' ? '' : num(v); onChange(); } }),
     el('span', { class: 'g-euro' }, '€'));
@@ -249,7 +259,7 @@ function render() {
       bar = await loadBar(ID);
       await paintBrand();
       render();
-      $('gFrame').contentWindow?.location.reload();
+      if (frame().getAttribute('src')) frame().contentWindow?.location.reload();
     } }, 'Restablecer la demo')));
   for (const d of document.querySelectorAll('.g-swatch-dot')) d.style.background = d.dataset.c;
   paintPreview();

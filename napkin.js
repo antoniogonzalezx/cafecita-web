@@ -77,8 +77,10 @@ function lines(item) {
 
 // ---------- Servilletas ----------
 // item: { kind: 'news', news: {titular, fuente, fecha} } | { kind: 'ad', ad: {texto, marca} } | { kind: 'empty' }
+//     | { kind: 'bar', lines: ['- Bocata de calamares 6€', …] } (las sugerencias de un bar)
 // La plantilla sale del id: la misma noticia cae siempre en la misma servilleta.
-export async function paintNapkin(canvas, item, { logo } = {}) {
+// ink: en las de bar, la única tinta de la servilleta (lo escrito, la frase y el logo, que ya viene pintado de ella)
+export async function paintNapkin(canvas, item, { logo, ink = BAR_INK } = {}) {
   const list = await TEMPLATES;
   const t = list[hash(item.id || 'x') % list.length];
   const img = await t.img;
@@ -97,8 +99,9 @@ export async function paintNapkin(canvas, item, { logo } = {}) {
   g.textBaseline = 'middle';
   const fy = H * t.fold;
   if (item.kind === 'bar') {
-    penLines(g, item.lines, W, H, fy, hash(item.id || 'x'));
-    flap(g, W, H, fy, logo, false);
+    penLines(g, item.lines, W, fy, ink, hash(item.id || 'x'));
+    barFlap(g, W, fy, H, logo, ink);
+    g.globalAlpha = 1;
     g.globalCompositeOperation = 'source-over';
     if ('filter' in g) g.filter = 'none';
     return canvas;
@@ -125,8 +128,21 @@ export async function paintNapkin(canvas, item, { logo } = {}) {
   g.font = SERIF(footSize);
   g.fillText(foot, W / 2, y);
 
+  // en la solapa: el clásico «Gracias por su visita» y el logo, como en el servilletero
+  const cy = fy + (H - fy) * 0.42;
+  g.globalAlpha = 0.9;
+  g.font = SERIF(Math.round(W * 0.078));
+  g.fillText(THANKS, W / 2, cy);
+  // dónde cae cada letra, para poder doblarla como en los bares (el easter egg de main.js)
+  const x0 = W / 2 - g.measureText(THANKS).width / 2;
+  canvas.dataset.thanks = ['Gracias p', 'Gracias por s', 'Gracias por su', 'Gracias por su visi']
+    .map((s) => Math.round(x0 + g.measureText(s).width)).join(',');
   canvas.dataset.fold = t.fold;
-  flap(g, W, H, fy, logo, canvas);
+  const ly = cy + W * 0.095, lH = W * 0.044;
+  if (logo) {
+    const lW = lH * logo.naturalWidth / logo.naturalHeight;
+    g.drawImage(logo, W / 2 - lW / 2, ly - lH / 2, lW, lH);
+  }
 
   g.globalAlpha = 1;
   g.globalCompositeOperation = 'source-over';
@@ -134,59 +150,94 @@ export async function paintNapkin(canvas, item, { logo } = {}) {
   return canvas;
 }
 
-// en la solapa: el clásico «Gracias por su visita» y el logo, como en el servilletero.
-// tall: el logo de un bar (casi cuadrado) va más alto que CAFECITA, que es una tira.
-// canvas: dónde guardar dónde cae cada letra, para el easter egg (en las de bar no hay)
-function flap(g, W, H, fy, logo, canvas) {
-  const tall = logo && logo.naturalWidth / logo.naturalHeight < 4;
-  const cy = fy + (H - fy) * (tall ? 0.28 : 0.42);
-  g.fillStyle = QUOTE;
+const THANKS = 'Gracias por su visita';
+// la tinta de las servilletas de un bar: lo que escribe, la frase y su logo, todo del mismo boli
+export const BAR_INK = '#2F4C82';
+
+// La solapa de un bar: «Gracias por su visita» y, debajo, su logo (o CAFECITA, sin Pro).
+// Se mide lo que ocupa de verdad la frase, y entre ella y el logo siempre queda el mismo hueco:
+// nunca se tocan, sea cual sea el logo. El conjunto va centrado en la solapa (de top a bottom).
+// Lo usa también main.js para la solapa del servilletero 3D.
+export function barFlap(g, W, top, bottom, logo, ink) {
+  const h = bottom - top, pad = h * 0.1, gap = W * 0.055;
+  g.save();
+  g.fillStyle = ink;
   g.globalAlpha = 0.9;
   g.font = SERIF(Math.round(W * 0.078));
-  g.fillText('Gracias por su visita', W / 2, cy);
-  if (canvas) {
-    // dónde cae cada letra, para poder doblarla como en los bares (el easter egg de main.js)
-    const x0 = W / 2 - g.measureText('Gracias por su visita').width / 2;
-    canvas.dataset.thanks = ['Gracias p', 'Gracias por s', 'Gracias por su', 'Gracias por su visi']
-      .map((s) => Math.round(x0 + g.measureText(s).width)).join(',');
-  }
+  g.textAlign = 'center';
+  g.textBaseline = 'alphabetic';
+  const m = g.measureText(THANKS);
+  const asc = m.actualBoundingBoxAscent, textH = asc + m.actualBoundingBoxDescent;
+  let lW = 0, lH = 0;
   if (logo) {
-    const lH = tall ? Math.min(W * 0.2, (H - cy) * 0.55) : W * 0.044;
-    const ly = cy + W * (tall ? 0.08 : 0.073) + lH / 2;
-    const lW = lH * logo.naturalWidth / logo.naturalHeight;
-    g.drawImage(logo, W / 2 - lW / 2, ly - lH / 2, lW, lH);
+    const ratio = logo.naturalWidth / logo.naturalHeight;
+    // una tira (CAFECITA) va baja y ancha; un logo casi cuadrado, más alto pero sin pasar del hueco que queda
+    lH = Math.max(0, Math.min(h - 2 * pad - textH - gap, ratio >= 4 ? W * 0.05 : W * 0.24, W * 0.55 / ratio));
+    lW = lH * ratio;
   }
-  g.globalAlpha = 1;
+  const groupH = textH + (lH ? gap + lH : 0);
+  const y0 = top + (h - groupH) / 2;
+  g.fillText(THANKS, W / 2, y0 + asc);
+  if (lH) g.drawImage(logo, W / 2 - lW / 2, y0 + textH + gap, lW, lH);
+  g.restore();
 }
 
-// Lo que escribe el bar, a boli: cada línea un pelín torcida y con la tinta desigual
-const PEN = '#21418A';
-const HAND = (s) => `400 ${s}px 'Reenie Beanie', 'Bradley Hand', cursive`;
-function penLines(g, rows, W, H, fy, seed) {
+// Lo que escribe el bar: en mayúsculas, a rotulador, grande, y cada línea un pelín torcida.
+// Si una sugerencia no cabe en una línea, sigue en la siguiente con sangría (detrás del guion).
+// Cada sugerencia en una línea o, si no cabe, en dos lo más parejas posible (nada de una
+// palabra suelta en una línea). El precio va siempre pegado a la palabra de antes.
+// Devuelve null si a este tamaño no cabe en dos líneas.
+function penWrap(g, text, maxW) {
+  const words = text.split(' ').filter(Boolean);
+  if (words.length > 2 && /\d/.test(words.at(-1))) words.splice(-2, 2, `${words.at(-2)} ${words.at(-1)}`);
+  const w = (ws) => g.measureText(ws.join(' ')).width;
+  if (w(words) <= maxW) return [words.join(' ')];
+  let best = null, bestW = Infinity;
+  for (let i = 1; i < words.length; i++) {
+    const a = words.slice(0, i), b = words.slice(i), m = Math.max(w(a), w(b));
+    if (m <= maxW && m < bestW) { bestW = m; best = [a.join(' '), b.join(' ')]; }
+  }
+  return best;
+}
+const HAND = (s) => `400 ${s}px 'Walter Turncoat', 'Marker Felt', 'Comic Sans MS', cursive`;
+function penLines(g, rows, W, fy, ink, seed) {
   if (!rows.length) return;
   const rnd = prng(seed || 1);
-  const left = W * 0.11, maxW = W * 0.8, top = H * 0.08, bottom = fy - H * 0.05;
-  let size = Math.round(W * 0.13);
-  for (; size > W * 0.06; size -= 2) {
+  const text = rows.map((r) => r.toUpperCase());
+  const left = W * 0.1, maxW = W * 0.8, top = fy * 0.09, bottom = fy * 0.9, lh = 1.25;
+  // el tamaño más grande al que cada sugerencia cabe en una o dos líneas y todas caben en la servilleta
+  const min = Math.round(W * 0.05);
+  let size = Math.round(W * 0.15), out = null;
+  for (; size >= min && !out; size -= 2) {
     g.font = HAND(size);
-    if (rows.length * size * 1.05 <= bottom - top && rows.every((r) => g.measureText(r).width <= maxW)) break;
+    const indent = g.measureText('- ').width;
+    const wrapped = text.map((r) => penWrap(g, r, maxW - indent));
+    if (wrapped.some((x) => !x) || wrapped.flat().length * size * lh > bottom - top) continue;
+    out = wrapped.flatMap((ls) => ls.map((l, i) => ({ l, x: i ? indent : 0 })));
+  }
+  if (out) size += 2;
+  else {
+    // ni a la letra más pequeña: se corta por palabras, como sea
+    size = min;
+    g.font = HAND(size);
+    out = text.flatMap((r) => wrap(g, r, maxW).map((l, i) => ({ l, x: i ? W * 0.03 : 0 })));
   }
   g.font = HAND(size);
   g.textAlign = 'left';
   g.textBaseline = 'alphabetic';
-  let y = top + size * 0.95;
-  for (const row of rows) {
+  g.fillStyle = ink;
+  let y = top + size;
+  for (const { l, x } of out) {
     g.save();
-    g.translate(left + (rnd() - 0.5) * W * 0.02, y);
-    g.rotate((rnd() - 0.6) * 0.035);
-    // dos pasadas: el boli deja más tinta en unos trazos que en otros
-    g.fillStyle = PEN;
-    g.globalAlpha = 0.92;
-    g.fillText(row, 0, 0);
-    g.globalAlpha = 0.3;
-    g.fillText(row, 0.8, 0.5);
+    g.translate(left + x + (rnd() - 0.5) * W * 0.015, y);
+    g.rotate((rnd() - 0.6) * 0.03);
+    // dos pasadas: el rotulador deja más tinta en unos trazos que en otros
+    g.globalAlpha = 0.9;
+    g.fillText(l, 0, 0);
+    g.globalAlpha = 0.25;
+    g.fillText(l, 0.9, 0.6);
     g.restore();
-    y += size * 1.05;
+    y += size * lh;
   }
   g.globalAlpha = 1;
   g.textAlign = 'center';

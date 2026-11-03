@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { gsap } from 'gsap';
-import { paintNapkin, paintStory, wrinkle } from './napkin.js?v=14';
+import { paintNapkin, paintStory, wrinkle, barFlap, BAR_INK } from './napkin.js?v=17';
 import * as sound from './sound.js?v=13';
 import { medir, visita, API } from './medir.js?v=14';
 import { loadBar, isPro, logoOf, logoImage, sugerencia, renderCarta, DEFAULT_COLOR } from './bar.js?v=1';
@@ -203,7 +203,8 @@ function nextNapkin() {
 }
 
 // la solapa se rotula con la tipografía de la marca y el logo en tinta
-const INK = '#4A6789';
+// (en un bar, una sola tinta para todo: lo que escribe, la frase y el logo)
+const INK = BAR ? BAR_INK : '#4A6789';
 const logoSvg = fetch('logo.svg').then((r) => r.text());
 const logoIn = (color) => logoSvg.then(async (svg) => {
   const img = new Image();
@@ -218,7 +219,7 @@ const [inkLogo, paperLogo] = await Promise.all([
   barLogo ? logoImage(barLogo, '#F7F3EA') : logoIn('#F7F3EA'),
   document.fonts.load('italic 400 80px Fraunces').catch(() => {}),
   document.fonts.load("700 40px 'Bricolage Grotesque'").catch(() => {}),
-  BAR ? document.fonts.load("400 60px 'Reenie Beanie'").catch(() => {}) : null,
+  BAR ? document.fonts.load("400 60px 'Walter Turncoat'").catch(() => {}) : null,
 ]);
 if (BAR) brandPage(paperLogo);
 
@@ -353,20 +354,22 @@ function flapTexture() {
   shade.addColorStop(1, 'rgba(90,80,60,0)');
   g.fillStyle = shade;
   g.fillRect(0, fy + 2, TEX_W, 40);
-  // rótulo (el logo de un bar, casi cuadrado, va más grande que la tira de CAFECITA)
-  const tall = inkLogo && inkLogo.naturalWidth / inkLogo.naturalHeight < 4;
-  const cy = fy + (TEX_H - fy) * (tall ? 0.28 : 0.44);
-  g.textAlign = 'center';
-  g.textBaseline = 'middle';
-  g.fillStyle = INK;
-  g.globalAlpha = 0.9;
+  // rótulo; en un bar, como en sus servilletas (napkin.js): su tinta, y la frase y el logo sin tocarse
   g.filter = 'blur(0.4px)';
-  g.font = `italic 400 ${Math.round(TEX_W * 0.082)}px Fraunces, Georgia, serif`;
-  g.fillText('Gracias por su visita', TEX_W / 2, cy);
-  const lh = tall ? Math.min(TEX_W * 0.2, (TEX_H - cy) * 0.55) : TEX_W * 0.04;
-  const ly = cy + TEX_W * (tall ? 0.08 : 0.07) + lh / 2;
-  const lw = inkLogo ? lh * inkLogo.naturalWidth / inkLogo.naturalHeight : 0;
-  if (inkLogo) g.drawImage(inkLogo, TEX_W / 2 - lw / 2, ly - lh / 2, lw, lh);
+  // (sin contar el trozo de abajo que tapa el marco de la ventana)
+  if (BAR) barFlap(g, TEX_W, fy, TEX_H * (1 - (WIN.bottom - N_BOTTOM) / NH), inkLogo, INK);
+  else {
+    const cy = fy + (TEX_H - fy) * 0.44;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillStyle = INK;
+    g.globalAlpha = 0.9;
+    g.font = `italic 400 ${Math.round(TEX_W * 0.082)}px Fraunces, Georgia, serif`;
+    g.fillText('Gracias por su visita', TEX_W / 2, cy);
+    const ly = cy + TEX_W * 0.09, lh = TEX_W * 0.04;
+    const lw = inkLogo ? lh * inkLogo.naturalWidth / inkLogo.naturalHeight : 0;
+    if (inkLogo) g.drawImage(inkLogo, TEX_W / 2 - lw / 2, ly - lh / 2, lw, lh);
+  }
   g.filter = 'none';
   g.globalAlpha = 1;
   grain(g, TEX_W, TEX_H, 7);
@@ -1537,7 +1540,7 @@ async function openBall(b) {
     c.height = Math.round(img.naturalHeight * 1.5);
     c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
   } else {
-    await paintNapkin(c, item, { logo: inkLogo });
+    await paintNapkin(c, item, { logo: inkLogo, ink: INK });
     // si se tiró doblada como «Gracias puta», así sigue
     if (item.folded && c.dataset.thanks) {
       const src = document.createElement('canvas');
@@ -1621,7 +1624,7 @@ async function showReveal(item, { from } = {}) {
     napkinImg.alt = `“${item.quote.quote}” — ${item.quote.author}`;
     try { await napkinImg.decode(); } catch {}
   } else {
-    await paintNapkin(napkinCanvas, item, { logo: inkLogo });
+    await paintNapkin(napkinCanvas, item, { logo: inkLogo, ink: INK });
     napkinCanvas.setAttribute('aria-label', LABEL[item.kind](item));
   }
   napkinImg.hidden = !!from || item.kind !== 'quote';
