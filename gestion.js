@@ -200,9 +200,10 @@ function planCard() {
   const pro = isPro(bar);
   // un bar dado de alta no se cambia el plan: lo pone Cafecita
   if (!DEMO) {
-    return card('Tu plan', pro ? 'Tienes Cafecita Pro: tu logo, tu color y tu servilletero, sin anuncios de otras marcas.'
-      : 'Tienes Cafecita, gratis. Con Pro tu página lleva tu logo, tu color y tu servilletero, sin anuncios de otras marcas.',
-    el('p', { class: 'g-note' }, pro ? 'Para cualquier cambio en tu plan, habla con Cafecita.' : 'Para pasarte a Pro, habla con Cafecita.'));
+    return card('Tu plan', pro ? 'Tienes Cafecita Pro: tu logo, tu color, tu servilletero y tu letra, sin anuncios.'
+      : 'Tienes Cafecita Basic, gratis. Con Pro, por 9,99 € al mes, tu página lleva tu logo, tu color, tu servilletero y tu letra, sin anuncios.',
+    el('p', { class: 'g-note' }, pro ? 'Para cualquier cambio en tu plan, habla con Cafecita.' : 'Para pasarte a Pro, habla con Cafecita. ',
+      !pro && el('a', { href: '/bares/#planes', target: '_blank', rel: 'noopener' }, 'Ver los planes')));
   }
   const opt = (value, title, price, text) => el('button', {
     type: 'button', class: `g-plan${bar.plan === value ? ' on' : ''}`, 'aria-pressed': String(bar.plan === value),
@@ -210,9 +211,9 @@ function planCard() {
   }, el('span', { class: 'g-plan-name' }, title, el('b', {}, price)), el('span', { class: 'g-plan-text' }, text));
   return card('Tu plan', 'En la demo puedes cambiar de plan sin pagar, para ver la diferencia.',
     el('div', { class: 'g-plans' },
-      opt('gratis', 'Cafecita', 'Gratis', 'Tu página, tus sugerencias y tu carta, con la imagen de Cafecita.'),
-      opt('pro', 'Cafecita Pro', '19 €/mes', 'Tu logo, tu color y tu servilletero. Sin anuncios de otras marcas.')),
-    !pro && el('p', { class: 'g-note' }, 'Con el plan gratis, de vez en cuando sale un anuncio de Cafecita en tu servilletero.'));
+      opt('gratis', 'Basic', 'Gratis', 'Tu página, tus sugerencias y tu carta, con el color y el logo de Cafecita.'),
+      opt('pro', 'Pro', '9,99 €/mes', 'Tu logo, tu color, tu servilletero y tu letra. Sin anuncios. O 99 € al año: dos meses gratis.')),
+    !pro && el('p', { class: 'g-note' }, 'Con Basic, de vez en cuando sale un anuncio de Cafecita en tu servilletero.'));
 }
 
 // Lo de hoy: cada línea es una sugerencia del día o algo fuera de carta, y cada tipo sale en
