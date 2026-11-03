@@ -44,6 +44,17 @@ button, input, select { font: inherit; color: inherit; }
 .g-top .g-btn-ghost { color: #fff; border-color: rgba(255, 255, 255, .5); }
 .g-top .g-btn-ghost:hover { background: rgba(255, 255, 255, .12); }
 
+.g-demo {
+  margin: 0;
+  padding: 9px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--suave);
+  background: color-mix(in srgb, var(--brand) 7%, #EFEAE0);
+  border-bottom: 1px solid var(--linea);
+}
+.g-demo b { color: var(--noche); }
+
 .g-main {
   display: grid;
   grid-template-columns: minmax(0, 680px) 400px;
