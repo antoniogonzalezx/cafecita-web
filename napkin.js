@@ -1,4 +1,4 @@
-import { LETRAS, letraCss } from './bar.js?v=5';
+import { LETRAS, letraCss } from './bar.js?v=6';
 
 // ---------- Servilletas pintadas al vuelo ----------
 // Las noticias, los anuncios y el aviso de reponer se rotulan en el navegador sobre una de las
@@ -279,7 +279,8 @@ function penLines(g, rows, W, fy, ink, seed, title, letra) {
 }
 
 // La story para compartir: la servilleta sobre azul en el mismo sitio que en stories/*.jpg
-export function paintStory(napkin, logo, bg = '#3F48F4') {
+// pie: en un bar, su nombre y dirección y su enlace (en vez de «Gracias por su visita»)
+export function paintStory(napkin, logo, bg = '#3F48F4', pie = null) {
   const c = document.createElement('canvas');
   c.width = 900;
   c.height = 1600;
@@ -297,8 +298,17 @@ export function paintStory(napkin, logo, bg = '#3F48F4') {
   g.fillStyle = '#F7F3EA';
   g.textAlign = 'center';
   g.textBaseline = 'middle';
-  g.font = SERIF(44);
-  g.fillText('Gracias por su visita', 450, 1474);
+  if (pie) {
+    g.font = SANS(30, 500);
+    g.globalAlpha = 0.85;
+    g.fillText(pie[0], 450, 1420);
+    g.globalAlpha = 1;
+    g.font = SANS(34, 700);
+    spaced(g, pie[1], 450, 1478, 0.04);
+  } else {
+    g.font = SERIF(44);
+    g.fillText('Gracias por su visita', 450, 1474);
+  }
   return new Promise((resolve) => c.toBlob(resolve, 'image/jpeg', 0.9));
 }
 

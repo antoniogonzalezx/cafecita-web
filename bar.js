@@ -124,6 +124,7 @@ export function renderCarta(root, bar) {
     const list = h('ul', 'carta-list');
     for (const x of hoy) {
       const li = h('li', 'carta-item');
+      li.dataset.al = Array.isArray(x.alergenos) ? x.alergenos.join(' ') : '?';
       const row = h('div', 'carta-row');
       row.append(h('span', 'carta-name', x.texto), h('span', 'carta-dots'), h('span', 'carta-price', precio(x.precio, true)));
       const tag = h('p', 'carta-al');
@@ -141,6 +142,7 @@ export function renderCarta(root, bar) {
     const list = h('ul', 'carta-list');
     for (const p of sec.platos) {
       const li = h('li', `carta-item${p.agotado ? ' agotado' : ''}`);
+      li.dataset.al = Array.isArray(p.alergenos) ? p.alergenos.join(' ') : '?';
       const row = h('div', 'carta-row');
       row.append(h('span', 'carta-name', p.nombre), h('span', 'carta-dots'), h('span', 'carta-price', precio(p.precio, true)));
       li.append(row);
@@ -154,6 +156,8 @@ export function renderCarta(root, bar) {
     s.append(list);
     root.append(s);
   }
+  // el aviso que pide el RD 126/2015: dónde está la información y que se puede preguntar
+  root.append(h('p', 'carta-aviso', 'Si tienes alguna alergia o intolerancia alimentaria, díselo al personal antes de pedir.'));
   if (bar.direccion || bar.horario) {
     const foot = h('footer', 'carta-foot');
     if (bar.direccion) foot.append(h('p', null, bar.direccion));

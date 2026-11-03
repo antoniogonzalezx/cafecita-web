@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { gsap } from 'gsap';
-import { paintNapkin, paintStory, wrinkle, barFlap, BAR_INK } from './napkin.js?v=20';
+import { paintNapkin, paintStory, wrinkle, barFlap, BAR_INK } from './napkin.js?v=21';
 import * as sound from './sound.js?v=13';
 import { medir, visita, API } from './medir.js?v=14';
-import { loadBar, isPro, logoOf, logoImage, servilletas, titulo, DEFAULT_COLOR, LETRAS, letraCss } from './bar.js?v=5';
+import { loadBar, isPro, logoOf, logoImage, servilletas, titulo, DEFAULT_COLOR, LETRAS, letraCss } from './bar.js?v=6';
 
 // ---------- Medidas (cm, iguales que tools/blender_servilletero.py) ----------
 const W = 9.0;      // ancho
@@ -149,7 +149,8 @@ let shared = sharedId ? await findShared(sharedId) : null;
 const sharedLink = (item) => (BAR ? `${location.origin}/${BAR_ID}/`
   : item.kind === 'news' || item.kind === 'quote' ? `${location.origin}/?s=${item.id}` : `${location.origin}/`);
 
-visita({ hoy: today(), conocido: state.count > 0, origen: BAR ? `bar:${BAR_ID}` : origen });
+// en un bar, de qué bar y, si viene de un QR, de cuál (qr-mesa, qr-barra, qr-carta)
+visita({ hoy: today(), conocido: state.count > 0, origen: BAR ? `bar:${BAR_ID}${params.get('o') ? `:${origen}` : ''}` : origen });
 
 // sin noticias nuevas, se vuelve a mirar si han llegado (como mucho una vez por minuto)
 let lastRefresh = Date.now();
@@ -2061,7 +2062,8 @@ function fileName(item) {
 }
 const storyBlob = (item) => (item.kind === 'quote' && !item.wrinkled
   ? fetch(item.quote.story).then((r) => r.blob())
-  : paintStory(napkinCanvas, paperLogo, BRAND));
+  : paintStory(napkinCanvas, paperLogo, BRAND,
+    BAR && [[BAR.nombre, BAR.direccion].filter(Boolean).join(' · '), `${location.host}/${BAR_ID}`]));
 
 function saveFile(file) {
   const url = URL.createObjectURL(file);

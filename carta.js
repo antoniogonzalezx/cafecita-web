@@ -3,7 +3,7 @@
 // del bar (sin un instante del azul de Cafecita) y la carta ya funciona, también con la Wi-Fi
 // lenta de un bar: el cliente viene a ver qué hay. El servilletero llega después (main.js),
 // que abre la carta desde la servilleta con el evento «carta:abrir».
-import { loadBar, isPro, logoOf, logoImage, renderCarta, DEFAULT_COLOR, LETRAS } from './bar.js?v=5';
+import { loadBar, isPro, logoOf, logoImage, renderCarta, DEFAULT_COLOR, LETRAS, ALERGENOS } from './bar.js?v=6';
 import { medir } from './medir.js?v=14';
 
 const $ = (id) => document.getElementById(id);
@@ -44,9 +44,45 @@ document.body.classList.add('bar-ready');
 // Una hoja que sube desde abajo. Escape solo la cierra a ella: la servilleta sigue debajo.
 const carta = $('carta');
 let drawn = false, hideTimer = null;
+// Para quien tiene una alergia: marca lo que no puede tomar y la carta apaga lo que lo lleva.
+// Lo que el bar no ha confirmado se queda a la vista, pero avisando de que hay que preguntar.
+const sin = new Set();
+function filtro() {
+  const bar_ = document.createElement('div');
+  bar_.className = 'carta-filtro';
+  bar_.setAttribute('role', 'group');
+  bar_.setAttribute('aria-label', 'Filtrar por alergia');
+  for (const [k, nombre] of Object.entries(ALERGENOS)) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'carta-chip';
+    b.textContent = `Sin ${nombre.toLowerCase()}`;
+    b.setAttribute('aria-pressed', 'false');
+    b.addEventListener('click', () => {
+      if (sin.has(k)) sin.delete(k); else sin.add(k);
+      b.setAttribute('aria-pressed', String(sin.has(k)));
+      aplicar();
+    });
+    bar_.append(b);
+  }
+  return bar_;
+}
+function aplicar() {
+  for (const li of $('cartaBody').querySelectorAll('.carta-item')) {
+    const al = li.dataset.al, lleva = al !== '?' && al.split(' ').some((a) => sin.has(a));
+    li.classList.toggle('filtrado', sin.size > 0 && lleva);
+    li.classList.toggle('dudoso', sin.size > 0 && al === '?');
+  }
+  $('cartaBody').classList.toggle('filtrando', sin.size > 0);
+}
+
 function open() {
   if (carta.classList.contains('open')) return;
-  if (!drawn) { renderCarta($('cartaBody'), bar); drawn = true; }
+  if (!drawn) {
+    renderCarta($('cartaBody'), bar);
+    $('cartaBody').before(filtro());
+    drawn = true;
+  }
   clearTimeout(hideTimer);
   carta.hidden = false;
   $('cartaBody').scrollTop = 0;

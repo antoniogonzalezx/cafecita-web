@@ -2,8 +2,8 @@
 // Lo que el bar cambia de su página: sugerencias del día, carta y datos (gratis) y, con Pro,
 // su logo, su color y el acabado del servilletero. En la demo se guarda en este navegador
 // (bar.js) y la vista previa de la derecha es su página de verdad, que se recarga al guardar.
-import { loadBar, saveBar, resetBar, isPro, logoOf, logoImage, servilletas, titulo, precio, ALERGENOS, COLORES, ACABADOS, TIPOS, DEFAULT_COLOR, LETRAS, letraCss } from './bar.js?v=5';
-import { paintNapkin, BAR_INK } from './napkin.js?v=20';
+import { loadBar, saveBar, resetBar, isPro, logoOf, logoImage, servilletas, titulo, precio, ALERGENOS, COLORES, ACABADOS, TIPOS, DEFAULT_COLOR, LETRAS, letraCss } from './bar.js?v=6';
+import { paintNapkin, BAR_INK } from './napkin.js?v=21';
 
 const ID = document.body.dataset.bar;
 // la vista previa es la página entera (con su 3D): solo se carga donde se ve, no en el móvil,
@@ -314,6 +314,17 @@ function priceInput(o, onChange) {
 }
 const removeBtn = (label, onclick) => el('button', { type: 'button', class: 'g-remove', 'aria-label': label, title: label, onclick }, '×');
 
+// lo que hay que imprimir para empezar: el QR de las mesas, el cartel y la carta en papel
+function imprimirCard() {
+  const link = (que, title, sub) => el('a', { class: 'g-print', href: `/${ID}/imprimir/?que=${que}`, target: '_blank', rel: 'noopener' },
+    el('span', { class: 'g-print-t' }, title), el('span', { class: 'g-print-s' }, sub));
+  return card('Para imprimir', 'Listo para la impresora o para guardar en PDF.',
+    el('div', { class: 'g-prints' },
+      link('mesas', 'Pegatinas para las mesas', 'Seis QR por hoja, con el aviso de alérgenos'),
+      link('barra', 'Cartel para la barra', 'A4 a todo color'),
+      link('carta', 'Carta en papel', 'Con los alérgenos de cada plato')));
+}
+
 function datosCard() {
   const input = (k, ph) => el('input', { class: 'g-input', value: bar[k] || '', placeholder: ph,
     oninput: (e) => { bar[k] = e.target.value; changed({ brand: k === 'nombre' }); } });
@@ -325,7 +336,7 @@ function datosCard() {
 
 function render() {
   $('gForm').replaceChildren(
-    hoyCard(), cartaCard(), marcaCard(), datosCard(), planCard(),
+    hoyCard(), cartaCard(), imprimirCard(), marcaCard(), datosCard(), planCard(),
     el('p', { class: 'g-reset' }, el('button', { type: 'button', class: 'g-link', onclick: async (e) => {
       // dos toques: el primero pregunta, sin ventanas del navegador
       const b = e.currentTarget;

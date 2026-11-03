@@ -358,7 +358,7 @@ body.bar .hint { bottom: calc(max(28px, env(safe-area-inset-bottom)) + 84px); }
 }
 /* hasta que carta.js pone la marca del bar, nada del azul de Cafecita */
 body[data-bar]:not(.bar-ready) { background: #15171B; }
-body[data-bar]:not(.bar-ready) .top, body[data-bar]:not(.bar-ready) .carta-btn { opacity: 0; }
+body[data-bar]:not(.bar-ready) .top, body[data-bar]:not(.bar-ready) .carta-btn { opacity: 0; pointer-events: none; }
 body[data-bar] .top, body[data-bar] .carta-btn { transition: opacity .4s ease, transform .2s ease, background .2s; }
 /* luz desde arriba sobre el color del bar, con grano */
 body.bar {
@@ -414,6 +414,7 @@ body.bar #scene:focus-visible { outline: none; }
   .carta-sheet, .carta-veil { transition: none; }
 }
 .carta-head {
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -472,9 +473,40 @@ body.bar #scene:focus-visible { outline: none; }
   background: color-mix(in srgb, var(--azul) 6%, #fff 40%);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--azul) 14%, transparent);
 }
+/* filtro de alergias: una fila de botones que se desliza */
+.carta-filtro {
+  flex: none;
+  display: flex;
+  gap: 6px;
+  padding: 10px 24px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid rgba(12, 14, 46, .08);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 16px, #000 calc(100% - 24px), transparent);
+  mask-image: linear-gradient(90deg, transparent 0, #000 16px, #000 calc(100% - 24px), transparent);
+}
+.carta-filtro::-webkit-scrollbar { display: none; }
+.carta-chip {
+  flex: none;
+  padding: 7px 12px;
+  border: 1px solid rgba(12, 14, 46, .16);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--noche);
+  font: 500 13px/1 var(--sans);
+  cursor: pointer;
+  transition: background .2s, border-color .2s, color .2s;
+}
+.carta-chip[aria-pressed="true"] { background: var(--azul); border-color: var(--azul); color: #fff; }
+.carta-item { transition: opacity .25s; }
+.carta-item.filtrado { opacity: .32; }
+.carta-item.filtrado .carta-name { text-decoration: line-through; text-decoration-thickness: 1px; }
+.carta-item.dudoso .carta-al { color: #8A5A00; font-weight: 600; }
+.carta-aviso { margin: 16px 0 0; padding: 12px 14px; border-radius: 12px; background: rgba(12, 14, 46, .04); font: 500 13px/1.45 var(--sans); color: rgba(12, 14, 46, .78); }
 .carta-foot { padding: 14px 0 4px; font: 400 14px/1.45 var(--sans); color: rgba(12, 14, 46, .7); }
 .carta-foot p { margin: 0; }
 .carta-credit {
+  flex: none;
   margin: 0;
   padding: 12px 24px max(18px, env(safe-area-inset-bottom));
   border-top: 1px solid rgba(12, 14, 46, .08);

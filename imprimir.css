@@ -1,0 +1,176 @@
+/* ---------- Para imprimir (barmanolo/imprimir/, imprimir.js) ----------
+   Cada hoja es un A4 que en pantalla se escala al ancho disponible: todo dentro se mide en cqw
+   (centésimas del ancho de la hoja), así que se ve igual en el móvil que impreso. */
+:root {
+  --brand: #3F48F4;
+  --brand-ink: #2a31b0;
+  --papel: #F7F3EA;
+  --noche: #0C0E2E;
+  --sans: 'Bricolage Grotesque', system-ui, sans-serif;
+  --grano: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: #E9E4DA; color: var(--noche); font: 400 15px/1.45 var(--sans); -webkit-font-smoothing: antialiased; }
+button { font: inherit; }
+
+/* ---------- La barra de arriba ---------- */
+.p-bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  background: var(--brand);
+  color: #fff;
+}
+.p-back { color: #fff; text-decoration: none; font-weight: 600; font-size: 14px; opacity: .9; }
+.p-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 auto; }
+.p-tab {
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, .35);
+  border-radius: 999px;
+  background: transparent;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+}
+.p-tab[aria-pressed="true"] { background: var(--papel); border-color: var(--papel); color: var(--brand-ink); font-weight: 600; }
+.p-print {
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--papel);
+  color: var(--brand-ink);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+.p-bar :focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.p-hint { max-width: 720px; margin: 16px auto 0; padding: 0 16px; text-align: center; font-size: 14px; color: rgba(12, 14, 46, .7); }
+@media (max-width: 640px) {
+  .p-tabs { order: 3; width: 100%; margin: 0; }
+  .p-print { margin-left: auto; }
+}
+
+/* ---------- Las hojas ---------- */
+.p-sheets { display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 20px 16px 48px; }
+.hoja {
+  container-type: inline-size;
+  position: relative;
+  width: min(210mm, 100%);
+  aspect-ratio: 210 / 297;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 20px 50px -20px rgba(12, 14, 46, .35);
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+/* el logo (y, sin Pro, el nombre del bar) */
+.p-marca { display: flex; flex-direction: column; align-items: center; gap: .6cqw; }
+.p-marca img { display: block; width: auto; }
+.p-nombre { margin: 0; font-family: var(--bar-font), Georgia, serif; font-style: var(--bar-style); text-transform: var(--bar-case); line-height: 1.1; }
+.p-qr svg { display: block; width: 100%; height: auto; }
+
+/* pegatinas: 2 × 3 de 85 mm (40,5 % del ancho) con línea de corte */
+.hoja-in { position: absolute; inset: 0; }
+.in-mesas {
+  display: grid;
+  grid-template-columns: repeat(2, 40.5cqw);
+  grid-template-rows: repeat(3, 40.5cqw);
+  gap: 4cqw;
+  place-content: center;
+}
+.pegatina {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.6cqw 2.4cqw 2.2cqw;
+  border: .25cqw dashed rgba(12, 14, 46, .18);
+  border-radius: 3cqw;
+  background: var(--papel) var(--grano);
+  text-align: center;
+}
+.p-marca-peq img { height: 4.6cqw; }
+.p-marca-peq .p-nombre { font-size: 2.4cqw; color: var(--brand-ink); }
+.pegatina .p-qr { width: 21cqw; margin: 1.6cqw 0 1.2cqw; padding: .6cqw; border-radius: 1.2cqw; background: #fff; }
+.p-titulo { margin: 0; font: 400 3.2cqw/1.1 var(--bar-font), Georgia, serif; font-style: var(--bar-style); text-transform: var(--bar-case); color: var(--brand-ink); }
+.p-sub { margin: .5cqw 0 0; font-size: 1.7cqw; font-weight: 500; color: rgba(12, 14, 46, .7); }
+.p-legal { margin: 1cqw 0 0; font-size: 1.35cqw; letter-spacing: .01em; color: rgba(12, 14, 46, .62); }
+
+/* cartel de barra: a todo color, con una servilleta en el centro */
+.in-barra {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3.2cqw;
+  padding: 8cqw 9cqw 12cqw;
+  background: var(--grano), radial-gradient(120% 80% at 50% 28%, color-mix(in srgb, var(--brand) 84%, white) 0%, var(--brand) 50%, color-mix(in srgb, var(--brand) 72%, black) 100%);
+  color: var(--papel);
+  text-align: center;
+}
+.p-marca-grande img { height: 17cqw; }
+.p-marca-grande .p-nombre { font-size: 5cqw; color: var(--papel); }
+.p-cartel { margin: 2cqw 0 0; font: 400 7.4cqw/1.05 var(--bar-font), Georgia, serif; font-style: var(--bar-style); text-transform: var(--bar-case); letter-spacing: -.01em; }
+.p-cartel-sub { max-width: 62cqw; margin: 0; font-size: 2.6cqw; line-height: 1.35; opacity: .86; }
+.p-servilleta {
+  width: 46cqw;
+  margin-top: 1.6cqw;
+  padding: 4cqw 5cqw 3.4cqw;
+  border-radius: .8cqw;
+  background: var(--papel) var(--grano);
+  color: var(--brand-ink);
+  box-shadow: 0 3cqw 6cqw -2cqw rgba(0, 0, 0, .35);
+  transform: rotate(-2deg);
+}
+.p-kicker { margin: 0 0 2cqw; font: 400 3.6cqw/1.1 var(--bar-font), Georgia, serif; font-style: var(--bar-style); text-transform: var(--bar-case); }
+.p-servilleta .p-qr { width: 30cqw; margin: 0 auto; }
+.p-url { margin: 1.8cqw 0 0; font-size: 2.1cqw; font-weight: 600; letter-spacing: .02em; }
+.p-legal-claro { position: absolute; left: 0; right: 0; bottom: 6cqw; margin: 0; font-size: 1.9cqw; color: rgba(247, 243, 234, .82); }
+
+/* carta en papel: puede ocupar varias páginas (en pantalla, una hoja alta) */
+.hoja-carta { aspect-ratio: auto; min-height: calc(min(210mm, 100vw - 32px) * 297 / 210); }
+.in-carta { position: static; padding: 8cqw 9cqw 7cqw; }
+.pc-head { display: flex; flex-direction: column; align-items: center; gap: 1.6cqw; padding-bottom: 3.4cqw; border-bottom: .2cqw solid rgba(12, 14, 46, .12); }
+.p-marca-carta img { height: 9cqw; }
+.p-marca-carta .p-nombre { font-size: 3.6cqw; color: var(--brand-ink); }
+.pc-titulo { margin: 0; font: 400 3.4cqw/1 var(--bar-font), Georgia, serif; font-style: var(--bar-style); text-transform: var(--bar-case); letter-spacing: .02em; color: rgba(12, 14, 46, .6); }
+.pc-body { columns: 2; column-gap: 7cqw; padding-top: 2cqw; }
+.pc-body .carta-sec { break-inside: avoid; padding: 2.4cqw 0 .6cqw; }
+.pc-body .carta-sec-title { margin: 0 0 .8cqw; font: 400 3.1cqw/1.15 var(--bar-font), Georgia, serif; font-style: var(--bar-style); text-transform: var(--bar-case); color: var(--brand-ink); }
+.pc-body .carta-list { list-style: none; margin: 0; padding: 0; }
+.pc-body .carta-item { padding: 1.1cqw 0; break-inside: avoid; }
+.pc-body .carta-row { display: flex; align-items: baseline; font-size: 1.95cqw; font-weight: 500; line-height: 1.3; }
+.pc-body .carta-dots { flex: 1 1 3cqw; min-width: 3cqw; margin: 0 1cqw; border-bottom: .2cqw dotted rgba(12, 14, 46, .35); transform: translateY(-.5cqw); }
+.pc-body .carta-price { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pc-body .carta-al { margin: .3cqw 0 0; font-size: 1.45cqw; color: rgba(12, 14, 46, .66); }
+.pc-body .agotado { display: none; } /* lo agotado no se imprime: la carta en papel dura más que un día */
+.pc-body .carta-tag, .pc-body .carta-out { display: inline-block; margin-right: .8cqw; padding: .15cqw .6cqw; border-radius: .4cqw; font-size: 1.15cqw; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: #fff; background: var(--brand); }
+.pc-body .tag-fuera { background: #6B4226; }
+.pc-body .tag-estrella { background: #9A6B12; }
+.pc-body .carta-hoy { display: none; } /* lo de hoy cambia cada día: va en el QR, no en el papel */
+.pc-body .carta-aviso { display: none; } /* en papel, el aviso va al pie */
+.pc-body .carta-foot { column-span: all; padding-top: 2.4cqw; font-size: 1.6cqw; color: rgba(12, 14, 46, .7); }
+.pc-body .carta-foot p { margin: 0; }
+.pc-legal { display: flex; align-items: center; justify-content: space-between; gap: 4cqw; margin-top: 4cqw; padding-top: 3cqw; border-top: .2cqw solid rgba(12, 14, 46, .12); font-size: 1.5cqw; color: rgba(12, 14, 46, .72); }
+.pc-legal p { margin: 0 0 .4cqw; }
+.pc-digital { font-weight: 600; color: var(--brand-ink); }
+.pc-legal .p-qr { flex: none; width: 13cqw; }
+
+/* ---------- Al imprimir: solo las hojas, a tamaño real ---------- */
+@page { size: A4; margin: 0; }
+@page carta { size: A4; margin: 14mm 0; }
+@media print {
+  body { background: #fff; }
+  .p-bar, .p-hint { display: none; }
+  .p-sheets { display: block; padding: 0; }
+  .hoja { width: 210mm; height: 297mm; box-shadow: none; break-after: page; }
+  .hoja-carta { page: carta; height: auto; min-height: 0; aspect-ratio: auto; overflow: visible; }
+  .in-carta { padding-top: 0; padding-bottom: 0; }
+}

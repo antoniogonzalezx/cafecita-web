@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <!-- vive en /barmanolo/imprimir/ pero usa los ficheros de la raíz -->
+  <base href="/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self' data: blob:; object-src 'none'; base-uri 'self'; form-action 'none'" />
+  <meta name="robots" content="noindex" />
+  <title>Para imprimir · Bar Manolo</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="fonts/fonts.css?v=4" />
+  <link rel="stylesheet" href="imprimir.css?v=1" />
+</head>
+<body data-bar="barmanolo">
+  <header class="p-bar">
+    <a class="p-back" id="pBack" href="/barmanolo/gestion/">← Gestión</a>
+    <nav class="p-tabs" aria-label="Qué imprimir">
+      <button type="button" class="p-tab" data-que="mesas" aria-pressed="false">Pegatinas para las mesas</button>
+      <button type="button" class="p-tab" data-que="barra" aria-pressed="false">Cartel para la barra</button>
+      <button type="button" class="p-tab" data-que="carta" aria-pressed="false">Carta en papel</button>
+    </nav>
+    <button type="button" class="p-print" id="pPrint">Imprimir o guardar en PDF</button>
+  </header>
+  <p class="p-hint" id="pHint"></p>
+  <main class="p-sheets" id="pSheets" aria-live="polite"></main>
+
+  <script type="module" src="imprimir.js?v=1"></script>
+</body>
+</html>
