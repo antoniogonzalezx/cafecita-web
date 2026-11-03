@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <!-- vive en /barmanolo/gestion/ pero usa los ficheros de la raíz (bar.js, napkin.js, fuentes) -->
+  <base href="/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self' data: blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'" />
+  <meta name="robots" content="noindex" />
+  <title>Gestión · Bar Manolo</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="fonts/fonts.css?v=4" />
+  <link rel="stylesheet" href="gestion.css?v=9" />
+</head>
+<body data-bar="barmanolo">
+  <header class="g-top">
+    <div class="g-brand">
+      <span class="g-logo" id="gLogo" aria-hidden="true"></span>
+      <div>
+        <p class="g-kicker">Gestión de tu bar</p>
+        <h1 id="gName">Bar Manolo</h1>
+      </div>
+    </div>
+    <div class="g-top-actions">
+      <span class="g-saved" id="gSaved" role="status"></span>
+      <a class="g-btn g-btn-ghost" href="/barmanolo/" target="_blank" rel="noopener">Ver mi página</a>
+    </div>
+  </header>
+
+  <p class="g-demo"><b>Demo.</b> Lo que cambies aquí se guarda solo en este navegador: nadie más lo ve.</p>
+
+  <main class="g-main">
+    <div class="g-form" id="gForm">
+      <p class="g-loading">Cargando…</p>
+    </div>
+    <aside class="g-preview" aria-label="Vista previa de tu página">
+      <div class="g-phone">
+        <iframe id="gFrame" data-src="/barmanolo/" title="Vista previa de la página del bar"></iframe>
+      </div>
+      <p class="g-preview-note">Así la ven tus clientes. Saca una servilleta para ver las sugerencias.</p>
+    </aside>
+  </main>
+
+  <div class="g-toast" id="gToast" role="status" hidden></div>
+
+  <script type="module" src="gestion.js?v=10"></script>
+</body>
+</html>

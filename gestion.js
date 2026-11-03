@@ -1,0 +1,349 @@
+// ---------- Gestión de un bar ----------
+// Lo que el bar cambia de su página: sugerencias del día, carta y datos (gratis) y, con Pro,
+// su logo, su color y el acabado del servilletero. En la demo se guarda en este navegador
+// (bar.js) y la vista previa de la derecha es su página de verdad, que se recarga al guardar.
+import { loadBar, saveBar, resetBar, isPro, logoOf, logoImage, servilletas, titulo, precio, ALERGENOS, COLORES, ACABADOS, TIPOS, DEFAULT_COLOR, LETRAS, letraCss } from './bar.js?v=5';
+import { paintNapkin, BAR_INK } from './napkin.js?v=20';
+
+const ID = document.body.dataset.bar;
+// la vista previa es la página entera (con su 3D): solo se carga donde se ve, no en el móvil,
+// que ya tiene «Ver mi página» y la servilleta de muestra
+const WIDE = matchMedia('(min-width: 761px)');
+const frame = () => document.getElementById('gFrame');
+function syncFrame() {
+  const f = frame();
+  if (WIDE.matches && !f.getAttribute('src')) f.src = f.dataset.src;
+}
+WIDE.addEventListener('change', syncFrame);
+syncFrame();
+const INK = BAR_INK; // la misma tinta que la servilleta de verdad
+let bar = await loadBar(ID);
+const letraDe = (b) => (isPro(b) && LETRAS[b.marca.letra] ? b.marca.letra : 'clasica');
+
+// ---------- DOM ----------
+function el(tag, props = {}, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (v == null || v === false) continue;
+    if (k === 'class') e.className = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else if (k in e && k !== 'list') e[k] = v;
+    else e.setAttribute(k, v === true ? '' : v);
+  }
+  e.append(...kids.flat().filter((x) => x != null && x !== false));
+  return e;
+}
+const $ = (id) => document.getElementById(id);
+const card = (title, sub, ...kids) => el('section', { class: 'g-card' },
+  el('header', { class: 'g-card-head' }, el('h2', {}, title), sub && el('p', { class: 'g-sub' }, sub)), ...kids);
+const field = (label, input, hint) => el('label', { class: 'g-field' }, el('span', { class: 'g-label' }, label), input, hint && el('span', { class: 'g-hint' }, hint));
+const num = (v) => (v === '' ? '' : Math.round(parseFloat(String(v).replace(',', '.')) * 100) / 100);
+
+// ---------- Guardar ----------
+// Cada cambio se guarda solo; la vista previa se recarga un poco después (es la página entera).
+let saveTimer = null, frameTimer = null;
+function changed({ redraw = false, napkin = false, brand = false } = {}) {
+  clearTimeout(saveTimer);
+  $('gSaved').textContent = 'Guardando…';
+  saveTimer = setTimeout(() => {
+    try {
+      saveBar(bar);
+      $('gSaved').textContent = 'Guardado';
+    } catch {
+      $('gSaved').textContent = 'No se ha podido guardar (¿logo muy grande?)';
+    }
+    clearTimeout(frameTimer);
+    frameTimer = setTimeout(() => { if (frame().getAttribute('src')) frame().contentWindow?.location.reload(); }, 500);
+  }, 350);
+  // el logo y el color se cargan antes de redibujar, que los usan
+  const after = () => { if (redraw) render(); else if (napkin || brand) paintPreview(); };
+  if (brand) paintBrand().then(after); else after();
+}
+
+// Quitar algo no pregunta: se quita y, durante unos segundos, se puede deshacer
+let toastTimer = null;
+function undoable(msg, mutate) {
+  const before = structuredClone(bar);
+  mutate();
+  changed({ redraw: true, napkin: true });
+  const toast = $('gToast');
+  toast.replaceChildren(el('span', {}, msg), el('button', { type: 'button', class: 'g-toast-undo', onclick: () => {
+    bar = before;
+    toast.hidden = true;
+    changed({ redraw: true, napkin: true });
+  } }, 'Deshacer'));
+  toast.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { toast.hidden = true; }, 6000);
+}
+
+// ---------- Cabecera y colores de la propia gestión ----------
+let logo = null;
+async function paintBrand() {
+  const pro = isPro(bar);
+  document.documentElement.style.setProperty('--brand', pro ? bar.marca.color : DEFAULT_COLOR);
+  const l = LETRAS[letraDe(bar)];
+  document.documentElement.style.setProperty('--boli', `'${l.family}', Georgia, serif`);
+  document.documentElement.style.setProperty('--boli-style', l.style || 'normal');
+  document.documentElement.style.setProperty('--boli-case', l.caps ? 'uppercase' : 'none');
+  $('gName').textContent = bar.nombre || 'Tu bar';
+  document.title = `Gestión · ${bar.nombre || 'Tu bar'}`;
+  logo = await logoOf(bar).catch(() => null);
+  const img = await logoImage(logo, '#F7F3EA');
+  $('gLogo').replaceChildren(...(img ? [img] : []));
+  $('gLogo').classList.toggle('empty', !img);
+}
+
+// la servilleta de sugerencias tal como saldrá (sin Pro, con CAFECITA en la solapa)
+let previewSeq = 0;
+async function paintPreview() {
+  const c = $('gNapkin');
+  if (!c) return;
+  const seq = ++previewSeq;
+  const pro = isPro(bar);
+  const src = pro && logo ? logo : { svg: await fetch('logo.svg').then((r) => r.text()) };
+  const img = await logoImage(src, INK);
+  const letra = letraDe(bar);
+  await document.fonts.load(letraCss(LETRAS[letra], 60)).catch(() => {});
+  // la que esté elegida en las pestañas de encima (o la primera que haya)
+  const list = servilletas(bar);
+  const n = list.find((x) => x.tipo === previewTipo) || list[0]
+    || { tipo: 'sugerencia', title: titulo('sugerencia'), lines: ['- Hoy, lo de siempre'] };
+  drawTabs(list, n.tipo);
+  const tmp = document.createElement('canvas');
+  await paintNapkin(tmp, { kind: 'bar', id: `${n.tipo}-gestion`, title: n.title, lines: n.lines }, { logo: img, ink: INK, letra });
+  if (seq !== previewSeq) return;
+  c.width = tmp.width;
+  c.height = tmp.height;
+  c.getContext('2d').drawImage(tmp, 0, 0);
+}
+
+let previewTipo = 'sugerencia';
+function drawTabs(list, on) {
+  const tabs = $('gTabs');
+  if (!tabs) return;
+  tabs.replaceChildren(...list.map((x) => el('button', {
+    type: 'button', class: `g-tab${x.tipo === on ? ' on' : ''}`, 'aria-pressed': String(x.tipo === on),
+    onclick: () => { previewTipo = x.tipo; paintPreview(); },
+  }, TIPOS[x.tipo])));
+  tabs.hidden = list.length < 2;
+}
+
+// ---------- Secciones ----------
+function planCard() {
+  const pro = isPro(bar);
+  const opt = (value, title, price, text) => el('button', {
+    type: 'button', class: `g-plan${bar.plan === value ? ' on' : ''}`, 'aria-pressed': String(bar.plan === value),
+    onclick: () => { bar.plan = value; changed({ redraw: true, brand: true }); },
+  }, el('span', { class: 'g-plan-name' }, title, el('b', {}, price)), el('span', { class: 'g-plan-text' }, text));
+  return card('Tu plan', 'En la demo puedes cambiar de plan sin pagar, para ver la diferencia.',
+    el('div', { class: 'g-plans' },
+      opt('gratis', 'Cafecita', 'Gratis', 'Tu página, tus sugerencias y tu carta, con la imagen de Cafecita.'),
+      opt('pro', 'Cafecita Pro', '19 €/mes', 'Tu logo, tu color y tu servilletero. Sin anuncios de otras marcas.')),
+    !pro && el('p', { class: 'g-note' }, 'Con el plan gratis, de vez en cuando sale un anuncio de Cafecita en tu servilletero.'));
+}
+
+// Lo de hoy: cada línea es una sugerencia del día o algo fuera de carta, y cada tipo sale en
+// su propia servilleta, rotulada. Lo más pedido no se escribe aquí: son los platos marcados en la carta.
+function hoyCard() {
+  const rows = el('div', { class: 'g-rows' });
+  const draw = () => {
+    rows.replaceChildren(...bar.sugerencias.map((s, i) => el('div', { class: 'g-row g-hoy' },
+      el('select', { class: 'g-input g-tipo', 'aria-label': 'Qué es',
+        onchange: (e) => { s.tipo = e.target.value; previewTipo = s.tipo; changed({ napkin: true }); } },
+        ...['sugerencia', 'fuera'].map((t) => el('option', { value: t, selected: (s.tipo || 'sugerencia') === t }, TIPOS[t]))),
+      el('input', { class: 'g-input grow', value: s.texto, placeholder: s.tipo === 'fuera' ? 'Rabo de toro estofado' : 'Bocata de calamares',
+        'aria-label': 'Plato', oninput: (e) => { s.texto = e.target.value; changed({ napkin: true }); } }),
+      priceInput(s, () => changed({ napkin: true })),
+      removeBtn('Quitar', () => undoable(`«${s.texto || 'Línea'}» quitada`, () => bar.sugerencias.splice(i, 1))),
+      el('div', { class: 'g-hoy-al' }, ...alergenosUI(s)))));
+  };
+  draw();
+  const add = (tipo, label) => el('button', { type: 'button', class: 'g-btn g-btn-add', onclick: () => {
+    bar.sugerencias.push({ tipo, texto: '', precio: '' });
+    previewTipo = tipo;
+    draw();
+    rows.lastElementChild?.querySelector('input')?.focus();
+  } }, label);
+  return card('Hoy en la barra', 'Cada cosa sale en su servilleta, rotulada a mano: la sugerencia del día, lo que hay fuera de carta y lo más pedido (los platos que marques con ★ en la carta).',
+    el('div', { class: 'g-split' },
+      el('div', { class: 'g-split-main' }, rows,
+        el('div', { class: 'g-adds' }, add('sugerencia', '+ Sugerencia del día'), add('fuera', '+ Fuera de carta'))),
+      el('figure', { class: 'g-napkin' },
+        el('div', { class: 'g-tabs', id: 'gTabs', role: 'group', 'aria-label': 'Qué servilleta ver' }),
+        el('canvas', { id: 'gNapkin', role: 'img', 'aria-label': 'Así sale la servilleta' }),
+        el('figcaption', {}, 'Así sale la servilleta'))));
+}
+
+function marcaCard() {
+  const pro = isPro(bar);
+  const m = bar.marca;
+  const file = el('input', { type: 'file', accept: '.svg,image/svg+xml,image/png,image/jpeg,image/webp', hidden: true, onchange: (e) => upload(e.target.files[0]) });
+  const logoBox = el('div', { class: 'g-logo-box' });
+  const logoErr = el('p', { class: 'g-error', role: 'alert', hidden: true }, 'El logo pesa demasiado: tiene que ocupar menos de 400 KB.');
+  logoImage(logo, '#F7F3EA').then((img) => logoBox.replaceChildren(img || el('span', {}, 'Sin logo')));
+  async function upload(f) {
+    if (!f) return;
+    logoErr.hidden = f.size <= 400 * 1024;
+    if (!logoErr.hidden) return;
+    m.logo = f.type === 'image/svg+xml' || f.name.endsWith('.svg')
+      ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(await f.text())}`
+      : await new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(f); });
+    changed({ redraw: true, brand: true });
+  }
+  const swatch = (c) => el('button', {
+    type: 'button', class: `g-swatch${m.color.toLowerCase() === c.toLowerCase() ? ' on' : ''}`, 'aria-label': `Color ${c}`,
+    'aria-pressed': String(m.color.toLowerCase() === c.toLowerCase()), disabled: !pro,
+    onclick: () => { m.color = c; changed({ redraw: true, brand: true }); },
+  }, el('span', { class: 'g-swatch-dot', 'data-c': c }));
+  const finish = (k) => el('button', {
+    type: 'button', class: `g-finish g-finish-${k}${m.servilletero === k ? ' on' : ''}`, 'aria-pressed': String(m.servilletero === k), disabled: !pro,
+    onclick: () => { m.servilletero = k; changed({ redraw: true }); },
+  }, el('span', { class: 'g-finish-box' }), ACABADOS[k]);
+  const body = el('div', { class: `g-marca${pro ? '' : ' locked'}`, inert: !pro },
+    field('Logo', el('div', { class: 'g-logo-row' }, logoBox,
+      el('div', { class: 'g-logo-actions' },
+        el('button', { type: 'button', class: 'g-btn', onclick: () => file.click() }, 'Subir logo'),
+        el('button', { type: 'button', class: 'g-btn g-btn-ghost', onclick: () => { m.logo = `bares/${ID}/logo.svg`; changed({ redraw: true, brand: true }); } }, 'Usar el de ejemplo'),
+        file), logoErr),
+      'SVG de un color (se pinta en la tinta de la servilleta) o PNG. Sale arriba de tu página y en la solapa.'),
+    field('Color de tu página', el('div', { class: 'g-swatches' }, COLORES.map(swatch),
+      el('input', { type: 'color', class: 'g-color', value: m.color, 'aria-label': 'Otro color', disabled: !pro,
+        onchange: (e) => { m.color = e.target.value; changed({ redraw: true, brand: true }); } }))),
+    field('Servilletero', el('div', { class: 'g-finishes' }, Object.keys(ACABADOS).map(finish))),
+    field('Letra de lo que escribes', el('div', { class: 'g-letras' }, Object.entries(LETRAS).map(([k, l]) => {
+      const on = (m.letra || 'clasica') === k;
+      const muestra = el('span', { class: 'g-letra-muestra' }, l.caps ? 'SUGERENCIA DEL DÍA' : 'Sugerencia del día');
+      muestra.style.fontFamily = `'${l.family}', Georgia, serif`;
+      muestra.style.fontStyle = l.style || 'normal';
+      return el('button', { type: 'button', class: `g-letra${on ? ' on' : ''}`, 'aria-pressed': String(on), disabled: !pro,
+        onclick: () => { m.letra = k; changed({ redraw: true, brand: true }); } },
+      muestra, el('span', { class: 'g-letra-nombre' }, k === 'clasica' ? `${l.nombre} (la de la frase)` : l.nombre));
+    })), 'La de las servilletas y los títulos de tu carta.'));
+  return card('Tu marca', pro ? 'Lo que hace que tu página sea tuya.' : null,
+    !pro && el('div', { class: 'g-lock' },
+      el('p', {}, el('b', {}, 'Con Cafecita Pro'), ' tu página lleva tu logo, tu color y tu servilletero, en vez de los de Cafecita.'),
+      el('button', { type: 'button', class: 'g-btn g-btn-brand', onclick: () => { bar.plan = 'pro'; changed({ redraw: true, brand: true }); } }, 'Probar Pro')),
+    body);
+}
+
+function cartaCard() {
+  const wrap = el('div', { class: 'g-carta' });
+  const draw = () => wrap.replaceChildren(...bar.carta.map((sec, si) => el('div', { class: 'g-sec' },
+    el('div', { class: 'g-sec-head' },
+      el('input', { class: 'g-input g-sec-name', value: sec.seccion, 'aria-label': 'Nombre de la sección', placeholder: 'Sección',
+        oninput: (e) => { sec.seccion = e.target.value; changed(); } }),
+      removeBtn('Quitar la sección', () => undoable(`Sección «${sec.seccion}» quitada`, () => bar.carta.splice(si, 1)))),
+    el('div', { class: 'g-items' }, sec.platos.map((p, pi) => itemRow(p, () => undoable(`«${p.nombre || 'Plato'}» quitado`, () => sec.platos.splice(pi, 1))))),
+    el('button', { type: 'button', class: 'g-btn g-btn-add', onclick: () => {
+      sec.platos.push({ nombre: '', precio: '', alergenos: null });
+      draw();
+      wrap.children[si].querySelector('.g-items').lastElementChild?.querySelector('input')?.focus();
+    } }, '+ Añadir plato'))));
+  draw();
+  return card('La carta', 'Lo agotado se ve tachado, y los alérgenos siempre a la vista. Si no los marcas, la carta dice «pregunta al personal».',
+    wrap, el('button', { type: 'button', class: 'g-btn g-btn-add', onclick: () => {
+      bar.carta.push({ seccion: 'Nueva sección', platos: [] }); draw(); changed();
+    } }, '+ Añadir sección'));
+}
+
+// Los 14 alérgenos de un plato (o de lo de hoy): un resumen que se despliega en botones.
+// «No lo sé» deja que la carta diga «pregunta al personal», nunca una suposición.
+function alergenosUI(p) {
+  const al = el('div', { class: 'g-al', hidden: true });
+  const summary = el('button', { type: 'button', class: 'g-al-btn', 'aria-expanded': 'false' });
+  const sum = () => {
+    summary.textContent = !Array.isArray(p.alergenos) ? 'Alérgenos: sin marcar'
+      : p.alergenos.length ? `Alérgenos: ${p.alergenos.map((a) => ALERGENOS[a]).join(', ')}` : 'Sin alérgenos';
+    summary.classList.toggle('warn', !Array.isArray(p.alergenos));
+  };
+  summary.addEventListener('click', () => {
+    al.hidden = !al.hidden;
+    summary.setAttribute('aria-expanded', String(!al.hidden));
+  });
+  const chips = () => al.replaceChildren(
+    ...Object.entries(ALERGENOS).map(([k, name]) => el('button', {
+      type: 'button', class: `g-chip${p.alergenos?.includes(k) ? ' on' : ''}`, 'aria-pressed': String(!!p.alergenos?.includes(k)),
+      onclick: () => {
+        const list = Array.isArray(p.alergenos) ? p.alergenos : [];
+        p.alergenos = list.includes(k) ? list.filter((x) => x !== k) : [...list, k];
+        chips(); sum(); changed();
+      },
+    }, name)),
+    el('button', { type: 'button', class: `g-chip g-chip-none${Array.isArray(p.alergenos) && !p.alergenos.length ? ' on' : ''}`,
+      onclick: () => { p.alergenos = []; chips(); sum(); changed(); } }, 'No tiene'),
+    el('button', { type: 'button', class: `g-chip g-chip-none${!Array.isArray(p.alergenos) ? ' on' : ''}`,
+      onclick: () => { p.alergenos = null; chips(); sum(); changed(); } }, 'No lo sé'));
+  chips();
+  sum();
+  return [summary, al];
+}
+
+function itemRow(p, remove) {
+  const row = el('div', { class: `g-item${p.agotado ? ' out' : ''}` },
+    el('div', { class: 'g-row' },
+      el('input', { class: 'g-input grow', value: p.nombre, placeholder: 'Nombre del plato', 'aria-label': 'Plato',
+        oninput: (e) => { p.nombre = e.target.value; changed(); } }),
+      priceInput(p, () => changed()),
+      el('label', { class: 'g-toggle g-star', title: 'Sale en la servilleta de lo más pedido' },
+        el('input', { type: 'checkbox', checked: !!p.destacado, onchange: (e) => { p.destacado = e.target.checked; if (p.destacado) previewTipo = 'estrella'; changed({ napkin: true }); } }),
+        el('span', {}, '★ Más pedido')),
+      el('label', { class: 'g-toggle', title: 'Se ve tachado en la carta' },
+        el('input', { type: 'checkbox', checked: !!p.agotado, onchange: (e) => { p.agotado = e.target.checked; row.classList.toggle('out', p.agotado); changed({ napkin: true }); } }),
+        el('span', {}, 'Agotado')),
+      removeBtn('Quitar el plato', remove)),
+    ...alergenosUI(p));
+  return row;
+}
+
+function priceInput(o, onChange) {
+  return el('span', { class: 'g-price' },
+    el('input', { class: 'g-input', inputmode: 'decimal', value: o.precio === '' || o.precio == null ? '' : precio(o.precio).replace('€', ''),
+      placeholder: '0', 'aria-label': 'Precio en euros',
+      oninput: (e) => {
+        const v = e.target.value.trim(), n = v === '' ? '' : num(v);
+        // solo números (con coma o punto): si no, se marca y no se guarda
+        const bad = n !== '' && Number.isNaN(n);
+        e.target.setAttribute('aria-invalid', String(bad));
+        e.target.title = bad ? 'Solo números, por ejemplo 7,50' : '';
+        if (bad) return;
+        o.precio = n;
+        onChange();
+      } }),
+    el('span', { class: 'g-euro' }, '€'));
+}
+const removeBtn = (label, onclick) => el('button', { type: 'button', class: 'g-remove', 'aria-label': label, title: label, onclick }, '×');
+
+function datosCard() {
+  const input = (k, ph) => el('input', { class: 'g-input', value: bar[k] || '', placeholder: ph,
+    oninput: (e) => { bar[k] = e.target.value; changed({ brand: k === 'nombre' }); } });
+  return card('Datos del bar', 'Salen al final de la carta.',
+    field('Nombre', input('nombre', 'Bar Manolo')),
+    field('Dirección', input('direccion', 'Calle del Pez, 14 · Madrid')),
+    field('Horario', input('horario', 'De lunes a sábado, de 8:00 a 24:00')));
+}
+
+function render() {
+  $('gForm').replaceChildren(
+    hoyCard(), cartaCard(), marcaCard(), datosCard(), planCard(),
+    el('p', { class: 'g-reset' }, el('button', { type: 'button', class: 'g-link', onclick: async (e) => {
+      // dos toques: el primero pregunta, sin ventanas del navegador
+      const b = e.currentTarget;
+      if (!b.dataset.sure) {
+        b.dataset.sure = '1';
+        b.textContent = '¿Seguro? Pulsa otra vez para restablecer';
+        setTimeout(() => { delete b.dataset.sure; b.textContent = 'Restablecer la demo'; }, 4000);
+        return;
+      }
+      resetBar(ID);
+      bar = await loadBar(ID);
+      await paintBrand();
+      render();
+      if (frame().getAttribute('src')) frame().contentWindow?.location.reload();
+    } }, 'Restablecer la demo')));
+  for (const d of document.querySelectorAll('.g-swatch-dot')) d.style.background = d.dataset.c;
+  paintPreview();
+}
+
+await paintBrand();
+render();
