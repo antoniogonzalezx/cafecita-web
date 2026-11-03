@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "wrangler dev --test-scheduled",
     "deploy": "wrangler deploy",
-    "esquema": "wrangler d1 execute cafecita --remote --file=schema.sql"
+    "esquema": "wrangler d1 execute cafecita --remote --file=schema.sql",
+    "alta": "node alta-bar.mjs",
+    "migrar": "wrangler d1 execute cafecita --remote --file=migraciones/2026-11-03-bares-y-carta.sql"
   },
   "devDependencies": {
     "wrangler": "^4.156.2"

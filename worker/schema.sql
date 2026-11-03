@@ -24,7 +24,7 @@ create table if not exists eventos (
   id     integer primary key,
   creado text not null,                -- ISO en UTC
   dia    text not null,                -- AAAA-MM-DD en hora de Madrid
-  evento text not null check (evento in ('visita', 'dia', 'servilleta', 'enlace', 'compartir', 'bola', 'bienvenida')),
+  evento text not null check (evento in ('visita', 'dia', 'servilleta', 'enlace', 'compartir', 'bola', 'bienvenida', 'carta')),
   datos  text not null default '{}' check (json_valid(datos) and json_type(datos) = 'object' and length(datos) < 512)
 );
 
@@ -38,6 +38,7 @@ select dia as fecha,
        count(*) filter (where evento = 'servilleta')                                         as servilletas,
        count(*) filter (where evento = 'enlace')                                             as enlaces,
        count(*) filter (where evento = 'compartir')                                          as compartidas,
+       count(*) filter (where evento = 'carta')                                              as cartas,
        count(*) filter (where evento = 'visita' and json_extract(datos, '$.origen') = 'compartida') as llegadas_compartidas
 from eventos
 group by dia
@@ -55,3 +56,15 @@ from eventos
 where evento = 'dia'
 group by 1
 order by 1 desc;
+
+-- La ficha de cada bar (lo que cambia en su gestión) y su acceso.
+-- El plan lo pone Cafecita, no el bar: va en su columna y el Worker no deja tocarlo desde la gestión.
+-- Del código de acceso solo se guarda su SHA-256: el código lo tiene el bar (y quien se lo dio).
+-- Altas: npm run alta -- <id> "<Nombre del bar>" [--pro]
+create table if not exists bares (
+  id          text primary key check (length(id) between 2 and 40 and id not glob '*[^a-z0-9-]*'),
+  datos       text not null check (json_valid(datos) and json_type(datos) = 'object'),
+  plan        text not null default 'gratis' check (plan in ('gratis', 'pro')),
+  codigo      text not null check (length(codigo) = 64),
+  actualizado text not null
+) without rowid;

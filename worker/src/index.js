@@ -31,7 +31,7 @@ const BATCH = 25;
 
 // ---------- Respuestas ----------
 // Todo es público (titulares y eventos anónimos), así que vale cualquier origen
-const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' };
+const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization' };
 const json = (body, status = 200, maxAge = 0) => new Response(JSON.stringify(body), {
   status,
   headers: { ...CORS, 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': maxAge ? `public, max-age=${maxAge}` : 'no-store' },
@@ -209,6 +209,81 @@ async function refrescar(db) {
   return { ok: true, titulares: rows.length, log };
 }
 
+// ---------- Bares ----------
+// La ficha de cada bar (lo que cambia en su gestión) vive en D1. Leerla es público; cambiarla
+// pide su código de acceso, que Cafecita da a mano a cada bar (de momento no hay registro).
+// Del código solo se guarda su SHA-256. El plan (gratis o Pro) lo pone Cafecita: el bar no puede tocarlo.
+const BAR_ID = /^[a-z0-9-]{2,40}$/;
+const ALERGENOS = new Set(['gluten', 'crustaceos', 'huevos', 'pescado', 'cacahuetes', 'soja', 'lacteos', 'frutos', 'apio', 'mostaza', 'sesamo', 'sulfitos', 'altramuces', 'moluscos']);
+const sha256 = async (s) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)))]
+  .map((b) => b.toString(16).padStart(2, '0')).join('');
+// el código se escribe como se quiera (minúsculas, con o sin guiones): se compara normalizado
+const normalizarCodigo = (c) => String(c ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+async function barDe(db, id) {
+  if (!BAR_ID.test(id || '')) return null;
+  return db.prepare('select datos, plan, codigo from bares where id = ?').bind(id).first();
+}
+async function autorizado(row, codigo) {
+  const c = normalizarCodigo(codigo);
+  return !!row && c.length >= 12 && (await sha256(c)) === row.codigo;
+}
+
+// Lo que llega de la gestión se reescribe campo a campo: solo lo que conocemos, con su tamaño
+function limpiarBar(d, id) {
+  const txt = (v, n) => (typeof v === 'string' ? v.trim().slice(0, n) : '');
+  const precio = (v) => (v === '' || v == null || !Number.isFinite(+v) ? '' : Math.round(+v * 100) / 100);
+  const alergenos = (v) => (Array.isArray(v) ? [...new Set(v.filter((a) => ALERGENOS.has(a)))] : null);
+  const m = d?.marca ?? {};
+  const logo = typeof m.logo === 'string' && (/^data:image\/(svg\+xml|png|jpeg|webp)[;,]/.test(m.logo) || /^bares\/[a-z0-9-]+\/logo\.svg$/.test(m.logo)) && m.logo.length < 600e3 ? m.logo : '';
+  return {
+    id,
+    nombre: txt(d?.nombre, 60) || id,
+    direccion: txt(d?.direccion, 120),
+    horario: txt(d?.horario, 120),
+    marca: {
+      logo,
+      color: /^#[0-9a-f]{6}$/i.test(m.color) ? m.color : '#1F6B45',
+      servilletero: ['inox', 'blanco', 'negro'].includes(m.servilletero) ? m.servilletero : 'inox',
+      letra: ['clasica', 'rotulador', 'pizarra', 'pincel'].includes(m.letra) ? m.letra : 'clasica',
+    },
+    sugerencias: (Array.isArray(d?.sugerencias) ? d.sugerencias : []).slice(0, 20).map((x) => ({
+      tipo: x?.tipo === 'fuera' ? 'fuera' : 'sugerencia', texto: txt(x?.texto, 80), precio: precio(x?.precio), alergenos: alergenos(x?.alergenos),
+    })),
+    carta: (Array.isArray(d?.carta) ? d.carta : []).slice(0, 20).map((sec) => ({
+      seccion: txt(sec?.seccion, 60),
+      platos: (Array.isArray(sec?.platos) ? sec.platos : []).slice(0, 80).map((p) => ({
+        nombre: txt(p?.nombre, 80), precio: precio(p?.precio), alergenos: alergenos(p?.alergenos), agotado: p?.agotado === true, destacado: p?.destacado === true,
+      })),
+    })),
+  };
+}
+
+async function leerBar(db, id) {
+  const row = await barDe(db, id);
+  if (!row) return json({ ok: false, error: 'no existe' }, 404);
+  return json({ ...JSON.parse(row.datos), id, plan: row.plan });
+}
+async function entrarBar(db, request) {
+  let body;
+  try { body = await request.json(); } catch { return json({ ok: false }, 400); }
+  const row = await barDe(db, body?.id);
+  return (await autorizado(row, body?.codigo)) ? json({ ok: true }) : json({ ok: false, error: 'código no válido' }, 401);
+}
+async function guardarBar(db, request, id) {
+  const row = await barDe(db, id);
+  const codigo = (request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  if (!(await autorizado(row, codigo))) return json({ ok: false, error: 'código no válido' }, 401);
+  const text = await request.text();
+  if (text.length > 800e3) return json({ ok: false, error: 'demasiado grande' }, 413);
+  let d;
+  try { d = JSON.parse(text); } catch { return json({ ok: false }, 400); }
+  const datos = limpiarBar(d, id);
+  const now = new Date().toISOString();
+  await db.prepare('update bares set datos = ?, actualizado = ? where id = ?').bind(JSON.stringify(datos), now, id).run();
+  return json({ ok: true, actualizado: now });
+}
+
 export default {
   async fetch(request, env) {
     const { pathname, searchParams } = new URL(request.url);
@@ -219,6 +294,9 @@ export default {
     }
     if (m === 'GET' && pathname === '/hemeroteca') return hemeroteca(env.DB, searchParams.get('id'));
     if (m === 'POST' && pathname === '/registrar') return registrar(env.DB, request);
+    if (m === 'GET' && pathname === '/bar') return leerBar(env.DB, searchParams.get('id'));
+    if (m === 'POST' && pathname === '/bar/entrar') return entrarBar(env.DB, request);
+    if (m === 'PUT' && pathname === '/bar') return guardarBar(env.DB, request, searchParams.get('id'));
     if (m === 'POST' && pathname === '/refrescar') {
       const last = await env.DB.prepare('select actualizado from portada where id = 1').first();
       const since = last ? (Date.now() - Date.parse(last.actualizado)) / 60000 : Infinity;

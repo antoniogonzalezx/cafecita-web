@@ -4,7 +4,7 @@ import { gsap } from 'gsap';
 import { paintNapkin, paintStory, wrinkle, barFlap, BAR_INK } from './napkin.js?v=21';
 import * as sound from './sound.js?v=13';
 import { medir, visita, API } from './medir.js?v=14';
-import { loadBar, isPro, logoOf, logoImage, servilletas, titulo, DEFAULT_COLOR, LETRAS, letraCss } from './bar.js?v=6';
+import { loadBar, isPro, logoOf, logoImage, servilletas, titulo, DEFAULT_COLOR, LETRAS, letraCss } from './bar.js?v=7';
 
 // ---------- Medidas (cm, iguales que tools/blender_servilletero.py) ----------
 const W = 9.0;      // ancho

@@ -3,12 +3,21 @@
 // del bar (sin un instante del azul de Cafecita) y la carta ya funciona, también con la Wi-Fi
 // lenta de un bar: el cliente viene a ver qué hay. El servilletero llega después (main.js),
 // que abre la carta desde la servilleta con el evento «carta:abrir».
-import { loadBar, isPro, logoOf, logoImage, renderCarta, DEFAULT_COLOR, LETRAS, ALERGENOS } from './bar.js?v=6';
+import { loadBar, isPro, logoOf, logoImage, renderCarta, DEFAULT_COLOR, LETRAS, ALERGENOS } from './bar.js?v=7';
 import { medir } from './medir.js?v=14';
 
 const $ = (id) => document.getElementById(id);
 const ID = document.body.dataset.bar;
-const bar = await loadBar(ID);
+// sin conexión con el servidor no hay ficha que enseñar: se dice y se puede reintentar
+const bar = await loadBar(ID).catch(() => null);
+if (!bar) {
+  document.body.classList.add('bar-ready');
+  const msg = document.createElement('p');
+  msg.className = 'bar-name';
+  msg.textContent = 'No se ha podido cargar. Recarga la página.';
+  document.querySelector('.logo').replaceChildren(msg);
+  throw new Error(`No se ha podido cargar el bar ${ID}`);
+}
 const pro = isPro(bar);
 
 // ---------- Su marca ----------

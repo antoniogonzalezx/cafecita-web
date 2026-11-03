@@ -1,8 +1,9 @@
 // ---------- Gestión de un bar ----------
 // Lo que el bar cambia de su página: sugerencias del día, carta y datos (gratis) y, con Pro,
-// su logo, su color y el acabado del servilletero. En la demo se guarda en este navegador
-// (bar.js) y la vista previa de la derecha es su página de verdad, que se recarga al guardar.
-import { loadBar, saveBar, resetBar, isPro, logoOf, logoImage, servilletas, titulo, precio, ALERGENOS, COLORES, ACABADOS, TIPOS, DEFAULT_COLOR, LETRAS, letraCss } from './bar.js?v=6';
+// su logo, su color y el acabado del servilletero. Un bar dado de alta entra con su código de
+// acceso y lo que cambia se guarda en el servidor; en la demo (Bar Manolo), en este navegador.
+// La vista previa de la derecha es su página de verdad, que se recarga al guardar.
+import { loadBar, saveBar, resetBar, entrar, guardarRemoto, isPro, logoOf, logoImage, servilletas, titulo, precio, ALERGENOS, COLORES, ACABADOS, TIPOS, DEFAULT_COLOR, LETRAS, letraCss } from './bar.js?v=7';
 import { paintNapkin, BAR_INK } from './napkin.js?v=21';
 
 const ID = document.body.dataset.bar;
@@ -18,6 +19,7 @@ WIDE.addEventListener('change', syncFrame);
 syncFrame();
 const INK = BAR_INK; // la misma tinta que la servilleta de verdad
 let bar = await loadBar(ID);
+const DEMO = !bar.remoto;
 const letraDe = (b) => (isPro(b) && LETRAS[b.marca.letra] ? b.marca.letra : 'clasica');
 
 // ---------- DOM ----------
@@ -39,22 +41,86 @@ const card = (title, sub, ...kids) => el('section', { class: 'g-card' },
 const field = (label, input, hint) => el('label', { class: 'g-field' }, el('span', { class: 'g-label' }, label), input, hint && el('span', { class: 'g-hint' }, hint));
 const num = (v) => (v === '' ? '' : Math.round(parseFloat(String(v).replace(',', '.')) * 100) / 100);
 
+// ---------- Acceso ----------
+// El código llega en el enlace que da Cafecita (#codigo=…, que no sale del navegador) o se
+// escribe aquí; se recuerda en este navegador hasta que se pulsa «Salir».
+const KEY_CODIGO = `cafecita.acceso.${ID}`;
+let codigo = null;
+function recordar(c) { try { if (c) localStorage.setItem(KEY_CODIGO, c); else localStorage.removeItem(KEY_CODIGO); } catch {} }
+async function acceso() {
+  const m = location.hash.match(/codigo=([A-Za-z0-9-]+)/);
+  if (m) history.replaceState(null, '', location.pathname + location.search);
+  let c = m?.[1] || null;
+  if (!c) try { c = localStorage.getItem(KEY_CODIGO); } catch {}
+  if (c && await entrar(ID, c).catch(() => null)) { codigo = c; recordar(c); return true; }
+  recordar(null);
+  return false;
+}
+// msg: un aviso (al salir) o, con error, lo que ha fallado
+function pantallaAcceso(msg, error = false) {
+  document.body.classList.add('g-sin-acceso');
+  const input = el('input', { class: 'g-input g-codigo', placeholder: 'XXXX-XXXX-XXXX', 'aria-label': 'Código de acceso', autocomplete: 'one-time-code', autocapitalize: 'characters', spellcheck: false });
+  const err = el('p', { class: error ? 'g-error' : 'g-aviso', role: 'alert', hidden: !msg }, msg || '');
+  const go = async (e) => {
+    e.preventDefault();
+    const c = input.value.trim();
+    if (!c) return;
+    err.hidden = true;
+    err.className = 'g-error';
+    const ok = await entrar(ID, c).catch(() => null);
+    if (ok === null) { err.textContent = 'No hay conexión. Prueba otra vez en un momento.'; err.hidden = false; return; }
+    if (!ok) { err.textContent = 'Ese código no es el de este bar. Revisa el que te dimos.'; err.hidden = false; return; }
+    codigo = c;
+    recordar(c);
+    document.body.classList.remove('g-sin-acceso');
+    render();
+  };
+  $('gForm').replaceChildren(el('section', { class: 'g-card g-acceso' },
+    el('header', { class: 'g-card-head' }, el('h2', {}, 'Entra en tu gestión'),
+      el('p', { class: 'g-sub' }, 'Escribe el código de acceso que te dio Cafecita. Lo recordaremos en este dispositivo.')),
+    el('form', { class: 'g-acceso-form', onsubmit: go }, input, el('button', { type: 'submit', class: 'g-btn g-btn-brand' }, 'Entrar')),
+    err));
+  input.focus();
+}
+function salir() {
+  codigo = null;
+  recordar(null);
+  pantallaAcceso('Has salido. Para volver a entrar, escribe tu código.');
+}
+
 // ---------- Guardar ----------
-// Cada cambio se guarda solo; la vista previa se recarga un poco después (es la página entera).
-let saveTimer = null, frameTimer = null;
+// Cada cambio se guarda solo (en el servidor o, en la demo, en este navegador); la vista previa
+// se recarga un poco después (es la página entera).
+let saveTimer = null, frameTimer = null, retry = null;
+async function guardar() {
+  if (DEMO) { saveBar(bar); return true; }
+  const status = await guardarRemoto(bar, codigo).catch(() => 0);
+  if (status === 401) { salir(); $('gSaved').textContent = ''; return false; }
+  if (status === 413) throw new Error('grande');
+  if (status !== 200) {
+    // sin conexión: lo intenta otra vez dentro de un rato, sin perder lo escrito
+    $('gSaved').textContent = 'Sin conexión: se guardará en cuanto vuelva';
+    clearTimeout(retry);
+    retry = setTimeout(() => changed(), 8000);
+    return false;
+  }
+  return true;
+}
 function changed({ redraw = false, napkin = false, brand = false } = {}) {
   clearTimeout(saveTimer);
   $('gSaved').textContent = 'Guardando…';
-  saveTimer = setTimeout(() => {
+  saveTimer = setTimeout(async () => {
+    let ok = false;
     try {
-      saveBar(bar);
-      $('gSaved').textContent = 'Guardado';
+      ok = await guardar();
+      if (ok) $('gSaved').textContent = 'Guardado';
     } catch {
       $('gSaved').textContent = 'No se ha podido guardar (¿logo muy grande?)';
     }
+    if (!ok) return;
     clearTimeout(frameTimer);
     frameTimer = setTimeout(() => { if (frame().getAttribute('src')) frame().contentWindow?.location.reload(); }, 500);
-  }, 350);
+  }, DEMO ? 350 : 700);
   // el logo y el color se cargan antes de redibujar, que los usan
   const after = () => { if (redraw) render(); else if (napkin || brand) paintPreview(); };
   if (brand) paintBrand().then(after); else after();
@@ -132,6 +198,12 @@ function drawTabs(list, on) {
 // ---------- Secciones ----------
 function planCard() {
   const pro = isPro(bar);
+  // un bar dado de alta no se cambia el plan: lo pone Cafecita
+  if (!DEMO) {
+    return card('Tu plan', pro ? 'Tienes Cafecita Pro: tu logo, tu color y tu servilletero, sin anuncios de otras marcas.'
+      : 'Tienes Cafecita, gratis. Con Pro tu página lleva tu logo, tu color y tu servilletero, sin anuncios de otras marcas.',
+    el('p', { class: 'g-note' }, pro ? 'Para cualquier cambio en tu plan, habla con Cafecita.' : 'Para pasarte a Pro, habla con Cafecita.'));
+  }
   const opt = (value, title, price, text) => el('button', {
     type: 'button', class: `g-plan${bar.plan === value ? ' on' : ''}`, 'aria-pressed': String(bar.plan === value),
     onclick: () => { bar.plan = value; changed({ redraw: true, brand: true }); },
@@ -223,7 +295,7 @@ function marcaCard() {
   return card('Tu marca', pro ? 'Lo que hace que tu página sea tuya.' : null,
     !pro && el('div', { class: 'g-lock' },
       el('p', {}, el('b', {}, 'Con Cafecita Pro'), ' tu página lleva tu logo, tu color y tu servilletero, en vez de los de Cafecita.'),
-      el('button', { type: 'button', class: 'g-btn g-btn-brand', onclick: () => { bar.plan = 'pro'; changed({ redraw: true, brand: true }); } }, 'Probar Pro')),
+      DEMO && el('button', { type: 'button', class: 'g-btn g-btn-brand', onclick: () => { bar.plan = 'pro'; changed({ redraw: true, brand: true }); } }, 'Probar Pro')),
     body);
 }
 
@@ -337,7 +409,7 @@ function datosCard() {
 function render() {
   $('gForm').replaceChildren(
     hoyCard(), cartaCard(), imprimirCard(), marcaCard(), datosCard(), planCard(),
-    el('p', { class: 'g-reset' }, el('button', { type: 'button', class: 'g-link', onclick: async (e) => {
+    DEMO && el('p', { class: 'g-reset' }, el('button', { type: 'button', class: 'g-link', onclick: async (e) => {
       // dos toques: el primero pregunta, sin ventanas del navegador
       const b = e.currentTarget;
       if (!b.dataset.sure) {
@@ -357,4 +429,11 @@ function render() {
 }
 
 await paintBrand();
-render();
+// la demo avisa de que es una demo; un bar de verdad entra con su código y puede salir
+$('gDemo').hidden = !DEMO;
+if (!DEMO) {
+  $('gSalir').hidden = false;
+  $('gSalir').addEventListener('click', salir);
+}
+if (DEMO || await acceso()) render();
+else pantallaAcceso();
