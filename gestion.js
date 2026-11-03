@@ -2,8 +2,8 @@
 // Lo que el bar cambia de su página: sugerencias del día, carta y datos (gratis) y, con Pro,
 // su logo, su color y el acabado del servilletero. En la demo se guarda en este navegador
 // (bar.js) y la vista previa de la derecha es su página de verdad, que se recarga al guardar.
-import { loadBar, saveBar, resetBar, isPro, logoOf, logoImage, sugerencia, precio, ALERGENOS, COLORES, ACABADOS, DEFAULT_COLOR } from './bar.js?v=1';
-import { paintNapkin, BAR_INK } from './napkin.js?v=17';
+import { loadBar, saveBar, resetBar, isPro, logoOf, logoImage, servilletas, titulo, precio, ALERGENOS, COLORES, ACABADOS, TIPOS, DEFAULT_COLOR } from './bar.js?v=2';
+import { paintNapkin, BAR_INK } from './napkin.js?v=18';
 
 const ID = document.body.dataset.bar;
 // la vista previa es la página entera (con su 3D): solo se carga donde se ve, no en el móvil,
@@ -83,13 +83,28 @@ async function paintPreview() {
   const src = pro && logo ? logo : { svg: await fetch('logo.svg').then((r) => r.text()) };
   const img = await logoImage(src, INK);
   await document.fonts.load("400 60px 'Walter Turncoat'").catch(() => {});
-  const lines = bar.sugerencias.filter((s) => s.texto.trim()).map(sugerencia);
+  // la que esté elegida en las pestañas de encima (o la primera que haya)
+  const list = servilletas(bar);
+  const n = list.find((x) => x.tipo === previewTipo) || list[0]
+    || { tipo: 'sugerencia', title: titulo('sugerencia'), lines: ['- Hoy, lo de siempre'] };
+  drawTabs(list, n.tipo);
   const tmp = document.createElement('canvas');
-  await paintNapkin(tmp, { kind: 'bar', id: 'sugerencias-gestion', lines: lines.length ? lines : ['- Hoy, lo de siempre'] }, { logo: img, ink: INK });
+  await paintNapkin(tmp, { kind: 'bar', id: `${n.tipo}-gestion`, title: n.title, lines: n.lines }, { logo: img, ink: INK });
   if (seq !== previewSeq) return;
   c.width = tmp.width;
   c.height = tmp.height;
   c.getContext('2d').drawImage(tmp, 0, 0);
+}
+
+let previewTipo = 'sugerencia';
+function drawTabs(list, on) {
+  const tabs = $('gTabs');
+  if (!tabs) return;
+  tabs.replaceChildren(...list.map((x) => el('button', {
+    type: 'button', class: `g-tab${x.tipo === on ? ' on' : ''}`, 'aria-pressed': String(x.tipo === on),
+    onclick: () => { previewTipo = x.tipo; paintPreview(); },
+  }, TIPOS[x.tipo])));
+  tabs.hidden = list.length < 2;
 }
 
 // ---------- Secciones ----------
@@ -106,25 +121,34 @@ function planCard() {
     !pro && el('p', { class: 'g-note' }, 'Con el plan gratis, de vez en cuando sale un anuncio de Cafecita en tu servilletero.'));
 }
 
-function sugerenciasCard() {
+// Lo de hoy: cada línea es una sugerencia del día o algo fuera de carta, y cada tipo sale en
+// su propia servilleta, rotulada. Lo más pedido no se escribe aquí: son los platos marcados en la carta.
+function hoyCard() {
   const rows = el('div', { class: 'g-rows' });
   const draw = () => {
-    rows.replaceChildren(...bar.sugerencias.map((s, i) => el('div', { class: 'g-row' },
-      el('input', { class: 'g-input grow', value: s.texto, placeholder: 'Bocata de calamares', 'aria-label': 'Sugerencia',
-        oninput: (e) => { s.texto = e.target.value; changed({ napkin: true }); } }),
+    rows.replaceChildren(...bar.sugerencias.map((s, i) => el('div', { class: 'g-row g-hoy' },
+      el('select', { class: 'g-input g-tipo', 'aria-label': 'Qué es',
+        onchange: (e) => { s.tipo = e.target.value; previewTipo = s.tipo; changed({ napkin: true }); } },
+        ...['sugerencia', 'fuera'].map((t) => el('option', { value: t, selected: (s.tipo || 'sugerencia') === t }, TIPOS[t]))),
+      el('input', { class: 'g-input grow', value: s.texto, placeholder: s.tipo === 'fuera' ? 'Rabo de toro estofado' : 'Bocata de calamares',
+        'aria-label': 'Plato', oninput: (e) => { s.texto = e.target.value; changed({ napkin: true }); } }),
       priceInput(s, () => changed({ napkin: true })),
-      removeBtn('Quitar sugerencia', () => { bar.sugerencias.splice(i, 1); draw(); changed({ napkin: true }); }))));
+      removeBtn('Quitar', () => { bar.sugerencias.splice(i, 1); draw(); changed({ napkin: true }); }))));
   };
   draw();
-  return card('Sugerencias del día', 'Lo que escribes aquí sale a boli en la servilleta, como lo apuntaría el camarero.',
+  const add = (tipo, label) => el('button', { type: 'button', class: 'g-btn g-btn-add', onclick: () => {
+    bar.sugerencias.push({ tipo, texto: '', precio: '' });
+    previewTipo = tipo;
+    draw();
+    rows.lastElementChild?.querySelector('input')?.focus();
+  } }, label);
+  return card('Hoy en la barra', 'Cada cosa sale en su servilleta, rotulada a mano: la sugerencia del día, lo que hay fuera de carta y lo más pedido (los platos que marques con ★ en la carta).',
     el('div', { class: 'g-split' },
       el('div', { class: 'g-split-main' }, rows,
-        el('button', { type: 'button', class: 'g-btn g-btn-add', onclick: () => {
-          bar.sugerencias.push({ texto: '', precio: '' });
-          draw();
-          rows.lastElementChild?.querySelector('input')?.focus();
-        } }, '+ Añadir sugerencia')),
-      el('figure', { class: 'g-napkin' }, el('canvas', { id: 'gNapkin', role: 'img', 'aria-label': 'Así sale la servilleta' }),
+        el('div', { class: 'g-adds' }, add('sugerencia', '+ Sugerencia del día'), add('fuera', '+ Fuera de carta'))),
+      el('figure', { class: 'g-napkin' },
+        el('div', { class: 'g-tabs', id: 'gTabs', role: 'group', 'aria-label': 'Qué servilleta ver' }),
+        el('canvas', { id: 'gNapkin', role: 'img', 'aria-label': 'Así sale la servilleta' }),
         el('figcaption', {}, 'Así sale la servilleta'))));
 }
 
@@ -224,8 +248,11 @@ function itemRow(p, remove) {
       el('input', { class: 'g-input grow', value: p.nombre, placeholder: 'Nombre del plato', 'aria-label': 'Plato',
         oninput: (e) => { p.nombre = e.target.value; changed(); } }),
       priceInput(p, () => changed()),
+      el('label', { class: 'g-toggle g-star', title: 'Sale en la servilleta de lo más pedido' },
+        el('input', { type: 'checkbox', checked: !!p.destacado, onchange: (e) => { p.destacado = e.target.checked; if (p.destacado) previewTipo = 'estrella'; changed({ napkin: true }); } }),
+        el('span', {}, '★ Más pedido')),
       el('label', { class: 'g-toggle', title: 'Se ve tachado en la carta' },
-        el('input', { type: 'checkbox', checked: !!p.agotado, onchange: (e) => { p.agotado = e.target.checked; row.classList.toggle('out', p.agotado); changed(); } }),
+        el('input', { type: 'checkbox', checked: !!p.agotado, onchange: (e) => { p.agotado = e.target.checked; row.classList.toggle('out', p.agotado); changed({ napkin: true }); } }),
         el('span', {}, 'Agotado')),
       removeBtn('Quitar el plato', remove)),
     summary, al);
@@ -252,7 +279,7 @@ function datosCard() {
 
 function render() {
   $('gForm').replaceChildren(
-    planCard(), sugerenciasCard(), marcaCard(), cartaCard(), datosCard(),
+    planCard(), hoyCard(), marcaCard(), cartaCard(), datosCard(),
     el('p', { class: 'g-reset' }, el('button', { type: 'button', class: 'g-link', onclick: async () => {
       if (!confirm('¿Volver a dejar la demo como estaba?')) return;
       resetBar(ID);

@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { gsap } from 'gsap';
-import { paintNapkin, paintStory, wrinkle, barFlap, BAR_INK } from './napkin.js?v=17';
+import { paintNapkin, paintStory, wrinkle, barFlap, BAR_INK } from './napkin.js?v=18';
 import * as sound from './sound.js?v=13';
 import { medir, visita, API } from './medir.js?v=14';
-import { loadBar, isPro, logoOf, logoImage, sugerencia, renderCarta, DEFAULT_COLOR } from './bar.js?v=1';
+import { loadBar, isPro, logoOf, logoImage, servilletas, titulo, renderCarta, DEFAULT_COLOR } from './bar.js?v=2';
 
 // ---------- Medidas (cm, iguales que tools/blender_servilletero.py) ----------
 const W = 9.0;      // ancho
@@ -158,14 +158,19 @@ function refreshNews() {
 }
 setInterval(refreshNews, 10 * 60000);
 
-// en un bar, siempre sus sugerencias del día (y, sin Pro, de vez en cuando un anuncio de Cafecita)
+// en un bar, lo de hoy, una cosa en cada servilleta y por turnos: la sugerencia del día, lo que
+// hay fuera de carta y lo más pedido (y, sin Pro, de vez en cuando un anuncio de Cafecita)
 function barNapkin() {
   if (!PRO && ADS.length && ++state.served % AD_EVERY === 0) {
     const ad = ADS[(state.served / AD_EVERY - 1) % ADS.length];
     return { kind: 'ad', id: ad.id, ad };
   }
-  const lines = (BAR.sugerencias || []).filter((x) => x.texto?.trim()).map(sugerencia);
-  return { kind: 'bar', id: `sugerencias-${today()}`, lines: lines.length ? lines : ['- Hoy, lo de siempre'] };
+  // cada día se empieza por la sugerencia
+  if (state.day !== today()) Object.assign(state, { day: today(), barTurn: -1 });
+  const list = servilletas(BAR);
+  const n = list.length ? list[(state.barTurn = ((state.barTurn ?? -1) + 1)) % list.length]
+    : { tipo: 'sugerencia', title: titulo('sugerencia'), lines: ['- Hoy, lo de siempre'] };
+  return { kind: 'bar', id: `${n.tipo}-${today()}`, tipo: n.tipo, title: n.title, lines: n.lines };
 }
 
 function nextNapkin() {
@@ -1100,7 +1105,7 @@ const packItem = (it) => (!it ? null
   : it.kind === 'news' ? { k: 'news', n: it.news, f: it.folded ? 1 : 0 }
   : it.kind === 'quote' ? { k: 'quote', id: it.quote.id }
   : it.kind === 'ad' ? { k: 'ad', id: it.ad.id, f: it.folded ? 1 : 0 }
-  : it.kind === 'bar' ? { k: 'bar', l: it.lines }
+  : it.kind === 'bar' ? { k: 'bar', t: it.tipo, l: it.lines }
   : { k: 'empty', f: it.folded ? 1 : 0 });
 function unpackItem(x) {
   const it = unpackKind(x);
@@ -1113,7 +1118,10 @@ function unpackKind(x) {
   if (x.k === 'quote') { const q = NAPKINS.find((n) => n.id === x.id); return q ? { kind: 'quote', id: q.id, quote: q } : null; }
   if (x.k === 'ad') { const ad = ADS.find((a) => a.id === x.id); return ad ? { kind: 'ad', id: ad.id, ad } : null; }
   if (x.k === 'empty') return { kind: 'empty', id: 'vacio-suelo' };
-  if (x.k === 'bar' && Array.isArray(x.l)) return { kind: 'bar', id: 'sugerencias-suelo', lines: x.l.map(String) };
+  if (x.k === 'bar' && Array.isArray(x.l)) {
+    const lines = x.l.map(String);
+    return { kind: 'bar', id: `${x.t || 'sugerencia'}-suelo`, tipo: x.t, title: titulo(x.t, lines.length), lines };
+  }
   return null;
 }
 
@@ -1512,7 +1520,7 @@ const LABEL = {
   news: (i) => `${i.news.titular} — ${i.news.fuente}`,
   ad: (i) => `Publicidad: ${i.ad.texto} — ${i.ad.marca}`,
   empty: () => 'Espere a que el personal reponga las servilletas. Gracias por su paciencia.',
-  bar: (i) => `Sugerencias del día: ${i.lines.map((l) => l.replace(/^- /, '')).join('; ')}`,
+  bar: (i) => `${i.title}: ${i.lines.map((l) => l.replace(/^- /, '')).join('; ')}`,
 };
 
 // Tocar una bola del suelo la abre: se despliega en 3D hasta donde se lee y queda arrugada.
@@ -2028,7 +2036,7 @@ const slug = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().rep
 function fileName(item) {
   const name = item.kind === 'quote' ? item.quote.author
     : item.kind === 'news' ? `${item.news.fuente} ${item.news.titular.split(' ').slice(0, 6).join(' ')}`
-    : item.kind === 'ad' ? item.ad.marca : item.kind === 'bar' ? 'sugerencias' : 'reponiendo';
+    : item.kind === 'ad' ? item.ad.marca : item.kind === 'bar' ? item.title : 'reponiendo';
   return `${BAR_ID || 'cafecita'}-${today()}-${slug(name)}.jpg`;
 }
 const storyBlob = (item) => (item.kind === 'quote' && !item.wrinkled
@@ -2049,7 +2057,7 @@ $('share').addEventListener('click', async () => {
   const item = current;
   const file = shareFile || new File([await storyBlob(item)], fileName(item), { type: 'image/jpeg' });
   // el texto (lo que acompaña a la imagen en WhatsApp) lleva el enlace de vuelta a esta servilleta
-  const what = item.kind === 'bar' ? `Sugerencias de hoy en ${BAR.nombre}`
+  const what = item.kind === 'bar' ? `${item.title} en ${BAR.nombre}`
     : item.kind === 'news' ? `${item.news.titular} — ${item.news.fuente}`
     : item.kind === 'quote' ? `«${item.quote.quote}» — ${item.quote.author}` : 'Gracias por su visita.';
   const text = `${what}\n${sharedLink(item)}`;

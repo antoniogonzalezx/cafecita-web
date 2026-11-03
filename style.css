@@ -387,6 +387,19 @@ body.bar .hint { bottom: calc(max(28px, env(safe-area-inset-bottom)) + 84px); }
   font-weight: 600;
   font-size: 12px;
 }
+.carta-tag {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 1px 7px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 12px;
+  color: #fff;
+  background: var(--azul);
+}
+.tag-fuera { background: #6B3F1F; }
+.tag-estrella { background: #B7791F; }
+.carta-hoy { margin: 0 -10px; padding: 14px 10px 6px; border-radius: 14px; background: color-mix(in srgb, var(--azul) 7%, transparent); }
 .carta-foot { padding: 14px 0 4px; font: 400 14px/1.45 var(--sans); color: rgba(12, 14, 46, .7); }
 .carta-foot p { margin: 0; }
 .carta-credit {

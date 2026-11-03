@@ -77,7 +77,7 @@ function lines(item) {
 
 // ---------- Servilletas ----------
 // item: { kind: 'news', news: {titular, fuente, fecha} } | { kind: 'ad', ad: {texto, marca} } | { kind: 'empty' }
-//     | { kind: 'bar', lines: ['- Bocata de calamares 6€', …] } (las sugerencias de un bar)
+//     | { kind: 'bar', title: 'Sugerencia del día', lines: ['- Bocata de calamares 6€', …] } (lo de hoy en un bar)
 // La plantilla sale del id: la misma noticia cae siempre en la misma servilleta.
 // ink: en las de bar, la única tinta de la servilleta (lo escrito, la frase y el logo, que ya viene pintado de ella)
 export async function paintNapkin(canvas, item, { logo, ink = BAR_INK } = {}) {
@@ -99,7 +99,7 @@ export async function paintNapkin(canvas, item, { logo, ink = BAR_INK } = {}) {
   g.textBaseline = 'middle';
   const fy = H * t.fold;
   if (item.kind === 'bar') {
-    penLines(g, item.lines, W, fy, ink, hash(item.id || 'x'));
+    penLines(g, item.lines, W, fy, ink, hash(item.id || 'x'), item.title);
     barFlap(g, W, fy, H, logo, ink);
     g.globalAlpha = 1;
     g.globalCompositeOperation = 'source-over';
@@ -159,11 +159,11 @@ export const BAR_INK = '#2F4C82';
 // nunca se tocan, sea cual sea el logo. El conjunto va centrado en la solapa (de top a bottom).
 // Lo usa también main.js para la solapa del servilletero 3D.
 export function barFlap(g, W, top, bottom, logo, ink) {
-  const h = bottom - top, pad = h * 0.1, gap = W * 0.055;
+  const h = bottom - top, pad = h * 0.12, gap = W * 0.045;
   g.save();
   g.fillStyle = ink;
   g.globalAlpha = 0.9;
-  g.font = SERIF(Math.round(W * 0.078));
+  g.font = SERIF(Math.round(W * 0.06));
   g.textAlign = 'center';
   g.textBaseline = 'alphabetic';
   const m = g.measureText(THANKS);
@@ -172,7 +172,7 @@ export function barFlap(g, W, top, bottom, logo, ink) {
   if (logo) {
     const ratio = logo.naturalWidth / logo.naturalHeight;
     // una tira (CAFECITA) va baja y ancha; un logo casi cuadrado, más alto pero sin pasar del hueco que queda
-    lH = Math.max(0, Math.min(h - 2 * pad - textH - gap, ratio >= 4 ? W * 0.05 : W * 0.24, W * 0.55 / ratio));
+    lH = Math.max(0, Math.min(h - 2 * pad - textH - gap, ratio >= 4 ? W * 0.04 : W * 0.16, W * 0.38 / ratio));
     lW = lH * ratio;
   }
   const groupH = textH + (lH ? gap + lH : 0);
@@ -200,14 +200,40 @@ function penWrap(g, text, maxW) {
   return best;
 }
 const HAND = (s) => `400 ${s}px 'Walter Turncoat', 'Marker Felt', 'Comic Sans MS', cursive`;
-function penLines(g, rows, W, fy, ink, seed) {
+function penLines(g, rows, W, fy, ink, seed, title) {
   if (!rows.length) return;
   const rnd = prng(seed || 1);
   const text = rows.map((r) => r.toUpperCase());
-  const left = W * 0.1, maxW = W * 0.8, top = fy * 0.09, bottom = fy * 0.9, lh = 1.25;
+  const left = W * 0.1, maxW = W * 0.8, lh = 1.25, bottom = fy * 0.9;
+  let top = fy * 0.09;
+  // arriba, qué es: «SUGERENCIA DEL DÍA», «FUERA DE CARTA» o «LO MÁS PEDIDO», subrayado a mano
+  if (title) {
+    g.save();
+    let ts = Math.round(W * 0.08);
+    g.font = HAND(ts);
+    const tt = title.toUpperCase();
+    while (g.measureText(tt).width > maxW && ts > W * 0.04) g.font = HAND(--ts);
+    g.fillStyle = ink;
+    g.textAlign = 'left';
+    g.textBaseline = 'alphabetic';
+    const y = top + ts, tw = g.measureText(tt).width;
+    g.globalAlpha = 0.95;
+    g.fillText(tt, left, y);
+    // el subrayado: un trazo algo torcido, más largo que la palabra, como quien lo hace deprisa
+    g.strokeStyle = ink;
+    g.lineCap = 'round';
+    g.lineWidth = Math.max(2, W * 0.007);
+    g.beginPath();
+    const uy = y + ts * 0.32;
+    g.moveTo(left - W * 0.01, uy + ts * 0.04);
+    g.quadraticCurveTo(left + tw * 0.5, uy - ts * (0.06 + rnd() * 0.06), left + tw + W * 0.02, uy + ts * 0.02);
+    g.stroke();
+    g.restore();
+    top = uy + ts * 0.55;
+  }
   // el tamaño más grande al que cada sugerencia cabe en una o dos líneas y todas caben en la servilleta
   const min = Math.round(W * 0.05);
-  let size = Math.round(W * 0.15), out = null;
+  let size = Math.round(W * 0.13), out = null;
   for (; size >= min && !out; size -= 2) {
     g.font = HAND(size);
     const indent = g.measureText('- ').width;

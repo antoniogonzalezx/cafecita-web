@@ -16,7 +16,7 @@ body {
   font: 400 15px/1.45 var(--sans);
   -webkit-font-smoothing: antialiased;
 }
-button, input { font: inherit; color: inherit; }
+button, input, select { font: inherit; color: inherit; }
 
 /* cabecera con el color y el logo del bar */
 .g-top {
@@ -270,3 +270,25 @@ button, input { font: inherit; color: inherit; }
   .g-item .g-row { flex-wrap: wrap; }
   .g-item .g-row .grow { flex-basis: 100%; }
 }
+
+/* lo de hoy: qué es cada línea, y pestañas para ver cada servilleta */
+/* cada línea de hoy en dos renglones: qué es (y quitar) arriba, plato y precio debajo */
+.g-hoy { flex-wrap: wrap; padding: 8px; border: 1px solid var(--linea); border-radius: 12px; background: #fff; }
+.g-hoy .g-tipo { flex: 1 1 auto; width: auto; max-width: calc(100% - 44px); order: 0; min-height: 38px; padding: 6px 10px; border-color: transparent; background: rgba(12, 14, 46, .04); font-weight: 600; font-size: 14px; cursor: pointer; }
+.g-hoy .g-remove { order: 1; margin-left: auto; }
+.g-hoy .grow { order: 2; flex: 1 1 calc(100% - 100px); }
+.g-hoy .g-price { order: 3; }
+.g-adds { display: flex; gap: 8px; flex-wrap: wrap; }
+.g-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin-bottom: 10px; }
+.g-tabs[hidden] { display: none; }
+.g-tab {
+  padding: 4px 9px;
+  border: 1px solid var(--linea);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 12px;
+  cursor: pointer;
+}
+.g-tab.on { background: var(--brand); border-color: var(--brand); color: #fff; }
+.g-star input { accent-color: #B7791F; }
+

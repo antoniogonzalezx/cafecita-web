@@ -32,6 +32,28 @@ export function resetBar(id) {
 
 export const isPro = (bar) => bar.plan === 'pro';
 
+// Lo que sale en las servilletas, cada cosa en la suya y bien rotulada: la sugerencia del día,
+// lo que hay fuera de carta y lo más pedido (los platos de la carta marcados como destacados).
+export const TIPOS = { sugerencia: 'Sugerencia del día', fuera: 'Fuera de carta', estrella: 'Lo más pedido' };
+const tipoDe = (s) => (s.tipo in TIPOS && s.tipo !== 'estrella' ? s.tipo : 'sugerencia');
+export function servilletas(bar) {
+  const hoy = (bar.sugerencias || []).filter((s) => s.texto?.trim());
+  const de = (tipo) => hoy.filter((s) => tipoDe(s) === tipo).map(sugerencia);
+  const estrellas = (bar.carta || []).flatMap((sec) => sec.platos)
+    .filter((p) => p.destacado && !p.agotado && p.nombre?.trim())
+    .map((p) => sugerencia({ texto: p.nombre, precio: p.precio }));
+  return [
+    { tipo: 'sugerencia', lines: de('sugerencia') },
+    { tipo: 'fuera', lines: de('fuera') },
+    { tipo: 'estrella', lines: estrellas },
+  ].filter((x) => x.lines.length).map((x) => ({ ...x, title: titulo(x.tipo, x.lines.length) }));
+}
+// en plural si hay varias («Sugerencias del día»)
+export function titulo(tipo, n = 1) {
+  if (n > 1 && tipo === 'sugerencia') return 'Sugerencias del día';
+  return TIPOS[tipo] || TIPOS.sugerencia;
+}
+
 // 6 → «6€», 5.5 → «5,50€» (en la servilleta, sin espacio, como lo escribe el camarero)
 export function precio(n, space = false) {
   if (n === '' || n == null || Number.isNaN(+n)) return '';
@@ -77,6 +99,25 @@ const h = (tag, cls, text) => {
 
 export function renderCarta(root, bar) {
   root.replaceChildren();
+  // arriba, lo de hoy: lo mismo que sale en las servilletas
+  const hoy = (bar.sugerencias || []).filter((s) => s.texto?.trim());
+  if (hoy.length) {
+    const s = h('section', 'carta-sec carta-hoy');
+    s.append(h('h3', 'carta-sec-title', 'Hoy'));
+    const list = h('ul', 'carta-list');
+    for (const x of hoy) {
+      const li = h('li', 'carta-item');
+      const row = h('div', 'carta-row');
+      row.append(h('span', 'carta-name', x.texto), h('span', 'carta-price', precio(x.precio, true)));
+      const tag = h('p', 'carta-al');
+      // lo de hoy aún no lleva alérgenos marcados: nunca se supone, se pregunta
+      tag.append(h('span', `carta-tag tag-${tipoDe(x)}`, TIPOS[tipoDe(x)]), 'Alérgenos: pregunta al personal');
+      li.append(row, tag);
+      list.append(li);
+    }
+    s.append(list);
+    root.append(s);
+  }
   for (const sec of bar.carta || []) {
     if (!sec.platos?.length) continue;
     const s = h('section', 'carta-sec');
@@ -89,6 +130,7 @@ export function renderCarta(root, bar) {
       li.append(row);
       const al = h('p', 'carta-al');
       if (p.agotado) al.append(h('span', 'carta-out', 'Agotado'));
+      else if (p.destacado) al.append(h('span', 'carta-tag tag-estrella', TIPOS.estrella));
       al.append(Array.isArray(p.alergenos)
         ? (p.alergenos.length ? `Contiene: ${p.alergenos.map((a) => ALERGENOS[a] || a).join(', ')}` : 'Sin alérgenos declarados')
         : 'Alérgenos: pregunta al personal');
