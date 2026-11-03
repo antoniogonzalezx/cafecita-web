@@ -5,7 +5,7 @@
   <!-- vive en /barmanolo/imprimir/ pero usa los ficheros de la raíz -->
   <base href="/" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self' data: blob:; object-src 'none'; base-uri 'self'; form-action 'none'" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self' data: blob: https://cafecita-api.cafecita-api.workers.dev http://localhost:8787; object-src 'none'; base-uri 'self'; form-action 'none'" />
   <meta name="robots" content="noindex" />
   <title>Para imprimir · Bar Manolo</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
@@ -25,6 +25,6 @@
   <p class="p-hint" id="pHint"></p>
   <main class="p-sheets" id="pSheets" aria-live="polite"></main>
 
-  <script type="module" src="imprimir.js?v=1"></script>
+  <script type="module" src="imprimir.js?v=2"></script>
 </body>
 </html>

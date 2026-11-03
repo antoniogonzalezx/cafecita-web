@@ -2,8 +2,16 @@
 // Cada bar tiene su página, cafecita.app/<bar>/, con el mismo servilletero que la web pero con lo
 // suyo: sus sugerencias del día escritas a boli en la servilleta y su carta. Es gratis; con Pro,
 // además, su logo, su color y su servilletero (ver «Cafecita y Cafecita Pro»).
-// La ficha de cada bar es bares/<bar>.json. En la demo, lo que se guarda en la gestión
-// (<bar>/gestion/) se queda en este navegador y pisa la ficha.
+// La ficha de cada bar dado de alta vive en el servidor (worker/, tabla «bares») y su gestión
+// la cambia con el código de acceso que le da Cafecita. Bar Manolo es la demo: su ficha es
+// bares/barmanolo.json y lo que se cambia en su gestión se queda en este navegador.
+import { API as API_PROD } from './medir.js?v=14';
+
+// en local se puede probar contra el Worker de wrangler dev: localStorage['cafecita.api'] = 'local'
+const API = (() => {
+  try { if (location.hostname === 'localhost' && localStorage.getItem('cafecita.api') === 'local') return 'http://localhost:8787'; } catch {}
+  return API_PROD;
+})();
 
 export const DEFAULT_COLOR = '#3F48F4';
 const KEY = (id) => `cafecita.bar.${id}`;
@@ -18,13 +26,42 @@ export const COLORES = ['#1F6B45', '#8C2F2B', '#2B3F7A', '#6B3F1F', '#1E5C66', '
 export const ACABADOS = { inox: 'Inox', blanco: 'Blanco', negro: 'Negro' };
 
 export async function loadBar(id) {
-  const base = await fetch(`bares/${id}.json`).then((r) => r.json());
+  // dado de alta: su ficha, recién leída del servidor (remoto: se guarda allí)
+  const remota = await fetch(`${API}/bar?id=${encodeURIComponent(id)}`, { cache: 'no-store', signal: AbortSignal.timeout(6000) })
+    .then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  if (remota) return { ...remota, remoto: true };
+  // si no, la demo: la ficha del repo y lo que se haya cambiado en este navegador
+  const base = await fetch(`bares/${id}.json`).then((r) => {
+    if (!r.ok) throw new Error(`No se ha podido cargar el bar ${id}`);
+    return r.json();
+  });
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem(KEY(id))); } catch {}
   return saved && saved.id === id ? { ...base, ...saved, marca: { ...base.marca, ...saved.marca } } : base;
 }
 export function saveBar(bar) {
   localStorage.setItem(KEY(bar.id), JSON.stringify(bar));
+}
+
+// ---------- Acceso a la gestión (bares dados de alta) ----------
+// ¿Vale este código para este bar? (lanza si no hay conexión, para no confundirlo con un código malo)
+export async function entrar(id, codigo) {
+  const r = await fetch(`${API}/bar/entrar`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, codigo }),
+    signal: AbortSignal.timeout(8000),
+  });
+  if (r.status === 401) return false;
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return true;
+}
+// Guarda la ficha en el servidor. El plan no viaja: lo pone Cafecita.
+export async function guardarRemoto(bar, codigo) {
+  const { remoto, plan, ...datos } = bar;
+  const r = await fetch(`${API}/bar?id=${encodeURIComponent(bar.id)}`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${codigo}` },
+    body: JSON.stringify(datos), signal: AbortSignal.timeout(10000),
+  });
+  return r.status;
 }
 export function resetBar(id) {
   try { localStorage.removeItem(KEY(id)); } catch {}

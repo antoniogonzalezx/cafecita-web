@@ -1,4 +1,4 @@
-import { LETRAS, letraCss } from './bar.js?v=6';
+import { LETRAS, letraCss } from './bar.js?v=7';
 
 // ---------- Servilletas pintadas al vuelo ----------
 // Las noticias, los anuncios y el aviso de reponer se rotulan en el navegador sobre una de las
