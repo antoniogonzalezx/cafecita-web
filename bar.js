@@ -32,6 +32,18 @@ export function resetBar(id) {
 
 export const isPro = (bar) => bar.plan === 'pro';
 
+// Las letras para lo que escribe el bar. Por defecto, la misma que «Gracias por su visita»;
+// con Pro, el bar elige una a mano (esas van en mayúsculas, como se rotula una pizarra).
+// size: lo grande que se escribe con ella (las estrechas, más; las anchas, algo menos).
+export const LETRAS = {
+  clasica: { nombre: 'Clásica', family: 'Fraunces', style: 'italic', caps: false, size: 1 },
+  rotulador: { nombre: 'Rotulador', family: 'Shantell Sans', caps: true, size: 0.92 },
+  pizarra: { nombre: 'Pizarra', family: 'Just Another Hand', caps: true, size: 1.25 },
+  pincel: { nombre: 'Pincel', family: 'Caveat Brush', caps: true, size: 1.05 },
+};
+export const letraCss = (l, s) => `${l.style || 'normal'} 400 ${s}px '${l.family}', Georgia, serif`;
+
+
 // Lo que sale en las servilletas, cada cosa en la suya y bien rotulada: la sugerencia del día,
 // lo que hay fuera de carta y lo más pedido (los platos de la carta marcados como destacados).
 export const TIPOS = { sugerencia: 'Sugerencia del día', fuera: 'Fuera de carta', estrella: 'Lo más pedido' };
@@ -108,7 +120,7 @@ export function renderCarta(root, bar) {
     for (const x of hoy) {
       const li = h('li', 'carta-item');
       const row = h('div', 'carta-row');
-      row.append(h('span', 'carta-name', x.texto), h('span', 'carta-price', precio(x.precio, true)));
+      row.append(h('span', 'carta-name', x.texto), h('span', 'carta-dots'), h('span', 'carta-price', precio(x.precio, true)));
       const tag = h('p', 'carta-al');
       // lo de hoy aún no lleva alérgenos marcados: nunca se supone, se pregunta
       tag.append(h('span', `carta-tag tag-${tipoDe(x)}`, TIPOS[tipoDe(x)]), 'Alérgenos: pregunta al personal');
@@ -126,7 +138,7 @@ export function renderCarta(root, bar) {
     for (const p of sec.platos) {
       const li = h('li', `carta-item${p.agotado ? ' agotado' : ''}`);
       const row = h('div', 'carta-row');
-      row.append(h('span', 'carta-name', p.nombre), h('span', 'carta-price', precio(p.precio, true)));
+      row.append(h('span', 'carta-name', p.nombre), h('span', 'carta-dots'), h('span', 'carta-price', precio(p.precio, true)));
       li.append(row);
       const al = h('p', 'carta-al');
       if (p.agotado) al.append(h('span', 'carta-out', 'Agotado'));

@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { gsap } from 'gsap';
-import { paintNapkin, paintStory, wrinkle, barFlap, BAR_INK, LETRAS, letraCss } from './napkin.js?v=19';
+import { paintNapkin, paintStory, wrinkle, barFlap, BAR_INK } from './napkin.js?v=20';
 import * as sound from './sound.js?v=13';
 import { medir, visita, API } from './medir.js?v=14';
-import { loadBar, isPro, logoOf, logoImage, servilletas, titulo, renderCarta, DEFAULT_COLOR } from './bar.js?v=2';
+import { loadBar, isPro, logoOf, logoImage, servilletas, titulo, DEFAULT_COLOR, LETRAS, letraCss } from './bar.js?v=4';
 
 // ---------- Medidas (cm, iguales que tools/blender_servilletero.py) ----------
 const W = 9.0;      // ancho
@@ -228,7 +228,7 @@ const [inkLogo, paperLogo] = await Promise.all([
   document.fonts.load("700 40px 'Bricolage Grotesque'").catch(() => {}),
   BAR ? document.fonts.load(letraCss(LETRAS[LETRA], 60)).catch(() => {}) : null,
 ]);
-if (BAR) brandPage(paperLogo);
+// (el color, la letra, la cabecera y la carta del bar los pone carta.js, que no espera al 3D)
 
 // ---------- Render ----------
 const canvas = document.getElementById('scene');
@@ -518,6 +518,8 @@ const pickables = [];
 const loaded = () => requestAnimationFrame(() => requestAnimationFrame(() => {
   document.body.classList.remove('loading');
   gsap.delayedCall(0.6, () => onboard.start());
+  // en un bar, quien llega del QR viene a ver qué hay: la primera del día sale sola
+  if (BAR && state.autoDay !== today()) gsap.delayedCall(1.2, () => { state.autoDay = today(); saveState(); serveNapkin(); });
 }));
 new GLTFLoader().load('models/servilletero.glb', (gltf) => {
   gltf.scene.traverse((o) => {
@@ -997,6 +999,22 @@ function endDrag() {
 }
 canvas.addEventListener('pointerup', endDrag);
 canvas.addEventListener('pointercancel', endDrag);
+
+// Una servilleta sin el gesto: la primera del día en un bar, o con Intro desde el teclado
+function serveNapkin() {
+  if (busy || !reveal.hidden || document.getElementById('carta')?.classList.contains('open')) return;
+  busy = true;
+  const item = nextNapkin();
+  medir('servilleta', { tipo: item.kind, ...detail(item), n: state.count });
+  sound.pull();
+  updateUI();
+  showReveal(item);
+}
+canvas.addEventListener('keydown', (e) => {
+  if (!BAR || (e.key !== 'Enter' && e.key !== ' ')) return;
+  e.preventDefault();
+  serveNapkin();
+});
 
 function tuckBack(face) {
   if (drag && drag.face === face) return;
@@ -1515,7 +1533,7 @@ source.addEventListener('click', (e) => {
   if (!current) return;
   medir('enlace', { tipo: current.kind, ...detail(current) });
   // la de sugerencias lleva a la carta del bar, encima de la servilleta
-  if (current.kind === 'bar') { e.preventDefault(); openCarta(); }
+  if (current.kind === 'bar') { e.preventDefault(); document.dispatchEvent(new Event('carta:abrir')); }
 });
 
 const LABEL = {
@@ -2073,65 +2091,6 @@ $('share').addEventListener('click', async () => {
     medir('compartir', { tipo: item.kind, ...detail(item), modo: 'descarga' });
   }
 });
-
-// ---------- La página del bar ----------
-// Su color de fondo, su logo arriba (sin Pro, CAFECITA y debajo su nombre) y su carta, que se abre
-// con el botón de abajo o desde la servilleta de sugerencias. Va antes de que exista $():
-// se llama nada más cargar los logos.
-function brandPage(logo) {
-  document.body.classList.add('bar');
-  document.title = `${BAR.nombre} · Carta y sugerencias`;
-  const css = document.documentElement.style;
-  css.setProperty('--azul', BRAND);
-  css.setProperty('--azul-hover', `color-mix(in srgb, ${BRAND} 86%, black)`);
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', BRAND);
-  // la carta y el nombre del bar, con la misma letra que sus servilletas
-  const l = LETRAS[LETRA];
-  css.setProperty('--bar-font', `'${l.family}'`);
-  css.setProperty('--bar-style', l.style || 'normal');
-  css.setProperty('--bar-case', l.caps ? 'uppercase' : 'none');
-  const head = document.querySelector('.logo');
-  head.setAttribute('aria-label', BAR.nombre);
-  if (PRO && barLogo && logo) {
-    logo.alt = '';
-    head.classList.add('bar-logo');
-    head.replaceChildren(logo);
-  } else {
-    const name = document.createElement('p');
-    name.className = 'bar-name';
-    name.textContent = BAR.nombre;
-    head.after(name);
-  }
-}
-
-const carta = document.getElementById('carta');
-let cartaDrawn = false;
-function openCarta() {
-  if (!BAR || !carta.hidden) return;
-  if (!cartaDrawn) { renderCarta($('cartaBody'), BAR); cartaDrawn = true; }
-  carta.hidden = false;
-  $('cartaBody').scrollTop = 0;
-  gsap.fromTo('.carta-sheet', { yPercent: 100 }, { yPercent: 0, duration: 0.45, ease: 'power3.out' });
-  gsap.fromTo('.carta-veil', { opacity: 0 }, { opacity: 1, duration: 0.3 });
-  medir('carta', { bar: BAR_ID });
-  $('cartaClose').focus({ preventScroll: true });
-}
-function closeCarta() {
-  if (carta.hidden) return;
-  gsap.to('.carta-veil', { opacity: 0, duration: 0.25 });
-  gsap.to('.carta-sheet', { yPercent: 100, duration: 0.3, ease: 'power2.in', onComplete: () => { carta.hidden = true; } });
-  if (location.hash === '#carta') history.replaceState(null, '', location.pathname + location.search);
-}
-if (BAR) {
-  $('cartaBtn').addEventListener('click', openCarta);
-  $('cartaClose').addEventListener('click', closeCarta);
-  carta.querySelector('.carta-veil').addEventListener('click', closeCarta);
-  // con la carta abierta, Escape solo cierra la carta (la servilleta sigue debajo)
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !carta.hidden) { e.stopImmediatePropagation(); closeCarta(); }
-  }, { capture: true });
-  if (location.hash === '#carta') gsap.delayedCall(0.8, openCarta);
-}
 
 // ---------- Bucle ----------
 const clock = new THREE.Clock();

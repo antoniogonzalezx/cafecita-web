@@ -2,8 +2,8 @@
 // Lo que el bar cambia de su página: sugerencias del día, carta y datos (gratis) y, con Pro,
 // su logo, su color y el acabado del servilletero. En la demo se guarda en este navegador
 // (bar.js) y la vista previa de la derecha es su página de verdad, que se recarga al guardar.
-import { loadBar, saveBar, resetBar, isPro, logoOf, logoImage, servilletas, titulo, precio, ALERGENOS, COLORES, ACABADOS, TIPOS, DEFAULT_COLOR } from './bar.js?v=2';
-import { paintNapkin, BAR_INK, LETRAS, letraCss } from './napkin.js?v=19';
+import { loadBar, saveBar, resetBar, isPro, logoOf, logoImage, servilletas, titulo, precio, ALERGENOS, COLORES, ACABADOS, TIPOS, DEFAULT_COLOR, LETRAS, letraCss } from './bar.js?v=4';
+import { paintNapkin, BAR_INK } from './napkin.js?v=20';
 
 const ID = document.body.dataset.bar;
 // la vista previa es la página entera (con su 3D): solo se carga donde se ve, no en el móvil,

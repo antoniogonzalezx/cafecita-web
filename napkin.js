@@ -1,3 +1,5 @@
+import { LETRAS, letraCss } from './bar.js?v=4';
+
 // ---------- Servilletas pintadas al vuelo ----------
 // Las noticias, los anuncios y el aviso de reponer se rotulan en el navegador sobre una de las
 // servilletas fotografiadas de las plantillas (templates/, las genera tools/build_templates.py):
@@ -201,17 +203,6 @@ function penWrap(g, text, maxW) {
   return best;
 }
 
-// Las letras para lo que escribe el bar. Por defecto, la misma que «Gracias por su visita»;
-// con Pro, el bar elige una a mano (esas van en mayúsculas, como se rotula una pizarra).
-// size: lo grande que se escribe con ella (las estrechas, más; las anchas, algo menos).
-export const LETRAS = {
-  clasica: { nombre: 'Clásica', family: 'Fraunces', style: 'italic', caps: false, size: 1 },
-  rotulador: { nombre: 'Rotulador', family: 'Shantell Sans', caps: true, size: 0.92 },
-  pizarra: { nombre: 'Pizarra', family: 'Just Another Hand', caps: true, size: 1.25 },
-  pincel: { nombre: 'Pincel', family: 'Caveat Brush', caps: true, size: 1.05 },
-};
-export const letraCss = (l, s) => `${l.style || 'normal'} 400 ${s}px '${l.family}', Georgia, serif`;
-
 // Lo que escribe el bar, grande y cada línea un pelín torcida. Si una sugerencia no cabe en
 // una línea, sigue en la siguiente con sangría (detrás del guion).
 function penLines(g, rows, W, fy, ink, seed, title, letra) {
@@ -219,7 +210,8 @@ function penLines(g, rows, W, fy, ink, seed, title, letra) {
   const HAND = (sz) => letraCss(letra, sz);
   const rnd = prng(seed || 1);
   const up = (t) => (letra.caps ? t.toUpperCase() : t);
-  const text = rows.map(up);
+  // con la letra de la frase, la raya tipográfica en vez del guion
+  const text = rows.map((r) => (letra.caps ? up(r) : r.replace(/^- /, '– ')));
   const left = W * 0.1, maxW = W * 0.8, lh = 1.25, bottom = fy * 0.9;
   let top = fy * 0.09;
   // arriba, qué es: «SUGERENCIA DEL DÍA», «FUERA DE CARTA» o «LO MÁS PEDIDO», subrayado a mano
@@ -252,7 +244,7 @@ function penLines(g, rows, W, fy, ink, seed, title, letra) {
   let size = Math.round(W * 0.13 * letra.size), out = null;
   for (; size >= min && !out; size -= 2) {
     g.font = HAND(size);
-    const indent = g.measureText('- ').width;
+    const indent = g.measureText(letra.caps ? '- ' : '– ').width;
     const wrapped = text.map((r) => penWrap(g, r, maxW - indent));
     if (wrapped.some((x) => !x) || wrapped.flat().length * size * lh > bottom - top) continue;
     out = wrapped.flatMap((ls) => ls.map((l, i) => ({ l, x: i ? indent : 0 })));
