@@ -1,7 +1,7 @@
 // ---------- Cafecita para bares (bares/) ----------
-// La página para vender Cafecita a los bares. Las servilletas no son fotos: se pintan con el mismo
-// código que el servilletero (napkin.js), así que salen igual que las verá el cliente del bar.
-// El QR del cartel lleva a la demo de Bar Manolo.
+// La página para vender Cafecita a los bares: azul y blanco, poco texto y los azulejos como detalle.
+// La servilleta no es una foto: se pinta con el mismo código que el servilletero (napkin.js).
+// El QR de su esquina lleva a la demo de Bar Manolo.
 import { paintNapkin, BAR_INK } from './napkin.js?v=21';
 import { logoImage, LETRAS, letraCss } from './bar.js?v=8';
 import { qrSvg } from './qr.js?v=2';
@@ -10,21 +10,6 @@ import { mosaico, ASPA, AZUL } from './marca.js?v=1';
 
 const $ = (id) => document.getElementById(id);
 
-// ---------- Pro: mensual o anual ----------
-const PAGOS = {
-  mes: { precio: '9,99 €', periodo: '/mes', nota: 'Sin permanencia. O 99 € al año.' },
-  ano: { precio: '99 €', periodo: '/año', nota: 'Sale a 8,25 € al mes: dos meses gratis.' },
-};
-for (const b of document.querySelectorAll('[data-pago]')) {
-  b.addEventListener('click', () => {
-    const p = PAGOS[b.dataset.pago];
-    for (const o of document.querySelectorAll('[data-pago]')) o.setAttribute('aria-pressed', String(o === b));
-    $('lPrecio').textContent = p.precio;
-    $('lPeriodo').textContent = p.periodo;
-    $('lNota').textContent = p.nota;
-  });
-}
-
 // ---------- Lo que caduca ----------
 // el piloto (Pro gratis hasta el 31 de enero) desaparece solo al día siguiente
 for (const e of document.querySelectorAll('[data-hasta]')) {
@@ -32,7 +17,7 @@ for (const e of document.querySelectorAll('[data-hasta]')) {
 }
 
 // ---------- La franja de azulejos del pie ----------
-$('lFranja').innerHTML = mosaico({ cols: 60, filas: 3, l: 64, semilla: 21 });
+$('lFranja').innerHTML = mosaico({ cols: 48, filas: 3, l: 40, semilla: 21 });
 
 // ---------- El QR de la demo ----------
 $('lQr').innerHTML = qrSvg('https://cafecita.app/barmanolo/?o=qr-landing', AZUL, { centro: ASPA });
@@ -43,20 +28,12 @@ for (const a of document.querySelectorAll('[data-medir]')) a.addEventListener('c
 
 // ---------- Las servilletas ----------
 const svg = (src) => fetch(src).then((r) => r.text()).then((t) => ({ svg: t }));
-const [manolo, cafecita] = await Promise.all([
-  svg('bares/barmanolo/logo.svg').then((l) => logoImage(l, BAR_INK)),
-  svg('logo.svg').then((l) => logoImage(l, BAR_INK)),
-  document.fonts.load(letraCss(LETRAS.clasica, 60)),
-]).catch(() => []);
+const manolo = await svg('bares/barmanolo/logo.svg').then((l) => logoImage(l, BAR_INK)).catch(() => null);
+await document.fonts.load(letraCss(LETRAS.clasica, 60)).catch(() => {});
 
 // id: elige la plantilla (la misma servilleta fotografiada cada vez)
 const SERVILLETAS = {
   hero: { id: 'landing-hero', title: 'Sugerencia del día', lines: ['- Bocata de calamares 6€'], logo: manolo },
-  sugerencia: { id: 'landing-sugerencia', title: 'Sugerencia del día', lines: ['- Migas con uvas 7€'], logo: manolo },
-  fuera: { id: 'landing-fuera', title: 'Fuera de carta', lines: ['- Rabo de toro estofado 14€'], logo: manolo },
-  estrella: { id: 'landing-estrella', title: 'Lo más pedido', lines: ['- Patatas bravas 5€', '- Pisto manchego 6,50€'], logo: manolo },
-  basic: { id: 'landing-basic', title: 'Sugerencia del día', lines: ['- Tu plato del día 6€'], logo: cafecita },
-  pro: { id: 'landing-pro', title: 'Sugerencia del día', lines: ['- Tu plato del día 6€'], logo: manolo },
 };
 
 // se pintan cuando se van a ver, la primera la del principio
