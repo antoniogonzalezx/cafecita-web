@@ -213,7 +213,7 @@ function nextNapkin() {
 // la solapa se rotula con la tipografía de la marca y el logo en tinta
 // (en un bar, una sola tinta para todo: lo que escribe, la frase y el logo)
 const INK = BAR ? BAR_INK : '#4A6789';
-const logoSvg = fetch('logo.svg').then((r) => r.text());
+const logoSvg = fetch('logo.svg?v=2').then((r) => r.text());
 const logoIn = (color) => logoSvg.then(async (svg) => {
   const img = new Image();
   img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg.replace('currentColor', color))}`;

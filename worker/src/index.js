@@ -246,6 +246,7 @@ function limpiarBar(d, id) {
       color: /^#[0-9a-f]{6}$/i.test(m.color) ? m.color : '#1F6B45',
       servilletero: ['inox', 'blanco', 'negro'].includes(m.servilletero) ? m.servilletero : 'inox',
       letra: ['clasica', 'rotulador', 'pizarra', 'pincel'].includes(m.letra) ? m.letra : 'clasica',
+      marcoQr: m.marcoQr !== false,
     },
     sugerencias: (Array.isArray(d?.sugerencias) ? d.sugerencias : []).slice(0, 20).map((x) => ({
       tipo: x?.tipo === 'fuera' ? 'fuera' : 'sugerencia', texto: txt(x?.texto, 80), precio: precio(x?.precio), alergenos: alergenos(x?.alergenos),
