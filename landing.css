@@ -95,3 +95,16 @@ a { color: inherit; }
   .l-franja { height: 96px; }
 }
 @media (prefers-reduced-motion: reduce) { .l-napkin, .l-btn { transition: none; } }
+
+/* ---------- Aviso legal (legal/index.html) ---------- */
+.l-legal-link { font-size: 15px; opacity: .8; text-underline-offset: 4px; }
+.l-legal-link:hover { opacity: 1; }
+.l-doc { background: var(--blanco); color: var(--azul); padding: 72px var(--lado) 96px; }
+.l-doc > * { max-width: 40rem; }
+.l-doc h1 { font: 700 clamp(36px, 6vw, 64px)/1.02 var(--sans); letter-spacing: -.03em; }
+.l-doc .l-fecha { margin-top: 14px; font-size: 15px; opacity: .7; }
+.l-doc h2 { margin-top: 56px; font: 700 24px/1.2 var(--sans); letter-spacing: -.01em; }
+.l-doc p { margin-top: 14px; text-wrap: pretty; }
+.l-doc a { text-underline-offset: 3px; }
+.l-doc strong { font-weight: 600; }
+.hueco { background: #FFE9A8; color: inherit; padding: 0 4px; border-radius: 4px; }
