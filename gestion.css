@@ -249,7 +249,7 @@ button, input, select { font: inherit; color: inherit; }
 .g-carta { display: flex; flex-direction: column; gap: 18px; }
 .g-sec { padding-top: 4px; }
 .g-sec-head { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
-.g-sec-name { font: 400 20px/1.2 var(--boli); font-style: var(--boli-style); text-transform: var(--boli-case); color: var(--brand); border-color: transparent; background: transparent; padding-left: 4px; }
+.g-sec-name { font: 700 19px/1.2 var(--sans); letter-spacing: -.02em; color: var(--brand); border-color: transparent; background: transparent; padding-left: 4px; }
 .g-sec-name:hover { border-color: var(--linea); }
 .g-item { padding: 8px; border-radius: 12px; background: #fff; border: 1px solid var(--linea); }
 .g-item .g-input { border-color: transparent; background: rgba(12, 14, 46, .03); }

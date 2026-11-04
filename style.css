@@ -255,7 +255,8 @@ body[data-bar].loading .top { opacity: 0; }
 }
 .welcome-card h2 {
   margin: 0 0 12px;
-  font: italic 400 28px/1.15 Fraunces, Georgia, serif;
+  font: 700 26px/1.12 var(--sans);
+  letter-spacing: -.02em;
   color: var(--noche);
 }
 .welcome-card p:not(.welcome-kicker) {
@@ -308,7 +309,8 @@ body.bar .top { flex-direction: column; align-items: center; gap: 6px; }
 @media (max-width: 600px) { .logo.bar-logo { height: 58px; } }
 .bar-name {
   margin: 0;
-  font: italic 400 22px/1.1 'Fraunces', Georgia, serif;
+  font: 700 20px/1.1 var(--sans);
+  letter-spacing: -.015em;
   color: #fff;
 }
 body.bar .hint { bottom: calc(max(28px, env(safe-area-inset-bottom)) + 84px); }
@@ -402,13 +404,14 @@ body.bar #scene:focus-visible { outline: none; }
   padding: 10px 16px 10px 24px;
   border-bottom: 1px solid rgba(12, 14, 46, .1);
 }
-.carta-head h2 { margin: 0; font: italic 400 30px/1.1 'Fraunces', Georgia, serif; color: var(--azul); }
+/* los títulos, con la letra del logo (Rethink Sans); Fraunces queda para lo escrito en las servilletas */
+.carta-head h2 { margin: 0; font: 700 27px/1.1 var(--sans); letter-spacing: -.025em; color: var(--azul); }
 .carta-close { border-color: rgba(12, 14, 46, .25); color: var(--noche); width: 42px; height: 42px; }
 .carta-close:hover { background: rgba(12, 14, 46, .06); border-color: rgba(12, 14, 46, .5); }
 .carta-close:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; }
 .carta-body { overflow-y: auto; padding: 6px 24px 14px; overscroll-behavior: contain; }
 .carta-sec { padding: 14px 0 6px; }
-.carta-sec-title { margin: 0 0 4px; font: italic 400 23px/1.2 'Fraunces', Georgia, serif; color: var(--azul); }
+.carta-sec-title { margin: 0 0 4px; font: 700 20px/1.2 var(--sans); letter-spacing: -.02em; color: var(--azul); }
 .carta-list { list-style: none; margin: 0; padding: 0; }
 .carta-item { padding: 10px 0; border-bottom: 1px solid rgba(12, 14, 46, .08); }
 .carta-item:last-child { border-bottom: 0; }
@@ -531,7 +534,7 @@ body.bar #scene:focus-visible { outline: none; }
 .foto-grande.open .foto-card { transform: none; }
 .foto-card img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 2px; background: #EFE9DC; }
 .foto-card figcaption { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; margin-top: 14px; }
-.foto-name { margin: 0; font: italic 400 24px/1.15 'Fraunces', Georgia, serif; }
+.foto-name { margin: 0; font: 700 21px/1.15 var(--sans); letter-spacing: -.02em; }
 .foto-price { margin: 0; font: 700 18px/1 var(--sans); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .foto-card .foto-al { margin-top: 8px; }
 @media (prefers-reduced-motion: reduce) {
