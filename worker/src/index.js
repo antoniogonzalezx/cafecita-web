@@ -249,7 +249,9 @@ function limpiarBar(d, id) {
       marcoQr: m.marcoQr !== false,
     },
     sugerencias: (Array.isArray(d?.sugerencias) ? d.sugerencias : []).slice(0, 20).map((x) => ({
-      tipo: x?.tipo === 'fuera' ? 'fuera' : 'sugerencia', texto: txt(x?.texto, 80), precio: precio(x?.precio), alergenos: alergenos(x?.alergenos),
+      tipo: ['fuera', 'propio'].includes(x?.tipo) ? x.tipo : 'sugerencia', texto: txt(x?.texto, 80), precio: precio(x?.precio), alergenos: alergenos(x?.alergenos),
+      // con Pro, el título que el bar le pone a su servilleta («Plato del día»)
+      ...(x?.tipo === 'propio' ? { titulo: txt(x?.titulo, 40) } : {}),
     })),
     carta: (Array.isArray(d?.carta) ? d.carta : []).slice(0, 20).map((sec) => ({
       seccion: txt(sec?.seccion, 60),

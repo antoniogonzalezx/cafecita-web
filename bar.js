@@ -116,19 +116,32 @@ export const letraCss = (l, s) => `${l.style || 'normal'} 400 ${s}px '${l.family
 
 // Lo que sale en las servilletas, cada cosa en la suya y bien rotulada: la sugerencia del día,
 // lo que hay fuera de carta y lo más pedido (los platos de la carta marcados como destacados).
+// Con Pro, además, lo que el bar quiera con su propio título («Plato del día», «Postres caseros»…):
+// tipo «propio» y el título en «titulo». Sin Pro, eso sale como sugerencia del día.
 export const TIPOS = { sugerencia: 'Sugerencia del día', fuera: 'Fuera de carta', estrella: 'Lo más pedido' };
 const tipoDe = (s) => (s.tipo in TIPOS && s.tipo !== 'estrella' ? s.tipo : 'sugerencia');
+const tituloPropio = (bar, s) => (s.tipo === 'propio' && isPro(bar) ? (s.titulo || '').trim() : '');
+// a qué servilleta va cada línea: el tipo, o «propio:<título>» (las del mismo título, juntas)
+export const servilletaDe = (bar, s) => {
+  const t = tituloPropio(bar, s);
+  return t ? `propio:${t.toLowerCase()}` : tipoDe(s);
+};
+// el rótulo de cada línea en la carta: su título propio o el de su tipo
+export const rotuloDe = (bar, s) => tituloPropio(bar, s) || TIPOS[tipoDe(s)];
 export function servilletas(bar) {
   const hoy = (bar.sugerencias || []).filter((s) => s.texto?.trim());
-  const de = (tipo) => hoy.filter((s) => tipoDe(s) === tipo).map(sugerencia);
+  const grupos = new Map([['sugerencia', null], ['fuera', null]]);
+  for (const s of hoy) {
+    const k = servilletaDe(bar, s);
+    if (!grupos.get(k)) grupos.set(k, { tipo: k, propio: tituloPropio(bar, s), lines: [] });
+    grupos.get(k).lines.push(sugerencia(s));
+  }
   const estrellas = (bar.carta || []).flatMap((sec) => sec.platos)
     .filter((p) => p.destacado && !p.agotado && p.nombre?.trim())
     .map((p) => sugerencia({ texto: p.nombre, precio: p.precio }));
-  return [
-    { tipo: 'sugerencia', lines: de('sugerencia') },
-    { tipo: 'fuera', lines: de('fuera') },
-    { tipo: 'estrella', lines: estrellas },
-  ].filter((x) => x.lines.length).map((x) => ({ ...x, title: titulo(x.tipo, x.lines.length) }));
+  return [...grupos.values(), { tipo: 'estrella', propio: '', lines: estrellas }]
+    .filter((x) => x?.lines.length)
+    .map(({ propio, ...x }) => ({ ...x, title: propio || titulo(x.tipo, x.lines.length) }));
 }
 // en plural si hay varias («Sugerencias del día»)
 export function titulo(tipo, n = 1) {
@@ -200,7 +213,7 @@ export function renderCarta(root, bar, { fotos = false } = {}) {
       const row = h('div', 'carta-row');
       row.append(h('span', 'carta-name', x.texto), h('span', 'carta-dots'), h('span', 'carta-price', precio(x.precio, true)));
       const tag = h('p', 'carta-al');
-      tag.append(h('span', `carta-tag tag-${tipoDe(x)}`, TIPOS[tipoDe(x)]), alergenosTexto(x.alergenos));
+      tag.append(h('span', `carta-tag tag-${tipoDe(x)}`, rotuloDe(bar, x)), alergenosTexto(x.alergenos));
       li.append(row, tag);
       list.append(li);
     }

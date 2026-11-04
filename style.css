@@ -30,9 +30,9 @@ html, body {
 }
 
 /* ---------- Carga: la pared se llena y el logo se monta (carga.js) ---------- */
-/* Mientras llega el servilletero, una franja de tres filas de azulejos (con el fondo de la
-   servilleta y muy tenues) se va llenando de uno en uno; en el hueco del centro, el logo aparece
-   y desaparece. En la página de un bar no hay hueco: su logo ya está arriba. */
+/* Mientras llega el servilletero, siempre sobre el azul de cafecita, una franja de tres filas de
+   azulejos (con el fondo de la servilleta y muy tenues) se va llenando de uno en uno; en el hueco del
+   centro, el logo aparece y desaparece. En un bar con Pro, solo el logo (.carga.solo). */
 #scene { transition: opacity .6s ease; }
 .loading #scene { opacity: 0; }
 
@@ -46,6 +46,9 @@ html, body {
   transition: opacity .5s ease;
 }
 body:not(.loading) .carga { opacity: 0; }
+/* en la página de un bar, mientras carga, el azul de cafecita y nada de su marca */
+body[data-bar].loading { background: var(--grano), #3F48F4; }
+body[data-bar].loading .top { opacity: 0; }
 .carga-franja { position: relative; width: 100%; }
 .carga-franja > svg { display: block; width: 100%; }
 .carga .az { opacity: 0; transition: opacity .7s ease; }
@@ -338,8 +341,8 @@ body.bar .hint { bottom: calc(max(28px, env(safe-area-inset-bottom)) + 84px); }
   /* grano de papel, para que nada se vea plano */
   --grano: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
-/* hasta que carta.js pone la marca del bar, nada del azul de Cafecita */
-body[data-bar]:not(.bar-ready) { background: #15171B; }
+/* hasta que carta.js pone la marca del bar, el azul de cafecita (el de la carga) */
+body[data-bar]:not(.bar-ready) { background: var(--grano), #3F48F4; }
 body[data-bar]:not(.bar-ready) .top, body[data-bar]:not(.bar-ready) .carta-btn { opacity: 0; pointer-events: none; }
 body[data-bar] .top, body[data-bar] .carta-btn { transition: opacity .4s ease, transform .2s ease, background .2s; }
 /* luz desde arriba sobre el color del bar, con grano */

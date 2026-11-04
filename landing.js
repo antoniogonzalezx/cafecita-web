@@ -2,8 +2,8 @@
 // La página para vender Cafecita a los bares: azul y blanco, poco texto y los azulejos como detalle.
 // La servilleta no es una foto: se pinta con el mismo código que el servilletero (napkin.js).
 // El QR de su esquina lleva a la demo.
-import { paintNapkin, tintaDe } from './napkin.js?v=24';
-import { logoImage, LETRAS, letraCss } from './bar.js?v=8';
+import { paintNapkin, tintaDe } from './napkin.js?v=25';
+import { logoImage, LETRAS, letraCss } from './bar.js?v=9';
 import { qrSvg } from './qr.js?v=2';
 import { medir } from './medir.js?v=14';
 import { mosaico, ASPA, AZUL } from './marca.js?v=1';
