@@ -6,6 +6,7 @@ import { paintNapkin, BAR_INK } from './napkin.js?v=21';
 import { logoImage, LETRAS, letraCss } from './bar.js?v=8';
 import { qrSvg } from './qr.js?v=1';
 import { medir } from './medir.js?v=14';
+import { mosaico } from './marca.js?v=1';
 
 const $ = (id) => document.getElementById(id);
 
@@ -29,6 +30,9 @@ for (const b of document.querySelectorAll('[data-pago]')) {
 for (const e of document.querySelectorAll('[data-hasta]')) {
   if (Date.now() > Date.parse(`${e.dataset.hasta}T23:59:59+01:00`)) e.hidden = true;
 }
+
+// ---------- La franja de azulejos del pie ----------
+$('lFranja').innerHTML = mosaico({ cols: 60, filas: 3, l: 64, semilla: 21 });
 
 // ---------- El QR de la demo ----------
 $('lQr').innerHTML = qrSvg('https://cafecita.app/barmanolo/?o=qr-landing', '#0C0E2E');

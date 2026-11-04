@@ -88,7 +88,7 @@ em { font-family: var(--serif); font-style: italic; font-weight: 400; }
   border-bottom: 1px solid transparent;
 }
 .l-logo { display: flex; align-items: baseline; gap: 10px; color: var(--azul); text-decoration: none; }
-.l-logo svg { height: 22px; width: auto; display: block; transform: translateY(3px); }
+.l-logo svg { height: 26px; width: auto; display: block; transform: translateY(5px); }
 .l-logo span { font: italic 400 18px/1 var(--serif); color: var(--noche); white-space: nowrap; }
 .l-nav { display: flex; align-items: center; gap: 26px; font-size: 15px; font-weight: 500; }
 .l-nav a:not(.l-btn) { text-decoration: none; color: var(--suave); transition: color .2s ease; }
@@ -352,13 +352,16 @@ em { font-family: var(--serif); font-style: italic; font-weight: 400; }
   align-items: center;
   justify-content: space-between;
   gap: 18px 32px;
-  padding: 120px var(--lado) max(36px, env(safe-area-inset-bottom));
+  padding: 36px var(--lado) max(36px, env(safe-area-inset-bottom));
   background: var(--papel-2);
   font-size: 14px;
   color: var(--suave);
 }
-.l-foot-brand { font-weight: 800; letter-spacing: .04em; color: var(--noche); }
-.l-foot-brand span { margin-left: 10px; font: italic 400 15px var(--serif); letter-spacing: 0; color: var(--suave); }
+.l-foot-brand { margin: 0; height: 24px; color: var(--azul); }
+.l-foot-brand svg { display: block; height: 100%; width: auto; }
+/* la franja: tres filas de azulejos pequeños justo antes del pie, como el remate de una pared */
+.l-franja { margin-top: 120px; height: 96px; overflow: hidden; }
+.l-franja svg { display: block; width: 100%; height: 100%; }
 .l-foot nav { display: flex; flex-wrap: wrap; gap: 10px 26px; }
 .l-foot a { text-decoration: none; }
 .l-foot a:hover { color: var(--noche); text-decoration: underline; text-underline-offset: 3px; }
