@@ -820,13 +820,7 @@ function resize() {
   camera.position.set(0, target.y + Math.sin(el) * dist, Math.cos(el) * dist);
   camera.lookAt(target);
   camera.updateProjectionMatrix();
-  camera.updateMatrixWorld();
-  // la barra acaba un poco por detrás del servilletero: ahí empieza la pared (style.css)
-  const fondo = new THREE.Vector3(0, 0, -BARRA_FONDO).project(camera);
-  document.body.style.setProperty('--barra-y', `${((1 - fondo.y) / 2 * 100).toFixed(2)}%`);
-  document.body.classList.add('lista-barra');
 }
-const BARRA_FONDO = D / 2 + 3;
 window.addEventListener('resize', resize);
 resize();
 
