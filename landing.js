@@ -4,9 +4,9 @@
 // El QR del cartel lleva a la demo de Bar Manolo.
 import { paintNapkin, BAR_INK } from './napkin.js?v=21';
 import { logoImage, LETRAS, letraCss } from './bar.js?v=8';
-import { qrSvg } from './qr.js?v=1';
+import { qrSvg } from './qr.js?v=2';
 import { medir } from './medir.js?v=14';
-import { mosaico } from './marca.js?v=1';
+import { mosaico, ASPA, AZUL } from './marca.js?v=1';
 
 const $ = (id) => document.getElementById(id);
 
@@ -35,7 +35,7 @@ for (const e of document.querySelectorAll('[data-hasta]')) {
 $('lFranja').innerHTML = mosaico({ cols: 60, filas: 3, l: 64, semilla: 21 });
 
 // ---------- El QR de la demo ----------
-$('lQr').innerHTML = qrSvg('https://cafecita.app/barmanolo/?o=qr-landing', '#0C0E2E');
+$('lQr').innerHTML = qrSvg('https://cafecita.app/barmanolo/?o=qr-landing', AZUL, { centro: ASPA });
 
 // ---------- Analítica: quién llega y quién abre la demo ----------
 medir('visita', { origen: `landing:${document.referrer ? new URL(document.referrer).hostname : 'directo'}`.slice(0, 40) });
