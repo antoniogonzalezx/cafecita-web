@@ -228,7 +228,7 @@ function planCard() {
     return card('Tu plan', pro ? 'Tienes Cafecita Pro: tu logo, tu color, tu servilletero y tu letra, sin anuncios.'
       : 'Tienes Cafecita Basic, gratis. Con Pro, por 9,99 € al mes, tu página lleva tu logo, tu color, tu servilletero y tu letra, sin anuncios.',
     el('p', { class: 'g-note' }, pro ? 'Para cualquier cambio en tu plan, habla con Cafecita.' : 'Para pasarte a Pro, habla con Cafecita. ',
-      !pro && el('a', { href: '/bares/#planes', target: '_blank', rel: 'noopener' }, 'Ver los planes')));
+      !pro && el('a', { href: '/carta/#precios', target: '_blank', rel: 'noopener' }, 'Ver los planes')));
   }
   const opt = (value, title, price, text) => el('button', {
     type: 'button', class: `g-plan${bar.plan === value ? ' on' : ''}`, 'aria-pressed': String(bar.plan === value),
