@@ -30,9 +30,9 @@ html, body {
 }
 
 /* ---------- Carga: la pared se llena y el logo se monta (carga.js) ---------- */
-/* Mientras llega el servilletero, una franja de tres filas de azulejos (con el fondo de la
-   servilleta y muy tenues) se va llenando de uno en uno; en el hueco del centro, el logo aparece
-   y desaparece. En la página de un bar no hay hueco: su logo ya está arriba. */
+/* Mientras llega el servilletero, siempre sobre el azul de cafecita, una franja de tres filas de
+   azulejos (con el fondo de la servilleta y muy tenues) se va llenando de uno en uno; en el hueco del
+   centro, el logo aparece y desaparece. En un bar con Pro, solo el logo (.carga.solo). */
 #scene { transition: opacity .6s ease; }
 .loading #scene { opacity: 0; }
 
@@ -46,6 +46,9 @@ html, body {
   transition: opacity .5s ease;
 }
 body:not(.loading) .carga { opacity: 0; }
+/* en la página de un bar, mientras carga, el azul de cafecita y nada de su marca */
+body[data-bar].loading { background: var(--grano), #3F48F4; }
+body[data-bar].loading .top { opacity: 0; }
 .carga-franja { position: relative; width: 100%; }
 .carga-franja > svg { display: block; width: 100%; }
 .carga .az { opacity: 0; transition: opacity .7s ease; }
@@ -252,7 +255,8 @@ body:not(.loading) .carga { opacity: 0; }
 }
 .welcome-card h2 {
   margin: 0 0 12px;
-  font: italic 400 28px/1.15 Fraunces, Georgia, serif;
+  font: 700 26px/1.12 var(--sans);
+  letter-spacing: -.02em;
   color: var(--noche);
 }
 .welcome-card p:not(.welcome-kicker) {
@@ -305,7 +309,8 @@ body.bar .top { flex-direction: column; align-items: center; gap: 6px; }
 @media (max-width: 600px) { .logo.bar-logo { height: 58px; } }
 .bar-name {
   margin: 0;
-  font: italic 400 22px/1.1 'Fraunces', Georgia, serif;
+  font: 700 20px/1.1 var(--sans);
+  letter-spacing: -.015em;
   color: #fff;
 }
 body.bar .hint { bottom: calc(max(28px, env(safe-area-inset-bottom)) + 84px); }
@@ -338,8 +343,8 @@ body.bar .hint { bottom: calc(max(28px, env(safe-area-inset-bottom)) + 84px); }
   /* grano de papel, para que nada se vea plano */
   --grano: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
-/* hasta que carta.js pone la marca del bar, nada del azul de Cafecita */
-body[data-bar]:not(.bar-ready) { background: #15171B; }
+/* hasta que carta.js pone la marca del bar, el azul de cafecita (el de la carga) */
+body[data-bar]:not(.bar-ready) { background: var(--grano), #3F48F4; }
 body[data-bar]:not(.bar-ready) .top, body[data-bar]:not(.bar-ready) .carta-btn { opacity: 0; pointer-events: none; }
 body[data-bar] .top, body[data-bar] .carta-btn { transition: opacity .4s ease, transform .2s ease, background .2s; }
 /* luz desde arriba sobre el color del bar, con grano */
@@ -399,13 +404,14 @@ body.bar #scene:focus-visible { outline: none; }
   padding: 10px 16px 10px 24px;
   border-bottom: 1px solid rgba(12, 14, 46, .1);
 }
-.carta-head h2 { margin: 0; font: italic 400 30px/1.1 'Fraunces', Georgia, serif; color: var(--azul); }
+/* los títulos, con la letra del logo (Rethink Sans); Fraunces queda para lo escrito en las servilletas */
+.carta-head h2 { margin: 0; font: 700 27px/1.1 var(--sans); letter-spacing: -.025em; color: var(--azul); }
 .carta-close { border-color: rgba(12, 14, 46, .25); color: var(--noche); width: 42px; height: 42px; }
 .carta-close:hover { background: rgba(12, 14, 46, .06); border-color: rgba(12, 14, 46, .5); }
 .carta-close:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; }
 .carta-body { overflow-y: auto; padding: 6px 24px 14px; overscroll-behavior: contain; }
 .carta-sec { padding: 14px 0 6px; }
-.carta-sec-title { margin: 0 0 4px; font: italic 400 23px/1.2 'Fraunces', Georgia, serif; color: var(--azul); }
+.carta-sec-title { margin: 0 0 4px; font: 700 20px/1.2 var(--sans); letter-spacing: -.02em; color: var(--azul); }
 .carta-list { list-style: none; margin: 0; padding: 0; }
 .carta-item { padding: 10px 0; border-bottom: 1px solid rgba(12, 14, 46, .08); }
 .carta-item:last-child { border-bottom: 0; }
@@ -528,7 +534,7 @@ body.bar #scene:focus-visible { outline: none; }
 .foto-grande.open .foto-card { transform: none; }
 .foto-card img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 2px; background: #EFE9DC; }
 .foto-card figcaption { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; margin-top: 14px; }
-.foto-name { margin: 0; font: italic 400 24px/1.15 'Fraunces', Georgia, serif; }
+.foto-name { margin: 0; font: 700 21px/1.15 var(--sans); letter-spacing: -.02em; }
 .foto-price { margin: 0; font: 700 18px/1 var(--sans); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .foto-card .foto-al { margin-top: 8px; }
 @media (prefers-reduced-motion: reduce) {

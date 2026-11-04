@@ -1,8 +1,9 @@
 // ---------- Carga: la pared se llena y el logo se monta ----------
-// Mientras llega el servilletero (body.loading), una franja de tres filas de azulejos se llena
-// de uno en uno desde el centro, tenue y con el fondo de la servilleta. En el centro de la fila
-// del medio queda un hueco para el logo, que aparece y desaparece (style.css). En la página de
-// un bar no hay hueco: arriba ya está su logo. Cuando se quita body.loading, todo se para.
+// Mientras llega el servilletero (body.loading), sobre el azul de cafecita, una franja de tres filas
+// de azulejos se llena de uno en uno desde el centro, tenue y con el fondo de la servilleta. En el
+// centro de la fila del medio queda un hueco para el logo, que aparece y desaparece (style.css).
+// En la página de un bar con Pro (su propia marca) no hay azulejos: solo el logo de cafecita.
+// En la de un bar se espera a saber cuál es (carta.js pone body.bar-ready). Al quitar body.loading, todo se para.
 import { AZULEJOS, AZUL, PAPEL } from './marca.js?v=1';
 
 const caja = document.querySelector('.carga');
@@ -60,10 +61,20 @@ function monta() {
   }, 140);
 }
 
-if (caja && document.body.classList.contains('loading')) {
-  monta();
+const B = document.body.classList;
+const listo = () => !document.body.dataset.bar || B.contains('bar-ready');
+let montada = false;
+function empieza() {
+  if (montada || !listo()) return;
+  montada = true;
+  if (B.contains('bar-pro')) caja.classList.add('solo');
+  else monta();
+}
+if (caja && B.contains('loading')) {
+  empieza();
   // cuando llega el servilletero, se para (y deja de gastar)
   new MutationObserver(() => {
-    if (!document.body.classList.contains('loading')) { clearInterval(reloj); setTimeout(() => caja.remove(), 600); }
+    empieza();
+    if (!B.contains('loading')) { clearInterval(reloj); setTimeout(() => caja.remove(), 600); }
   }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
 }

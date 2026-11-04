@@ -3,7 +3,7 @@
 // del bar (sin un instante del azul de Cafecita) y la carta ya funciona, también con la Wi-Fi
 // lenta de un bar: el cliente viene a ver qué hay. El servilletero llega después (main.js),
 // que abre la carta desde la servilleta con el evento «carta:abrir».
-import { loadBar, isPro, logoOf, logoImage, renderCarta, DEFAULT_COLOR, LETRAS, ALERGENOS } from './bar.js?v=8';
+import { loadBar, isPro, logoOf, logoImage, renderCarta, DEFAULT_COLOR, LETRAS, ALERGENOS } from './bar.js?v=9';
 import { medir } from './medir.js?v=14';
 
 const $ = (id) => document.getElementById(id);
@@ -32,6 +32,8 @@ css.setProperty('--bar-case', letra.caps ? 'uppercase' : 'none');
 document.querySelector('meta[name="theme-color"]')?.setAttribute('content', color);
 document.title = `${bar.nombre} · Carta y sugerencias`;
 document.body.classList.add('bar');
+// para la carga (carga.js): un bar con Pro tiene su marca, así que mientras carga solo sale el logo de cafecita
+if (pro) document.body.classList.add('bar-pro');
 
 // arriba, su logo (con Pro); si no, CAFECITA y debajo su nombre
 const head = document.querySelector('.logo');

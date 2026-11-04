@@ -249,7 +249,7 @@ button, input, select { font: inherit; color: inherit; }
 .g-carta { display: flex; flex-direction: column; gap: 18px; }
 .g-sec { padding-top: 4px; }
 .g-sec-head { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
-.g-sec-name { font: 400 20px/1.2 var(--boli); font-style: var(--boli-style); text-transform: var(--boli-case); color: var(--brand); border-color: transparent; background: transparent; padding-left: 4px; }
+.g-sec-name { font: 700 19px/1.2 var(--sans); letter-spacing: -.02em; color: var(--brand); border-color: transparent; background: transparent; padding-left: 4px; }
 .g-sec-name:hover { border-color: var(--linea); }
 .g-item { padding: 8px; border-radius: 12px; background: #fff; border: 1px solid var(--linea); }
 .g-item .g-input { border-color: transparent; background: rgba(12, 14, 46, .03); }
@@ -437,3 +437,7 @@ button:focus-visible, a:focus-visible, select:focus-visible { outline: 2px solid
 .g-top .g-btn-ghost[hidden] { display: none; }
 .g-aviso { margin: 8px 0 0; font-size: 13px; color: var(--suave); }
 .g-sin-acceso #gSalir, .g-sin-acceso .g-saved { display: none; }
+/* con Pro, el título propio de la servilleta va en su línea, debajo de «Con tu título» */
+.g-hoy .g-titulo { order: 2; flex: 1 1 100%; font-weight: 600; }
+.g-hoy .g-titulo ~ .grow { order: 3; }
+.g-hoy .g-titulo ~ .g-price { order: 4; }

@@ -3,8 +3,8 @@
 // su logo, su color y el acabado del servilletero. Un bar dado de alta entra con su código de
 // acceso y lo que cambia se guarda en el servidor; en la demo (Bar Manolo), en este navegador.
 // La vista previa de la derecha es su página de verdad, que se recarga al guardar.
-import { loadBar, saveBar, resetBar, entrar, guardarRemoto, isPro, logoOf, logoImage, servilletas, titulo, precio, ALERGENOS, COLORES, ACABADOS, TIPOS, DEFAULT_COLOR, LETRAS, letraCss, fotoUrl, prepararFoto, subirFoto } from './bar.js?v=8';
-import { paintNapkin, tintaDe } from './napkin.js?v=24';
+import { loadBar, saveBar, resetBar, entrar, guardarRemoto, isPro, logoOf, logoImage, servilletas, servilletaDe, titulo, precio, ALERGENOS, COLORES, ACABADOS, TIPOS, DEFAULT_COLOR, LETRAS, letraCss, fotoUrl, prepararFoto, subirFoto } from './bar.js?v=9';
+import { paintNapkin, tintaDe } from './napkin.js?v=25';
 import { medir } from './medir.js?v=14';
 
 const ID = document.body.dataset.bar;
@@ -193,7 +193,7 @@ function drawTabs(list, on) {
   tabs.replaceChildren(...list.map((x) => el('button', {
     type: 'button', class: `g-tab${x.tipo === on ? ' on' : ''}`, 'aria-pressed': String(x.tipo === on),
     onclick: () => { previewTipo = x.tipo; paintPreview(); },
-  }, TIPOS[x.tipo])));
+  }, x.title)));
   tabs.hidden = list.length < 2;
 }
 
@@ -244,14 +244,28 @@ function planCard() {
 }
 
 // Lo de hoy: cada línea es una sugerencia del día o algo fuera de carta, y cada tipo sale en
-// su propia servilleta, rotulada. Lo más pedido no se escribe aquí: son los platos marcados en la carta.
+// su propia servilleta, rotulada. Con Pro, también con el título que el bar quiera (las líneas
+// con el mismo título van juntas). Lo más pedido no se escribe aquí: son los platos marcados en la carta.
 function hoyCard() {
+  const pro = isPro(bar);
   const rows = el('div', { class: 'g-rows' });
+  const tipos = pro ? ['sugerencia', 'fuera', 'propio'] : ['sugerencia', 'fuera'];
+  const nombre = (t) => (t === 'propio' ? 'Con tu título' : TIPOS[t]);
   const draw = () => {
     rows.replaceChildren(...bar.sugerencias.map((s, i) => el('div', { class: 'g-row g-hoy' },
       el('select', { class: 'g-input g-tipo', 'aria-label': 'Qué es',
-        onchange: (e) => { s.tipo = e.target.value; previewTipo = s.tipo; changed({ napkin: true }); } },
-        ...['sugerencia', 'fuera'].map((t) => el('option', { value: t, selected: (s.tipo || 'sugerencia') === t }, TIPOS[t]))),
+        onchange: (e) => {
+          s.tipo = e.target.value;
+          if (s.tipo === 'propio') s.titulo ??= ''; else delete s.titulo;
+          previewTipo = servilletaDe(bar, s);
+          draw();
+          changed({ napkin: true });
+          if (s.tipo === 'propio') rows.children[i]?.querySelector('.g-titulo')?.focus();
+        } },
+        ...tipos.map((t) => el('option', { value: t, selected: (s.tipo || 'sugerencia') === t }, nombre(t)))),
+      pro && s.tipo === 'propio' && el('input', { class: 'g-input g-titulo', value: s.titulo || '', maxlength: 40,
+        placeholder: 'Título de la servilleta: Plato del día', 'aria-label': 'Título de la servilleta',
+        oninput: (e) => { s.titulo = e.target.value; previewTipo = servilletaDe(bar, s); changed({ napkin: true }); } }),
       el('input', { class: 'g-input grow', value: s.texto, placeholder: s.tipo === 'fuera' ? 'Rabo de toro estofado' : 'Bocata de calamares',
         'aria-label': 'Plato', oninput: (e) => { s.texto = e.target.value; changed({ napkin: true }); } }),
       priceInput(s, () => changed({ napkin: true })),
@@ -260,15 +274,17 @@ function hoyCard() {
   };
   draw();
   const add = (tipo, label) => el('button', { type: 'button', class: 'g-btn g-btn-add', onclick: () => {
-    bar.sugerencias.push({ tipo, texto: '', precio: '' });
+    bar.sugerencias.push(tipo === 'propio' ? { tipo, titulo: '', texto: '', precio: '' } : { tipo, texto: '', precio: '' });
     previewTipo = tipo;
     draw();
     rows.lastElementChild?.querySelector('input')?.focus();
   } }, label);
-  return card('Hoy en la barra', 'Cada cosa sale en su servilleta, rotulada a mano: la sugerencia del día, lo que hay fuera de carta y lo más pedido (los platos que marques con ★ en la carta).',
+  return card('Hoy en la barra', pro
+    ? 'Cada cosa sale en su servilleta, rotulada a mano: la sugerencia del día, lo que hay fuera de carta, lo que tú quieras con tu título y lo más pedido (los platos que marques con ★ en la carta).'
+    : 'Cada cosa sale en su servilleta, rotulada a mano: la sugerencia del día, lo que hay fuera de carta y lo más pedido (los platos que marques con ★ en la carta).',
     el('div', { class: 'g-split' },
       el('div', { class: 'g-split-main' }, rows,
-        el('div', { class: 'g-adds' }, add('sugerencia', '+ Sugerencia del día'), add('fuera', '+ Fuera de carta'))),
+        el('div', { class: 'g-adds' }, add('sugerencia', '+ Sugerencia del día'), add('fuera', '+ Fuera de carta'), pro && add('propio', '+ Con tu título'))),
       el('figure', { class: 'g-napkin' },
         el('div', { class: 'g-tabs', id: 'gTabs', role: 'group', 'aria-label': 'Qué servilleta ver' }),
         el('canvas', { id: 'gNapkin', role: 'img', 'aria-label': 'Así sale la servilleta' }),

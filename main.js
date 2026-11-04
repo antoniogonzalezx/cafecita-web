@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { gsap } from 'gsap';
-import { paintNapkin, paintStory, wrinkle, barFlap, tintaDe } from './napkin.js?v=24';
+import { paintNapkin, paintStory, wrinkle, barFlap, tintaDe } from './napkin.js?v=25';
 import * as sound from './sound.js?v=13';
 import { medir, visita, API } from './medir.js?v=14';
-import { loadBar, isPro, logoOf, logoImage, servilletas, titulo, DEFAULT_COLOR, LETRAS, letraCss } from './bar.js?v=7';
+import { loadBar, isPro, logoOf, logoImage, servilletas, titulo, DEFAULT_COLOR, LETRAS, letraCss } from './bar.js?v=9';
 
 // ---------- Medidas (cm, iguales que tools/blender_servilletero.py) ----------
 const W = 9.0;      // ancho
@@ -519,8 +519,6 @@ const pickables = [];
 const loaded = () => requestAnimationFrame(() => requestAnimationFrame(() => {
   document.body.classList.remove('loading');
   gsap.delayedCall(0.6, () => onboard.start());
-  // en un bar, quien llega del QR viene a ver qué hay: la primera del día sale sola
-  if (BAR && state.autoDay !== today()) gsap.delayedCall(1.2, () => { state.autoDay = today(); saveState(); serveNapkin(); });
 }));
 new GLTFLoader().load('models/servilletero.glb', (gltf) => {
   gltf.scene.traverse((o) => {
@@ -1126,7 +1124,7 @@ const packItem = (it) => (!it ? null
   : it.kind === 'news' ? { k: 'news', n: it.news, f: it.folded ? 1 : 0 }
   : it.kind === 'quote' ? { k: 'quote', id: it.quote.id }
   : it.kind === 'ad' ? { k: 'ad', id: it.ad.id, f: it.folded ? 1 : 0 }
-  : it.kind === 'bar' ? { k: 'bar', t: it.tipo, l: it.lines }
+  : it.kind === 'bar' ? { k: 'bar', t: it.tipo, ti: it.title, l: it.lines }
   : { k: 'empty', f: it.folded ? 1 : 0 });
 function unpackItem(x) {
   const it = unpackKind(x);
@@ -1141,7 +1139,8 @@ function unpackKind(x) {
   if (x.k === 'empty') return { kind: 'empty', id: 'vacio-suelo' };
   if (x.k === 'bar' && Array.isArray(x.l)) {
     const lines = x.l.map(String);
-    return { kind: 'bar', id: `${x.t || 'sugerencia'}-suelo`, tipo: x.t, title: titulo(x.t, lines.length), lines };
+    const title = typeof x.ti === 'string' && x.ti ? x.ti.slice(0, 40) : titulo(x.t, lines.length);
+    return { kind: 'bar', id: `${x.t || 'sugerencia'}-suelo`, tipo: x.t, title, lines };
   }
   return null;
 }
