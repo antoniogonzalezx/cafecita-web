@@ -2034,7 +2034,7 @@ if (shared) {
   let first = true;
   try { first = localStorage.getItem('cafecita.onboarding.v1') !== 'done'; } catch {}
   if (first) {
-    document.querySelector('.welcome-kicker').textContent = 'Te han guardado una servilleta';
+    $('welcomeTitle').textContent = 'Te han guardado una servilleta.';
     $('welcomeGo').textContent = 'Sacarla';
   } else {
     const toast = $('toast');
