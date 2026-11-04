@@ -5,12 +5,12 @@
   <!-- vive en /barmanolo/gestion/ pero usa los ficheros de la raíz (bar.js, napkin.js, fuentes) -->
   <base href="/" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self' data: blob: https://cafecita-api.cafecita-api.workers.dev http://localhost:8787; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data: blob: https://cafecita-api.cafecita-api.workers.dev http://localhost:8787; connect-src 'self' data: blob: https://cafecita-api.cafecita-api.workers.dev http://localhost:8787; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'" />
   <meta name="robots" content="noindex" />
   <title>Gestión · Bar Manolo</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="fonts/fonts.css?v=4" />
-  <link rel="stylesheet" href="gestion.css?v=12" />
+  <link rel="stylesheet" href="gestion.css?v=13" />
 </head>
 <body data-bar="barmanolo">
   <header class="g-top">
@@ -44,6 +44,6 @@
 
   <div class="g-toast" id="gToast" role="status" hidden></div>
 
-  <script type="module" src="gestion.js?v=13"></script>
+  <script type="module" src="gestion.js?v=14"></script>
 </body>
 </html>

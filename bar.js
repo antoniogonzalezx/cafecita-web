@@ -69,6 +69,39 @@ export function resetBar(id) {
 
 export const isPro = (bar) => bar.plan === 'pro';
 
+// ---------- Fotos de los platos (solo Pro) ----------
+// En el servidor, cada foto es un id; en la demo se queda en el navegador como data URL.
+export const fotoUrl = (bar, foto) => (foto.startsWith('data:') ? foto
+  : `${API}/foto?bar=${encodeURIComponent(bar.id)}&id=${foto}`);
+
+// La foto, cuadrada (lo del centro) y comprimida en el propio móvil: WebP si el navegador
+// sabe hacerlo (Safari no) y si no JPEG, bajando la calidad hasta que pese menos de 190 KB.
+const FOTO_LADO = 900;
+export async function prepararFoto(file) {
+  const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
+  const lado = Math.min(bmp.width, bmp.height);
+  const n = Math.min(FOTO_LADO, lado);
+  const c = document.createElement('canvas');
+  c.width = c.height = n;
+  c.getContext('2d').drawImage(bmp, (bmp.width - lado) / 2, (bmp.height - lado) / 2, lado, lado, 0, 0, n, n);
+  bmp.close();
+  const blob = (type, q) => new Promise((res) => c.toBlob(res, type, q));
+  for (const q of [0.8, 0.7, 0.6, 0.5]) {
+    let b = await blob('image/webp', q);
+    if (b?.type !== 'image/webp') b = await blob('image/jpeg', q);
+    if (b && b.size < 190e3) return b;
+  }
+  throw new Error('La foto no se ha podido comprimir');
+}
+// Devuelve el id de la foto o el estado HTTP si no se ha podido (403: el bar no es Pro)
+export async function subirFoto(id, codigo, blob) {
+  const r = await fetch(`${API}/bar/foto?id=${encodeURIComponent(id)}`, {
+    method: 'POST', headers: { 'Content-Type': blob.type, Authorization: `Bearer ${codigo}` }, body: blob,
+    signal: AbortSignal.timeout(20000),
+  });
+  return r.ok ? (await r.json()).foto : r.status;
+}
+
 // Las letras para lo que escribe el bar. Por defecto, la misma que «Gracias por su visita»;
 // con Pro, el bar elige una a mano (esas van en mayúsculas, como se rotula una pizarra).
 // size: lo grande que se escribe con ella (las estrechas, más; las anchas, algo menos).
@@ -151,7 +184,9 @@ const alergenosTexto = (list) => (Array.isArray(list)
   ? (list.length ? `Contiene: ${list.map((a) => ALERGENOS[a] || a).join(', ')}` : 'Sin alérgenos declarados')
   : 'Alérgenos: pregunta al personal');
 
-export function renderCarta(root, bar) {
+// fotos: en la página del bar, las de los platos (con Pro); en la carta de papel no van
+export function renderCarta(root, bar, { fotos = false } = {}) {
+  const conFotos = fotos && isPro(bar);
   root.replaceChildren();
   // arriba, lo de hoy: lo mismo que sale en las servilletas
   const hoy = (bar.sugerencias || []).filter((s) => s.texto?.trim());
@@ -183,6 +218,17 @@ export function renderCarta(root, bar) {
       const row = h('div', 'carta-row');
       row.append(h('span', 'carta-name', p.nombre), h('span', 'carta-dots'), h('span', 'carta-price', precio(p.precio, true)));
       li.append(row);
+      // la foto, como una polaroid grapada a la comanda; al tocarla se ve en grande (carta.js)
+      if (conFotos && p.foto) {
+        li.classList.add('con-foto');
+        const b = h('button', 'carta-foto');
+        b.type = 'button';
+        b.setAttribute('aria-label', `Ver la foto: ${p.nombre}`);
+        const img = h('img');
+        Object.assign(img, { src: fotoUrl(bar, p.foto), alt: '', loading: 'lazy', decoding: 'async', width: 128, height: 128 });
+        b.append(img);
+        li.prepend(b);
+      }
       const al = h('p', 'carta-al');
       if (p.agotado) al.append(h('span', 'carta-out', 'Agotado'));
       else if (p.destacado) al.append(h('span', 'carta-tag tag-estrella', TIPOS.estrella));

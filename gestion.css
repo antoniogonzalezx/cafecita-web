@@ -267,6 +267,52 @@ button, input, select { font: inherit; color: inherit; }
 .g-al-btn:hover { color: var(--noche); text-decoration: underline; }
 .g-al-btn.warn { color: #9A5B00; }
 .g-al { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 4px 4px; }
+
+/* debajo de cada plato: su foto (Pro) y sus alérgenos */
+.g-item-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin: 6px 0 0 4px; }
+.g-item-foot .g-al-btn { margin: 0; }
+.g-foto { display: flex; align-items: center; gap: 10px; }
+.g-foto-file { display: none; }
+.g-foto-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 4px 10px 4px 8px;
+  border: 1px dashed color-mix(in srgb, var(--brand) 45%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--brand) 5%, #fff);
+  color: var(--brand);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s ease, transform .15s ease;
+}
+.g-foto-add:hover { background: color-mix(in srgb, var(--brand) 11%, #fff); }
+.g-foto-add:active { transform: scale(.97); }
+.g-foto-ico { display: inline-flex; }
+.g-foto-lock { border-color: var(--linea); background: none; color: var(--suave); }
+.g-foto-lock:hover { background: rgba(12, 14, 46, .04); }
+.g-foto-lock b { padding: 1px 5px; border-radius: 4px; background: rgba(12, 14, 46, .07); font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; }
+/* la miniatura, como la polaroid de la carta */
+.g-foto-thumb {
+  width: 44px;
+  height: 44px;
+  padding: 2px;
+  border: 0;
+  border-radius: 3px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(12, 14, 46, .16), 0 5px 10px -5px rgba(12, 14, 46, .4);
+  rotate: -2deg;
+  cursor: pointer;
+  transition: transform .15s ease;
+}
+.g-foto-thumb:hover { transform: scale(1.06); }
+.g-foto-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 1px; }
+.g-foto .g-link { font-size: 13px; }
+.g-foto-msg { font-size: 13px; color: var(--suave); }
+.g-foto-msg[hidden] { display: none; }
+.g-foto-err { color: #A4262C; }
 .g-al[hidden] { display: none; }
 .g-chip {
   min-height: 32px;
