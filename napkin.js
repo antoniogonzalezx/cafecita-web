@@ -83,7 +83,8 @@ function lines(item) {
 // La plantilla sale del id: la misma noticia cae siempre en la misma servilleta.
 // ink: en las de bar, la única tinta de la servilleta (lo escrito, la frase y el logo, que ya viene pintado de ella)
 // letra: la que el bar ha elegido para lo que escribe (LETRAS; por defecto, la de la frase)
-export async function paintNapkin(canvas, item, { logo, ink = BAR_INK, letra = 'clasica' } = {}) {
+// centro: lo escrito va centrado y sin guiones, como un plato solo (la servilleta de cafecita.app/carta/)
+export async function paintNapkin(canvas, item, { logo, ink = BAR_INK, letra = 'clasica', centro = false } = {}) {
   const list = await TEMPLATES;
   const t = list[hash(item.id || 'x') % list.length];
   const img = await t.img;
@@ -102,7 +103,7 @@ export async function paintNapkin(canvas, item, { logo, ink = BAR_INK, letra = '
   g.textBaseline = 'middle';
   const fy = H * t.fold;
   if (item.kind === 'bar') {
-    penLines(g, item.lines, W, fy, ink, hash(item.id || 'x'), item.title, LETRAS[letra] || LETRAS.clasica);
+    penLines(g, item.lines, W, fy, ink, hash(item.id || 'x'), item.title, LETRAS[letra] || LETRAS.clasica, centro);
     barFlap(g, W, fy, H, logo, ink);
     g.globalAlpha = 1;
     g.globalCompositeOperation = 'source-over';
@@ -205,13 +206,13 @@ function penWrap(g, text, maxW) {
 
 // Lo que escribe el bar, grande y cada línea un pelín torcida. Si una sugerencia no cabe en
 // una línea, sigue en la siguiente con sangría (detrás del guion).
-function penLines(g, rows, W, fy, ink, seed, title, letra) {
+function penLines(g, rows, W, fy, ink, seed, title, letra, centro = false) {
   if (!rows.length) return;
   const HAND = (sz) => letraCss(letra, sz);
   const rnd = prng(seed || 1);
   const up = (t) => (letra.caps ? t.toUpperCase() : t);
   // con la letra de la frase, la raya tipográfica en vez del guion
-  const text = rows.map((r) => (letra.caps ? up(r) : r.replace(/^- /, '– ')));
+  const text = rows.map((r) => (centro ? up(r.replace(/^[-–] /, '')) : letra.caps ? up(r) : r.replace(/^- /, '– ')));
   const left = W * 0.1, maxW = W * 0.8, lh = 1.25, bottom = fy * 0.9;
   let top = fy * 0.09;
   // arriba, qué es: «SUGERENCIA DEL DÍA», «FUERA DE CARTA» o «LO MÁS PEDIDO», subrayado a mano
@@ -224,17 +225,17 @@ function penLines(g, rows, W, fy, ink, seed, title, letra) {
     g.fillStyle = ink;
     g.textAlign = 'left';
     g.textBaseline = 'alphabetic';
-    const y = top + ts, tw = g.measureText(tt).width;
+    const tw = g.measureText(tt).width, tx = centro ? (W - tw) / 2 : left, y = top + ts;
     g.globalAlpha = 0.95;
-    g.fillText(tt, left, y);
+    g.fillText(tt, tx, y);
     // el subrayado: un trazo algo torcido, más largo que la palabra, como quien lo hace deprisa
     g.strokeStyle = ink;
     g.lineCap = 'round';
     g.lineWidth = Math.max(2, W * 0.007);
     g.beginPath();
     const uy = y + ts * 0.32;
-    g.moveTo(left - W * 0.01, uy + ts * 0.04);
-    g.quadraticCurveTo(left + tw * 0.5, uy - ts * (0.06 + rnd() * 0.06), left + tw + W * 0.02, uy + ts * 0.02);
+    g.moveTo(tx - W * 0.01, uy + ts * 0.04);
+    g.quadraticCurveTo(tx + tw * 0.5, uy - ts * (0.06 + rnd() * 0.06), tx + tw + W * 0.02, uy + ts * 0.02);
     g.stroke();
     g.restore();
     top = uy + ts * 0.55;
@@ -244,7 +245,7 @@ function penLines(g, rows, W, fy, ink, seed, title, letra) {
   let size = Math.round(W * 0.13 * letra.size), out = null;
   for (; size >= min && !out; size -= 2) {
     g.font = HAND(size);
-    const indent = g.measureText(letra.caps ? '- ' : '– ').width;
+    const indent = centro ? 0 : g.measureText(letra.caps ? '- ' : '– ').width;
     const wrapped = text.map((r) => penWrap(g, r, maxW - indent));
     if (wrapped.some((x) => !x) || wrapped.flat().length * size * lh > bottom - top) continue;
     out = wrapped.flatMap((ls) => ls.map((l, i) => ({ l, x: i ? indent : 0 })));
@@ -257,13 +258,13 @@ function penLines(g, rows, W, fy, ink, seed, title, letra) {
     out = text.flatMap((r) => wrap(g, r, maxW).map((l, i) => ({ l, x: i ? W * 0.03 : 0 })));
   }
   g.font = HAND(size);
-  g.textAlign = 'left';
+  g.textAlign = centro ? 'center' : 'left';
   g.textBaseline = 'alphabetic';
   g.fillStyle = ink;
   let y = top + size;
   for (const { l, x } of out) {
     g.save();
-    g.translate(left + x + (rnd() - 0.5) * W * 0.015, y);
+    g.translate((centro ? W / 2 : left + x) + (rnd() - 0.5) * W * 0.015, y);
     g.rotate((rnd() - 0.6) * 0.03);
     // dos pasadas: el rotulador deja más tinta en unos trazos que en otros
     g.globalAlpha = 0.9;

@@ -2,7 +2,7 @@
 // La página para vender Cafecita a los bares: azul y blanco, poco texto y los azulejos como detalle.
 // La servilleta no es una foto: se pinta con el mismo código que el servilletero (napkin.js).
 // El QR de su esquina lleva a la demo.
-import { paintNapkin, BAR_INK } from './napkin.js?v=21';
+import { paintNapkin, BAR_INK } from './napkin.js?v=22';
 import { logoImage, LETRAS, letraCss } from './bar.js?v=8';
 import { qrSvg } from './qr.js?v=2';
 import { medir } from './medir.js?v=14';
@@ -34,7 +34,7 @@ await document.fonts.load(letraCss(LETRAS.clasica, 60)).catch(() => {});
 
 // id: elige la plantilla (la misma servilleta fotografiada cada vez)
 const SERVILLETAS = {
-  hero: { id: 'landing-hero', title: 'Plato del día', lines: ['- Carrillada de carne', '13,50€'], logo },
+  hero: { id: 'landing-hero', title: 'Plato del día', lines: ['Carrillada de carne', '13,50€'], logo },
 };
 
 // se pintan cuando se van a ver, la primera la del principio
@@ -42,7 +42,7 @@ const pintar = async (c) => {
   const s = SERVILLETAS[c.dataset.servilleta];
   if (!s || c.dataset.pintada) return;
   c.dataset.pintada = '1';
-  await paintNapkin(c, { kind: 'bar', id: s.id, title: s.title, lines: s.lines }, { logo: s.logo, ink: BAR_INK });
+  await paintNapkin(c, { kind: 'bar', id: s.id, title: s.title, lines: s.lines }, { logo: s.logo, ink: BAR_INK, centro: true });
   c.classList.add('lista');
 };
 const lazy = new IntersectionObserver((entries) => {
