@@ -253,7 +253,7 @@ body:not(.loading) .carga { opacity: 0; }
 .welcome-card h2 {
   margin: 0 0 12px;
   font: italic 400 28px/1.15 Fraunces, Georgia, serif;
-  color: #3F4E8C;
+  color: var(--noche);
 }
 .welcome-card p:not(.welcome-kicker) {
   margin: 0 0 22px;
@@ -305,9 +305,7 @@ body.bar .top { flex-direction: column; align-items: center; gap: 6px; }
 @media (max-width: 600px) { .logo.bar-logo { height: 58px; } }
 .bar-name {
   margin: 0;
-  font: 400 22px/1.1 var(--bar-font, 'Fraunces'), Georgia, serif;
-  font-style: var(--bar-style, italic);
-  text-transform: var(--bar-case, none);
+  font: italic 400 22px/1.1 'Fraunces', Georgia, serif;
   color: #fff;
 }
 body.bar .hint { bottom: calc(max(28px, env(safe-area-inset-bottom)) + 84px); }
@@ -345,12 +343,8 @@ body[data-bar]:not(.bar-ready) { background: #15171B; }
 body[data-bar]:not(.bar-ready) .top, body[data-bar]:not(.bar-ready) .carta-btn { opacity: 0; pointer-events: none; }
 body[data-bar] .top, body[data-bar] .carta-btn { transition: opacity .4s ease, transform .2s ease, background .2s; }
 /* luz desde arriba sobre el color del bar, con grano */
-body.bar {
-  background:
-    var(--grano),
-    radial-gradient(120% 80% at 50% 30%, color-mix(in srgb, var(--azul) 84%, white) 0%, var(--azul) 46%, color-mix(in srgb, var(--azul) 72%, black) 100%);
-  background-attachment: fixed;
-}
+/* el color del bar, liso y con grano de papel */
+body.bar { background: var(--grano), var(--azul); }
 body.bar .hint { font: 500 13px/1.3 var(--sans); letter-spacing: .02em; color: rgba(255, 255, 255, .74); }
 body.bar :focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 body.bar .carta :focus-visible { outline-color: var(--azul); }
@@ -405,13 +399,13 @@ body.bar #scene:focus-visible { outline: none; }
   padding: 10px 16px 10px 24px;
   border-bottom: 1px solid rgba(12, 14, 46, .1);
 }
-.carta-head h2 { margin: 0; font: 400 30px/1.1 var(--bar-font, 'Fraunces'), Georgia, serif; font-style: var(--bar-style, italic); text-transform: var(--bar-case, none); color: var(--azul); }
+.carta-head h2 { margin: 0; font: italic 400 30px/1.1 'Fraunces', Georgia, serif; color: var(--azul); }
 .carta-close { border-color: rgba(12, 14, 46, .25); color: var(--noche); width: 42px; height: 42px; }
 .carta-close:hover { background: rgba(12, 14, 46, .06); border-color: rgba(12, 14, 46, .5); }
 .carta-close:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; }
 .carta-body { overflow-y: auto; padding: 6px 24px 14px; overscroll-behavior: contain; }
 .carta-sec { padding: 14px 0 6px; }
-.carta-sec-title { margin: 0 0 4px; font: 400 23px/1.2 var(--bar-font, 'Fraunces'), Georgia, serif; font-style: var(--bar-style, italic); text-transform: var(--bar-case, none); color: var(--azul); }
+.carta-sec-title { margin: 0 0 4px; font: italic 400 23px/1.2 'Fraunces', Georgia, serif; color: var(--azul); }
 .carta-list { list-style: none; margin: 0; padding: 0; }
 .carta-item { padding: 10px 0; border-bottom: 1px solid rgba(12, 14, 46, .08); }
 .carta-item:last-child { border-bottom: 0; }
@@ -422,34 +416,13 @@ body.bar #scene:focus-visible { outline: none; }
 .carta-price { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .carta-al { margin: 4px 0 0; font: 400 13px/1.4 var(--sans); color: rgba(12, 14, 46, .68); }
 .agotado .carta-name, .agotado .carta-price { text-decoration: line-through; color: rgba(12, 14, 46, .45); }
-.carta-out {
-  display: inline-block;
-  margin-right: 8px;
-  padding: 2px 6px 1px;
-  border-radius: 4px;
-  background: #A4262C;
-  color: #fff;
-  font-weight: 600;
-  font-size: 10.5px;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  vertical-align: 1px;
-}
-.carta-tag {
-  display: inline-block;
-  margin-right: 8px;
-  padding: 2px 6px 1px;
-  border-radius: 4px;
-  font-weight: 600;
-  font-size: 10.5px;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  vertical-align: 1px;
-  color: #fff;
-  background: var(--azul);
-}
-.tag-fuera { background: #6B4226; }
-.tag-estrella { background: #9A6B12; }
+/* lo de cada plato se dice con texto, sin cápsulas: el color del bar para lo suyo y rojo solo
+   para lo agotado, que es lo único que el cliente tiene que ver sí o sí */
+.carta-out, .carta-tag { font-weight: 600; }
+.carta-out { color: #A4262C; }
+.carta-tag { color: var(--azul); }
+.carta-out::after, .carta-tag::after { content: ' · '; font-weight: 400; color: rgba(12, 14, 46, .45); }
+.tag-estrella::before { content: '★ '; }
 .carta-hoy {
   margin: 8px -12px 4px;
   padding: 14px 12px 6px;
@@ -555,7 +528,7 @@ body.bar #scene:focus-visible { outline: none; }
 .foto-grande.open .foto-card { transform: none; }
 .foto-card img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 2px; background: #EFE9DC; }
 .foto-card figcaption { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; margin-top: 14px; }
-.foto-name { margin: 0; font: 400 24px/1.15 var(--bar-font, 'Fraunces'), Georgia, serif; font-style: var(--bar-style, italic); text-transform: var(--bar-case, none); }
+.foto-name { margin: 0; font: italic 400 24px/1.15 'Fraunces', Georgia, serif; }
 .foto-price { margin: 0; font: 700 18px/1 var(--sans); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .foto-card .foto-al { margin-top: 8px; }
 @media (prefers-reduced-motion: reduce) {
