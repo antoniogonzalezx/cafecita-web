@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { gsap } from 'gsap';
-import { paintNapkin, paintStory, wrinkle, barFlap, BAR_INK } from './napkin.js?v=21';
+import { paintNapkin, paintStory, wrinkle, barFlap, tintaDe } from './napkin.js?v=24';
 import * as sound from './sound.js?v=13';
 import { medir, visita, API } from './medir.js?v=14';
 import { loadBar, isPro, logoOf, logoImage, servilletas, titulo, DEFAULT_COLOR, LETRAS, letraCss } from './bar.js?v=7';
@@ -211,8 +211,8 @@ function nextNapkin() {
 }
 
 // la solapa se rotula con la tipografía de la marca y el logo en tinta
-// (en un bar, una sola tinta para todo: lo que escribe, la frase y el logo)
-const INK = BAR ? BAR_INK : '#4A6789';
+// (una sola tinta para todo, la del color del bar o la de cafecita: lo que escribe, la frase y el logo)
+const INK = tintaDe(BRAND); // en la portada, el azul de cafecita
 const logoSvg = fetch('logo.svg?v=2').then((r) => r.text());
 const logoIn = (color) => logoSvg.then(async (svg) => {
   const img = new Image();
@@ -226,7 +226,7 @@ const [inkLogo, paperLogo] = await Promise.all([
   barLogo ? logoImage(barLogo, INK) : logoIn(INK),
   barLogo ? logoImage(barLogo, '#F7F3EA') : logoIn('#F7F3EA'),
   document.fonts.load('italic 400 80px Fraunces').catch(() => {}),
-  document.fonts.load("700 40px 'Bricolage Grotesque'").catch(() => {}),
+  document.fonts.load("700 40px 'Rethink Sans'").catch(() => {}),
   BAR ? document.fonts.load(letraCss(LETRAS[LETRA], 60)).catch(() => {}) : null,
 ]);
 // (el color, la letra, la cabecera y la carta del bar los pone carta.js, que no espera al 3D)

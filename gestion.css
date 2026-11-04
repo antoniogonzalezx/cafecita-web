@@ -5,7 +5,7 @@
   --noche: #0C0E2E;
   --linea: rgba(12, 14, 46, .12);
   --suave: rgba(12, 14, 46, .6);
-  --sans: 'Bricolage Grotesque', system-ui, sans-serif;
+  --sans: 'Rethink Sans', system-ui, sans-serif;
   --boli: 'Fraunces', Georgia, serif;
   --boli-style: italic;
   --boli-case: none;
@@ -110,6 +110,8 @@ button, input, select { font: inherit; color: inherit; }
 .g-card h2 { margin: 0; font: 700 18px/1.2 var(--sans); }
 .g-sub { margin: 4px 0 0; color: var(--suave); font-size: 14px; }
 .g-note { margin: 12px 0 0; font-size: 13px; color: var(--suave); }
+.g-note a { color: var(--noche); font-weight: 600; text-underline-offset: 3px; }
+.g-btn.g-btn-seguir { margin-top: 14px; border-color: transparent; background: var(--brand); color: #fff; }
 
 .g-field { display: block; margin-top: 16px; }
 .g-field:first-child { margin-top: 0; }

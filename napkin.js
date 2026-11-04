@@ -8,7 +8,7 @@ const SCALE = 1.5;                 // más resolución que la foto para que la l
 const QUOTE = '#537393';           // los mismos azules que las servilletas de las citas
 const AUTHOR = '#415F7A';
 const SERIF = (s) => `italic 400 ${s}px Fraunces, Georgia, serif`;
-const SANS = (s, w = 700) => `${w} ${s}px 'Bricolage Grotesque', system-ui, sans-serif`;
+const SANS = (s, w = 700) => `${w} ${s}px 'Rethink Sans', system-ui, sans-serif`;
 
 const loadImg = (src) => new Promise((resolve, reject) => {
   const img = new Image();
@@ -156,6 +156,18 @@ export async function paintNapkin(canvas, item, { logo, ink = BAR_INK, letra = '
 const THANKS = 'Gracias por su visita';
 // la tinta de las servilletas de un bar: lo que escribe, la frase y su logo, todo del mismo boli
 export const BAR_INK = '#2F4C82';
+// La tinta es el color del bar. Si es muy claro (un amarillo, un rosa), se oscurece lo justo
+// para que se lea sobre el papel (contraste 4,5:1 con la servilleta, #F7F3EA).
+export function tintaDe(color) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(color || '');
+  if (!m) return BAR_INK;
+  let rgb = [0, 2, 4].map((i) => parseInt(m[1].slice(i, i + 2), 16));
+  const lum = (c) => c.map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; })
+    .reduce((s, v, i) => s + v * [0.2126, 0.7152, 0.0722][i], 0);
+  const PAPEL = lum([247, 243, 234]);
+  for (let k = 0; k < 40 && (PAPEL + 0.05) / (lum(rgb) + 0.05) < 4.5; k++) rgb = rgb.map((v) => v * 0.94);
+  return `#${rgb.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('')}`;
+}
 
 // La solapa de un bar: «Gracias por su visita» y, debajo, su logo (o CAFECITA, sin Pro).
 // Se mide lo que ocupa de verdad la frase, y entre ella y el logo siempre queda el mismo hueco:
@@ -203,16 +215,16 @@ function penWrap(g, text, maxW) {
   return best;
 }
 
-// Lo que escribe el bar, grande y cada línea un pelín torcida. Si una sugerencia no cabe en
-// una línea, sigue en la siguiente con sangría (detrás del guion).
+// Lo que escribe el bar, grande, centrado y cada línea un pelín torcida. Sin guiones: si hay
+// varias sugerencias, un poco de aire entre una y otra; si una no cabe, sigue en la línea de abajo.
 function penLines(g, rows, W, fy, ink, seed, title, letra) {
   if (!rows.length) return;
   const HAND = (sz) => letraCss(letra, sz);
   const rnd = prng(seed || 1);
   const up = (t) => (letra.caps ? t.toUpperCase() : t);
-  // con la letra de la frase, la raya tipográfica en vez del guion
-  const text = rows.map((r) => (letra.caps ? up(r) : r.replace(/^- /, '– ')));
-  const left = W * 0.1, maxW = W * 0.8, lh = 1.25, bottom = fy * 0.9;
+  // los datos traen «- » delante de cada sugerencia (bar.js); en la servilleta no se escribe
+  const text = rows.map((r) => up(r.replace(/^[-–] /, '')));
+  const maxW = W * 0.8, lh = 1.25, bottom = fy * 0.9;
   let top = fy * 0.09;
   // arriba, qué es: «SUGERENCIA DEL DÍA», «FUERA DE CARTA» o «LO MÁS PEDIDO», subrayado a mano
   if (title) {
@@ -224,46 +236,47 @@ function penLines(g, rows, W, fy, ink, seed, title, letra) {
     g.fillStyle = ink;
     g.textAlign = 'left';
     g.textBaseline = 'alphabetic';
-    const y = top + ts, tw = g.measureText(tt).width;
+    const tw = g.measureText(tt).width, tx = (W - tw) / 2, y = top + ts;
     g.globalAlpha = 0.95;
-    g.fillText(tt, left, y);
+    g.fillText(tt, tx, y);
     // el subrayado: un trazo algo torcido, más largo que la palabra, como quien lo hace deprisa
     g.strokeStyle = ink;
     g.lineCap = 'round';
     g.lineWidth = Math.max(2, W * 0.007);
     g.beginPath();
     const uy = y + ts * 0.32;
-    g.moveTo(left - W * 0.01, uy + ts * 0.04);
-    g.quadraticCurveTo(left + tw * 0.5, uy - ts * (0.06 + rnd() * 0.06), left + tw + W * 0.02, uy + ts * 0.02);
+    g.moveTo(tx - W * 0.01, uy + ts * 0.04);
+    g.quadraticCurveTo(tx + tw * 0.5, uy - ts * (0.06 + rnd() * 0.06), tx + tw + W * 0.02, uy + ts * 0.02);
     g.stroke();
     g.restore();
     top = uy + ts * 0.55;
   }
   // el tamaño más grande al que cada sugerencia cabe en una o dos líneas y todas caben en la servilleta
-  const min = Math.round(W * 0.05);
+  const min = Math.round(W * 0.05), aire = rows.length > 1 ? 0.35 : 0;
+  const alto = (ls, sz) => (ls.length * lh + (text.length - 1) * aire) * sz;
   let size = Math.round(W * 0.13 * letra.size), out = null;
   for (; size >= min && !out; size -= 2) {
     g.font = HAND(size);
-    const indent = g.measureText(letra.caps ? '- ' : '– ').width;
-    const wrapped = text.map((r) => penWrap(g, r, maxW - indent));
-    if (wrapped.some((x) => !x) || wrapped.flat().length * size * lh > bottom - top) continue;
-    out = wrapped.flatMap((ls) => ls.map((l, i) => ({ l, x: i ? indent : 0 })));
+    const wrapped = text.map((r) => penWrap(g, r, maxW));
+    if (wrapped.some((x) => !x) || alto(wrapped.flat(), size) > bottom - top) continue;
+    out = wrapped.flatMap((ls, n) => ls.map((l, i) => ({ l, otra: n > 0 && i === 0 })));
   }
   if (out) size += 2;
   else {
     // ni a la letra más pequeña: se corta por palabras, como sea
     size = min;
     g.font = HAND(size);
-    out = text.flatMap((r) => wrap(g, r, maxW).map((l, i) => ({ l, x: i ? W * 0.03 : 0 })));
+    out = text.flatMap((r, n) => wrap(g, r, maxW).map((l, i) => ({ l, otra: n > 0 && i === 0 })));
   }
   g.font = HAND(size);
-  g.textAlign = 'left';
+  g.textAlign = 'center';
   g.textBaseline = 'alphabetic';
   g.fillStyle = ink;
   let y = top + size;
-  for (const { l, x } of out) {
+  for (const { l, otra } of out) {
+    if (otra) y += size * aire;
     g.save();
-    g.translate(left + x + (rnd() - 0.5) * W * 0.015, y);
+    g.translate(W / 2 + (rnd() - 0.5) * W * 0.015, y);
     g.rotate((rnd() - 0.6) * 0.03);
     // dos pasadas: el rotulador deja más tinta en unos trazos que en otros
     g.globalAlpha = 0.9;
