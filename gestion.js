@@ -4,7 +4,7 @@
 // acceso y lo que cambia se guarda en el servidor; en la demo (Bar Manolo), en este navegador.
 // La vista previa de la derecha es su página de verdad, que se recarga al guardar.
 import { loadBar, saveBar, resetBar, entrar, guardarRemoto, isPro, logoOf, logoImage, servilletas, titulo, precio, ALERGENOS, COLORES, ACABADOS, TIPOS, DEFAULT_COLOR, LETRAS, letraCss, fotoUrl, prepararFoto, subirFoto } from './bar.js?v=8';
-import { paintNapkin, BAR_INK } from './napkin.js?v=21';
+import { paintNapkin, BAR_INK } from './napkin.js?v=23';
 import { medir } from './medir.js?v=14';
 
 const ID = document.body.dataset.bar;

@@ -2,7 +2,7 @@
 // La página para vender Cafecita a los bares: azul y blanco, poco texto y los azulejos como detalle.
 // La servilleta no es una foto: se pinta con el mismo código que el servilletero (napkin.js).
 // El QR de su esquina lleva a la demo.
-import { paintNapkin, BAR_INK } from './napkin.js?v=22';
+import { paintNapkin, BAR_INK } from './napkin.js?v=23';
 import { logoImage, LETRAS, letraCss } from './bar.js?v=8';
 import { qrSvg } from './qr.js?v=2';
 import { medir } from './medir.js?v=14';
@@ -42,7 +42,7 @@ const pintar = async (c) => {
   const s = SERVILLETAS[c.dataset.servilleta];
   if (!s || c.dataset.pintada) return;
   c.dataset.pintada = '1';
-  await paintNapkin(c, { kind: 'bar', id: s.id, title: s.title, lines: s.lines }, { logo: s.logo, ink: BAR_INK, centro: true });
+  await paintNapkin(c, { kind: 'bar', id: s.id, title: s.title, lines: s.lines }, { logo: s.logo, ink: BAR_INK });
   c.classList.add('lista');
 };
 const lazy = new IntersectionObserver((entries) => {
