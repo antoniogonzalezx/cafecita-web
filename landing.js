@@ -9,6 +9,21 @@ import { medir } from './medir.js?v=14';
 
 const $ = (id) => document.getElementById(id);
 
+// ---------- Pro: mensual o anual ----------
+const PAGOS = {
+  mes: { precio: '9,99 €', periodo: '/mes', nota: 'Sin permanencia. O 99 € al año.' },
+  ano: { precio: '99 €', periodo: '/año', nota: 'Sale a 8,25 € al mes: dos meses gratis.' },
+};
+for (const b of document.querySelectorAll('[data-pago]')) {
+  b.addEventListener('click', () => {
+    const p = PAGOS[b.dataset.pago];
+    for (const o of document.querySelectorAll('[data-pago]')) o.setAttribute('aria-pressed', String(o === b));
+    $('lPrecio').textContent = p.precio;
+    $('lPeriodo').textContent = p.periodo;
+    $('lNota').textContent = p.nota;
+  });
+}
+
 // ---------- Lo que caduca ----------
 // el piloto (Pro gratis hasta el 31 de enero) desaparece solo al día siguiente
 for (const e of document.querySelectorAll('[data-hasta]')) {

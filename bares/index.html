@@ -24,7 +24,7 @@
   <meta property="og:locale" content="es_ES" />
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="stylesheet" href="fonts/fonts.css?v=4" />
-  <link rel="stylesheet" href="landing.css?v=3" />
+  <link rel="stylesheet" href="landing.css?v=2" />
 </head>
 <body>
   <a class="l-skip" href="#main">Saltar al contenido</a>
@@ -36,85 +36,51 @@
     </a>
     <nav class="l-nav" aria-label="Secciones">
       <a href="/bares/#como">Cómo funciona</a>
-      <a href="/bares/#planes">Precios</a>
+      <a href="/bares/#planes">Planes</a>
       <a class="l-btn l-btn-sm" href="mailto:hola@cafecita.es?subject=Cafecita%20para%20mi%20bar">Escríbenos</a>
     </nav>
   </header>
 
   <main id="main">
-    <section class="l-hero" aria-labelledby="heroTitle">
+    <section class="l-hero">
       <div class="l-hero-copy">
-        <h1 id="heroTitle">Tu sugerencia del día, <em>en cada mesa.</em></h1>
+        <p class="l-kicker">Para bares, cafeterías y tabernas</p>
+        <h1>Tu sugerencia del día, <em>en cada mesa.</em></h1>
         <p class="l-lead">Una pegatina con un QR en la mesa. El cliente lo escanea, saca una servilleta y ve lo que tienes hoy y tu carta, con sus alérgenos. Tú lo cambias desde el móvil en un minuto.</p>
         <div class="l-ctas">
           <a class="l-btn" href="/barmanolo/?o=landing" data-medir="demo">Prueba la demo</a>
-          <a class="l-link" href="/bares/#planes">Ver los precios</a>
+          <a class="l-link" href="/bares/#planes">Ver los planes</a>
         </div>
-        <p class="l-facts">Sin descargar nada. Te lo dejamos montado. <span data-hasta="2027-01-31">Gratis hasta el 31 de enero.</span></p>
+        <ul class="l-facts">
+          <li>Gratis para empezar</li>
+          <li>Sin descargar nada</li>
+          <li>Te lo dejamos montado</li>
+        </ul>
       </div>
-
-      <div class="l-sobre" role="img" aria-label="Sobre la barra, un grifo de cerveza con su caña y el servilletero de Bar Manolo con la sugerencia del día: bocata de calamares, 6 euros">
-        <svg class="l-grifo" viewBox="0 0 150 330" aria-hidden="true" focusable="false">
-          <defs>
-            <linearGradient id="gCromo" x1="0" x2="1">
-              <stop offset="0" stop-color="#7E848E" /><stop offset=".3" stop-color="#F4F5F7" /><stop offset=".55" stop-color="#B9BEC7" /><stop offset=".8" stop-color="#E6E8EC" /><stop offset="1" stop-color="#787E88" />
-            </linearGradient>
-            <linearGradient id="gCromoV" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#F4F5F7" /><stop offset=".6" stop-color="#B9BEC7" /><stop offset="1" stop-color="#7E848E" />
-            </linearGradient>
-            <linearGradient id="gCerveza" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#F2B544" /><stop offset="1" stop-color="#C9781C" />
-            </linearGradient>
-            <linearGradient id="gVidrio" x1="0" x2="1">
-              <stop offset="0" stop-color="#fff" stop-opacity=".5" /><stop offset=".25" stop-color="#fff" stop-opacity="0" /><stop offset=".8" stop-color="#fff" stop-opacity="0" /><stop offset="1" stop-color="#fff" stop-opacity=".35" />
-            </linearGradient>
-          </defs>
-          <!-- la columna, el brazo y el grifo con su maneta -->
-          <ellipse cx="43" cy="324" rx="30" ry="6" fill="url(#gCromoV)" />
-          <rect x="30" y="64" width="26" height="258" rx="3" fill="url(#gCromo)" />
-          <rect x="28" y="54" width="92" height="24" rx="12" fill="url(#gCromoV)" />
-          <rect x="100" y="74" width="18" height="34" rx="3" fill="url(#gCromo)" />
-          <rect x="104" y="106" width="10" height="16" rx="2" fill="url(#gCromo)" />
-          <path d="M103 72 L105 16 Q109 9 113 16 L115 72 Z" fill="#0C0E2E" />
-          <rect x="105.5" y="28" width="7" height="22" rx="3" fill="#3F48F4" />
-          <rect x="100" y="66" width="18" height="9" rx="2" fill="url(#gCromo)" />
-          <!-- la caña -->
-          <path d="M88 188 L132 188 L128 322 L92 322 Z" fill="url(#gCerveza)" />
-          <path d="M88 188 L132 188 L131.2 212 L88.8 212 Z" fill="#FBF6EA" />
-          <path d="M86 184 Q110 172 134 184 L132 196 L88 196 Z" fill="#FFFDF7" />
-          <g fill="#FFF3D6" opacity=".7"><circle cx="100" cy="250" r="1.6" /><circle cx="114" cy="276" r="1.2" /><circle cx="106" cy="300" r="1.4" /><circle cx="120" cy="236" r="1.1" /></g>
-          <path d="M86 184 L134 184 L128 322 L92 322 Z" fill="url(#gVidrio)" />
-          <path d="M86 184 L134 184 L128 322 L92 322 Z" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.2" />
-        </svg>
-        <div class="l-servilletero">
-          <div class="l-ventana">
-            <canvas class="l-napkin" data-servilleta="hero"></canvas>
-          </div>
+      <figure class="l-hero-art">
+        <div class="l-stage">
+          <canvas class="l-napkin" data-servilleta="hero" role="img" aria-label="Servilleta de Bar Manolo con la sugerencia del día: bocata de calamares, 6 euros"></canvas>
           <div class="l-sticker" aria-hidden="true">
             <span class="l-qr" id="lQr"></span>
-            <span class="l-sticker-text">Escanéalo con el móvil</span>
+            <span class="l-sticker-text">Escanéalo<br />con el móvil</span>
           </div>
         </div>
-      </div>
-      <div class="l-barra" aria-hidden="true"></div>
-      <p class="l-pie">Bar Manolo, nuestro bar de demostración. <a href="/barmanolo/?o=landing" data-medir="demo">Ábrelo</a>.</p>
+        <figcaption>Bar Manolo, nuestro bar de demostración. <a href="/barmanolo/?o=landing" data-medir="demo">Ábrelo aquí</a>.</figcaption>
+      </figure>
     </section>
 
     <section class="l-section l-steps" id="como" aria-labelledby="comoTitle">
-      <div class="l-steps-head">
-        <h2 class="l-h2" id="comoTitle">De la mesa <em>a tu móvil.</em></h2>
-        <p class="l-sub">Lo montamos nosotros. Tú solo cambias lo de hoy.</p>
-      </div>
+      <h2 class="l-h2" id="comoTitle">Así funciona</h2>
       <ol class="l-steps-list">
         <li>
           <span class="l-num" aria-hidden="true">1</span>
-          <h3>Pegamos el QR en las mesas</h3>
-          <p>Te llevamos las pegatinas, o las imprimes tú desde tu gestión: para las mesas, un cartel para la barra y la carta en papel.</p>
+          <h3>Pegas el QR en las mesas</h3>
+          <p>Te llevamos las pegatinas o las imprimes tú desde tu gestión: para las mesas, un cartel para la barra y la carta en papel.</p>
         </li>
         <li>
           <span class="l-num" aria-hidden="true">2</span>
           <h3>El cliente saca una servilleta</h3>
-          <p>Desde su móvil y sin descargar nada. En cada servilleta, escrito a boli, lo que tienes hoy. Debajo, tu carta.</p>
+          <p>Desde su móvil, sin descargar nada. En cada servilleta, escrito a boli, lo que tienes hoy.</p>
         </li>
         <li>
           <span class="l-num" aria-hidden="true">3</span>
@@ -124,10 +90,10 @@
       </ol>
     </section>
 
-    <section class="l-tipos" aria-labelledby="tiposTitle">
+    <section class="l-section l-tipos" aria-labelledby="tiposTitle">
       <div class="l-tipos-copy">
-        <h2 class="l-h2" id="tiposTitle">Cada cosa, <em>en su servilleta.</em></h2>
-        <p>Rotulada como la escribiría tu camarero, y con el «Gracias por su visita» de siempre en la solapa.</p>
+        <h2 class="l-h2" id="tiposTitle">Cada cosa, en su servilleta.</h2>
+        <p>Rotulada a mano, como la escribiría tu camarero, y con el «Gracias por su visita» de siempre en la solapa.</p>
       </div>
       <div class="l-napkins">
         <figure>
@@ -136,45 +102,44 @@
         </figure>
         <figure>
           <canvas class="l-napkin" data-servilleta="fuera" role="img" aria-label="Servilleta con lo que hay fuera de carta"></canvas>
-          <figcaption>Lo de fuera de carta</figcaption>
+          <figcaption>Lo que hay fuera de carta</figcaption>
         </figure>
         <figure>
           <canvas class="l-napkin" data-servilleta="estrella" role="img" aria-label="Servilleta con lo más pedido"></canvas>
-          <figcaption>Lo más pedido</figcaption>
+          <figcaption>Lo más pedido de tu carta</figcaption>
         </figure>
       </div>
     </section>
 
     <section class="l-section l-carta" aria-labelledby="cartaTitle">
       <div>
-        <h2 class="l-h2" id="cartaTitle">Y tu carta, <em>con sus alérgenos.</em></h2>
+        <h2 class="l-h2" id="cartaTitle">Y tu carta, con sus alérgenos.</h2>
         <p class="l-sub">Debajo de las servilletas, la carta entera. Hecha para leerse en el móvil, de pie en la barra o sentado en la terraza.</p>
       </div>
       <dl class="l-rasgos">
         <div><dt>Los 14 alérgenos, plato a plato</dt><dd>Los marcas una vez y el cliente los ve siempre.</dd></div>
         <div><dt>Un filtro para quien tiene alergias</dt><dd>Sin gluten, sin lactosa, sin frutos secos… Lo que no puede tomar se aparta.</dd></div>
         <div><dt>Lo agotado, tachado</dt><dd>No desaparece de la carta: se ve que hoy ya no queda.</dd></div>
-        <div><dt>Fotos de tus platos</dt><dd>Con Pro, una foto en cada plato, como una polaroid grapada a la comanda.</dd></div>
+        <div><dt>Tus platos estrella</dt><dd>Los marcas con una estrella y salen en su propia servilleta.</dd></div>
       </dl>
     </section>
 
     <section class="l-section l-planes" id="planes" aria-labelledby="planesTitle">
-      <div class="l-planes-head">
-        <h2 class="l-h2" id="planesTitle">Precios</h2>
-        <p class="l-sub">Empieza gratis. Pásate a Pro cuando quieras que se vea tu marca.</p>
-      </div>
-      <div class="l-tablon" role="img" aria-label="Tablón de precios: Basic, gratis. Pro, 9,99 euros al mes. Pro al año, 99 euros. Precios sin IVA.">
-        <div class="l-tablon-in" aria-hidden="true">
-          <p><span>Basic</span><i></i><b>Gratis</b></p>
-          <p><span>Pro</span><i></i><b>9,99 €/mes</b></p>
-          <p><span>Pro, al año</span><i></i><b>99 €</b></p>
-          <span class="l-tablon-nota">Precios sin IVA · Sin permanencia</span>
+      <header class="l-planes-head">
+        <div>
+          <h2 class="l-h2" id="planesTitle">Planes</h2>
+          <p class="l-sub">Empieza gratis. Pásate a Pro cuando quieras que se vea tu marca.</p>
         </div>
-      </div>
+        <div class="l-toggle" role="group" aria-label="Forma de pago de Pro">
+          <button type="button" data-pago="mes" aria-pressed="true">Mensual</button>
+          <button type="button" data-pago="ano" aria-pressed="false">Anual <span>2 meses gratis</span></button>
+        </div>
+      </header>
       <div class="l-plans">
         <article class="l-plan">
           <div class="l-plan-top">
             <h3>Basic</h3>
+            <p class="l-price"><b>Gratis</b></p>
             <p class="l-plan-sub">Para siempre, sin tarjeta.</p>
           </div>
           <canvas class="l-napkin l-plan-napkin" data-servilleta="basic" role="img" aria-label="Servilleta con el logo de Cafecita"></canvas>
@@ -190,9 +155,10 @@
         </article>
         <article class="l-plan l-plan-pro">
           <div class="l-plan-top">
-            <h3>Pro</h3>
-            <p class="l-plan-sub">9,99 € al mes, o 99 € al año: dos meses gratis.</p>
-            <p class="l-promo" data-hasta="2027-01-31">Gratis hasta el 31 de enero si empiezas ahora.</p>
+            <h3>Pro <span class="l-flag">Con tu marca</span></h3>
+            <p class="l-price"><b id="lPrecio">9,99 €</b><span id="lPeriodo">/mes</span></p>
+            <p class="l-plan-sub" id="lNota">Sin permanencia. O 99 € al año.</p>
+            <p class="l-promo" data-hasta="2027-01-31">Gratis hasta el 31 de enero si empiezas ahora</p>
           </div>
           <canvas class="l-napkin l-plan-napkin" data-servilleta="pro" role="img" aria-label="Servilleta con el logo de Bar Manolo"></canvas>
           <ul class="l-feats">
@@ -200,16 +166,17 @@
             <li>Tu logo en las servilletas y en tu página</li>
             <li>Tu color, de arriba abajo</li>
             <li>El servilletero en inox, blanco o negro</li>
-            <li>Fotos de tus platos en la carta</li>
+            <li>Cuatro letras para tus servilletas</li>
             <li>Imprimibles con tu marca y sin anuncios</li>
           </ul>
-          <a class="l-btn" href="mailto:hola@cafecita.es?subject=Quiero%20Cafecita%20Pro%20para%20mi%20bar">Quiero Pro</a>
+          <a class="l-btn l-btn-light" href="mailto:hola@cafecita.es?subject=Quiero%20Cafecita%20Pro%20para%20mi%20bar">Quiero Pro</a>
         </article>
       </div>
+      <p class="l-fine">Precios sin IVA.</p>
     </section>
 
     <section class="l-section l-faq" aria-labelledby="faqTitle">
-      <h2 class="l-h2" id="faqTitle">Lo que nos preguntan <em>en la barra.</em></h2>
+      <h2 class="l-h2" id="faqTitle">Preguntas</h2>
       <dl class="l-faq-list">
         <div><dt>¿Mis clientes tienen que descargarse algo?</dt><dd>No. Abren la cámara, apuntan al QR y ya está. Y quien no quiera, sigue teniendo la carta en papel.</dd></div>
         <div><dt>¿Y si no tengo tiempo de cambiarlo cada día?</dt><dd>La carta no cambia y la servilleta de lo más pedido sale sola. Cambiar la sugerencia es un minuto, y si un día no puedes, nos la mandas y la ponemos nosotros.</dd></div>
@@ -221,26 +188,21 @@
     </section>
 
     <section class="l-cta" aria-labelledby="ctaTitle">
-      <div class="l-cta-in">
-        <h2 id="ctaTitle">¿Te lo enseñamos <em>en tu bar?</em></h2>
-        <p>Pasamos por tu bar, te lo dejamos montado en un rato y al día siguiente te traemos las pegatinas.</p>
-        <a class="l-btn l-btn-light" href="mailto:hola@cafecita.es?subject=Cafecita%20para%20mi%20bar">Escríbenos a hola@cafecita.es</a>
-      </div>
+      <h2 id="ctaTitle">¿Te lo enseñamos <em>en tu bar?</em></h2>
+      <p>Pasamos por tu bar, te lo dejamos montado en un rato y al día siguiente te traemos las pegatinas.</p>
+      <a class="l-btn l-btn-light" href="mailto:hola@cafecita.es?subject=Cafecita%20para%20mi%20bar">Escríbenos a hola@cafecita.es</a>
     </section>
   </main>
 
   <footer class="l-foot">
-    <div class="l-foot-zocalo" aria-hidden="true"></div>
-    <div class="l-foot-in">
-      <p class="l-foot-brand"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 -1322 9047 1349" fill="currentColor"><path d="M658-398L658-398Q668-398 676-403L676-403L676-494Q744-540 866.5-569Q989-598 1105-598L1105-598Q1158-544 1193.5-436.5Q1229-329 1231-242L1231-242Q1211-202 1163.5-156Q1116-110 1049-71L1049-71Q883 27 668 27L668 27Q360 27 183-152L183-152Q0-333 0-653.5Q0-974 200-1157L200-1157Q288-1239 405-1280.5Q522-1322 651-1322L651-1322Q903-1322 1064-1200Q1225-1078 1225-899L1225-899Q1225-764 1142-699.5Q1059-635 917-635L917-635Q839-635 760-673.5Q681-712 666-746L666-746Q666-828 669-875L669-875Q667-876 662-876L662-876L655-876Q640-876 631.5-867.5Q623-859 616.5-832Q610-805 610-685L610-685Q610-398 658-398ZM1903.5-657Q1911.5-649 1928.5-649Q1945.5-649 1957.5-656L1957.5-656Q1931.5-808 1922.5-836L1922.5-836Q1911.5-865 1889.5-865L1889.5-865Q1879.5-865 1865.5-859L1865.5-859L1903.5-657ZM1705.5-357L1705.5-357Q1695.5-343 1695.5-331L1695.5-331Q1695.5-302 1750.0-282.5Q1804.5-263 1882.5-258L1882.5-258Q1895.5-114 1910.5-94L1910.5-94Q1891.5-57 1805.5-19.5Q1719.5 18 1611.5 18L1611.5 18Q1468.5 18 1366.5-43.5Q1264.5-105 1264.5-202L1264.5-202Q1264.5-228 1269.5-248L1269.5-248L1482.5-1200Q1562.5-1251 1673.5-1280Q1784.5-1309 1904.5-1309L1904.5-1309Q2076.5-1309 2198.5-1251L2198.5-1251Q2337.5-1185 2367.5-1060L2367.5-1060L2595.5-117Q2491.5 18 2256.5 18L2256.5 18Q2142.5 18 2063.5-23Q1984.5-64 1971.5-140L1971.5-140L1949.5-262Q2009.5-263 2065.5-285Q2121.5-307 2121.5-331L2121.5-331Q2121.5-347 2108.5-357L2108.5-357Q2070.5-330 2015.5-316Q1960.5-302 1913.5-302L1913.5-302Q1778.5-302 1705.5-357ZM3184.0-329L3184.0-329L3184.0-76Q3138.0-36 3061.5-9Q2985.0 18 2875.5 18Q2766.0 18 2687.0-31L2687.0-31Q2600.0-84 2600.0-182L2600.0-182L2600.0-1198Q2600.0-1290 3051.0-1290L3051.0-1290L3638.0-1290Q3667.0-1237 3681.0-1171.5Q3695.0-1106 3695.0-1054L3695.0-1054Q3695.0-825 3494.0-825L3494.0-825L3148.0-825Q3110.0-825 3110.0-793L3110.0-793L3110.0-786Q3110.0-780 3112.0-778L3112.0-778L3554.0-778Q3605.0-691 3605.0-582L3605.0-582Q3605.0-446 3544.0-370L3544.0-370L3054.0-370Q3046.0-362 3046.0-352L3046.0-352Q3046.0-336 3070.5-333Q3095.0-330 3126.0-330Q3157.0-330 3184.0-329ZM4173.5-1290L4173.5-1290L4750.5-1290Q4779.5-1242 4793.5-1185.5Q4807.5-1129 4807.5-1084L4807.5-1084Q4807.5-983 4768.0-932Q4728.5-881 4657.5-881L4657.5-881L4254.5-881Q4217.5-881 4217.5-852L4217.5-852L4217.5-844Q4217.5-838 4219.5-836L4219.5-836L4697.5-836Q4715.5-805 4728.5-758L4728.5-758Q4740.5-707 4740.5-667L4740.5-667Q4740.5-548 4696.5-481L4696.5-481L4479.5-481Q4327.5-481 4273.5-469.5Q4219.5-458 4206.5-450L4206.5-450Q4193.5-441 4193.5-427Q4193.5-413 4207.5-405L4207.5-405Q4259.5-422 4316.5-429L4316.5-429Q4391.5-436 4479.5-436L4479.5-436L4760.5-436Q4821.5-350 4821.5-229L4821.5-229Q4821.5-161 4804.5-99Q4787.5-37 4753.5 1L4753.5 1L4004.5 1Q3880.5 1 3805.5-59L3805.5-59Q3723.5-123 3723.5-247L3723.5-247L3723.5-1198Q3723.5-1246 3833.5-1268Q3943.5-1290 4173.5-1290ZM5448.0-398L5448.0-398Q5458.0-398 5466.0-403L5466.0-403L5466.0-494Q5534.0-540 5656.5-569Q5779.0-598 5895.0-598L5895.0-598Q5948.0-544 5983.5-436.5Q6019.0-329 6021.0-242L6021.0-242Q6001.0-202 5953.5-156Q5906.0-110 5839.0-71L5839.0-71Q5673.0 27 5458.0 27L5458.0 27Q5150.0 27 4973.0-152L4973.0-152Q4790.0-333 4790.0-653.5Q4790.0-974 4990.0-1157L4990.0-1157Q5078.0-1239 5195.0-1280.5Q5312.0-1322 5441.0-1322L5441.0-1322Q5693.0-1322 5854.0-1200Q6015.0-1078 6015.0-899L6015.0-899Q6015.0-764 5932.0-699.5Q5849.0-635 5707.0-635L5707.0-635Q5629.0-635 5550.0-673.5Q5471.0-712 5456.0-746L5456.0-746Q5456.0-828 5459.0-875L5459.0-875Q5457.0-876 5452.0-876L5452.0-876L5445.0-876Q5430.0-876 5421.5-867.5Q5413.0-859 5406.5-832Q5400.0-805 5400.0-685L5400.0-685Q5400.0-398 5448.0-398ZM6624.5-1109L6624.5-1109L6624.5-76Q6578.5-36 6501.5-9Q6424.5 18 6314.5 18Q6204.5 18 6127.5-31L6127.5-31Q6040.5-84 6040.5-181L6040.5-181L6040.5-1214Q6086.5-1254 6163.5-1281Q6240.5-1308 6349.5-1308Q6458.5-1308 6538.5-1260L6538.5-1260Q6624.5-1205 6624.5-1109ZM7498.0-779L7567.0-779L7567.0-76Q7521.0-36 7444.0-9Q7367.0 18 7257.0 18Q7147.0 18 7070.0-31L7070.0-31Q6983.0-84 6983.0-181L6983.0-181L6983.0-825L6750.0-825Q6678.0-928 6678.0-1050L6678.0-1050Q6678.0-1133 6704.5-1194.5Q6731.0-1256 6770.0-1290L6770.0-1290L7804.0-1290Q7833.0-1245 7852.0-1181Q7871.0-1117 7871.0-1054L7871.0-1054Q7871.0-936 7819.0-880.5Q7767.0-825 7679.0-825L7679.0-825L7386.0-825Q7383.0-818 7383.0-810L7383.0-810Q7383.0-792 7404.0-786L7404.0-786Q7426.0-779 7498.0-779L7498.0-779ZM8354.5-657Q8362.5-649 8379.5-649Q8396.5-649 8408.5-656L8408.5-656Q8382.5-808 8373.5-836L8373.5-836Q8362.5-865 8340.5-865L8340.5-865Q8330.5-865 8316.5-859L8316.5-859L8354.5-657ZM8156.5-357L8156.5-357Q8146.5-343 8146.5-331L8146.5-331Q8146.5-302 8201.0-282.5Q8255.5-263 8333.5-258L8333.5-258Q8346.5-114 8361.5-94L8361.5-94Q8342.5-57 8256.5-19.5Q8170.5 18 8062.5 18L8062.5 18Q7919.5 18 7817.5-43.5Q7715.5-105 7715.5-202L7715.5-202Q7715.5-228 7720.5-248L7720.5-248L7933.5-1200Q8013.5-1251 8124.5-1280Q8235.5-1309 8355.5-1309L8355.5-1309Q8527.5-1309 8649.5-1251L8649.5-1251Q8788.5-1185 8818.5-1060L8818.5-1060L9046.5-117Q8942.5 18 8707.5 18L8707.5 18Q8593.5 18 8514.5-23Q8435.5-64 8422.5-140L8422.5-140L8400.5-262Q8460.5-263 8516.5-285Q8572.5-307 8572.5-331L8572.5-331Q8572.5-347 8559.5-357L8559.5-357Q8521.5-330 8466.5-316Q8411.5-302 8364.5-302L8364.5-302Q8229.5-302 8156.5-357Z"/></svg><span>Hecho en Valdepeñas</span></p>
-      <nav aria-label="Enlaces">
-        <a href="/">El servilletero de noticias</a>
-        <a href="/barmanolo/?o=landing">La demo</a>
-        <a href="mailto:hola@cafecita.es">hola@cafecita.es</a>
-      </nav>
-    </div>
+    <p class="l-foot-brand">CAFECITA <span>Hecho en Valdepeñas</span></p>
+    <nav aria-label="Enlaces">
+      <a href="/">El servilletero de noticias</a>
+      <a href="/barmanolo/?o=landing">La demo</a>
+      <a href="mailto:hola@cafecita.es">hola@cafecita.es</a>
+    </nav>
   </footer>
 
-  <script type="module" src="landing.js?v=4"></script>
+  <script type="module" src="landing.js?v=3"></script>
 </body>
 </html>
