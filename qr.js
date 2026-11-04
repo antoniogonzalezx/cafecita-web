@@ -1,14 +1,18 @@
 // ---------- Códigos QR, sin librerías ----------
 // Lo justo para los enlaces de los bares (cafecita.app/<bar>/?o=…): modo byte (UTF-8),
 // corrección de errores M (aguanta ~15 % de daño: una pegatina con una mancha sigue leyéndose)
-// y versiones 1 a 6 (hasta 106 bytes), así que no hace falta el bloque de versión.
+// o H (~30 %: deja tapar el centro con el aspa) y versiones 1 a 6, así que no hace falta el
+// bloque de versión.
 // Sigue la norma ISO/IEC 18004: Reed-Solomon sobre GF(256), patrones fijos, colocación en
 // zigzag y la máscara con menos penalización.
 
-// por versión (1…6), con corrección M: codewords totales, de corrección por bloque y bloques
+// por versión (1…6): codewords totales y, por nivel de corrección, los de corrección por bloque y los bloques
 const RAW = [0, 26, 44, 70, 100, 134, 172];
-const ECC = [0, 10, 16, 26, 18, 24, 16];
-const BLOCKS = [0, 1, 1, 1, 2, 2, 4];
+const NIVELES = {
+  M: { bits: 0b00, ecc: [0, 10, 16, 26, 18, 24, 16], blocks: [0, 1, 1, 1, 2, 2, 4] },
+  H: { bits: 0b10, ecc: [0, 17, 28, 22, 16, 22, 28], blocks: [0, 1, 1, 2, 4, 4, 4] },
+};
+const datos = (v, n) => RAW[v] - n.ecc[v] * n.blocks[v];
 const ALIGN = [null, [], [6, 18], [6, 22], [6, 26], [6, 30], [6, 34]];
 
 // GF(256) con el polinomio 0x11D
@@ -44,8 +48,8 @@ function rsRemainder(data, divisor) {
 }
 
 // los datos: modo byte, longitud, bytes, terminador y relleno, y luego la corrección por bloques
-function codewords(bytes, ver) {
-  const dataLen = RAW[ver] - ECC[ver] * BLOCKS[ver];
+function codewords(bytes, ver, nivel) {
+  const ECC = nivel.ecc[ver], BLOCKS = nivel.blocks[ver], dataLen = datos(ver, nivel);
   const bits = [];
   const put = (val, n) => { for (let i = n - 1; i >= 0; i--) bits.push((val >>> i) & 1); };
   put(0b0100, 4);
@@ -56,15 +60,16 @@ function codewords(bytes, ver) {
   const data = [];
   for (let i = 0; i < bits.length; i += 8) data.push(bits.slice(i, i + 8).reduce((a, b) => (a << 1) | b, 0));
   for (let pad = 0xec; data.length < dataLen; pad ^= 0xec ^ 0x11) data.push(pad);
-  // con corrección M y versiones 1…6 todos los bloques miden lo mismo
-  const per = dataLen / BLOCKS[ver], div = rsDivisor(ECC[ver]), blocks = [];
-  for (let b = 0; b < BLOCKS[ver]; b++) {
-    const d = data.slice(b * per, (b + 1) * per);
+  // los bloques cortos van primero; los largos (versión 5 con H) llevan un codeword más
+  const short = Math.floor(dataLen / BLOCKS), largos = dataLen % BLOCKS, div = rsDivisor(ECC), blocks = [];
+  for (let b = 0, at = 0; b < BLOCKS; b++) {
+    const len = short + (b >= BLOCKS - largos ? 1 : 0), d = data.slice(at, at + len);
+    at += len;
     blocks.push({ d, e: rsRemainder(d, div) });
   }
   const out = [];
-  for (let i = 0; i < per; i++) for (const bl of blocks) out.push(bl.d[i]);
-  for (let i = 0; i < ECC[ver]; i++) for (const bl of blocks) out.push(bl.e[i]);
+  for (let i = 0; i <= short; i++) for (const bl of blocks) if (i < bl.d.length) out.push(bl.d[i]);
+  for (let i = 0; i < ECC; i++) for (const bl of blocks) out.push(bl.e[i]);
   return out;
 }
 
@@ -79,7 +84,7 @@ const MASKS = [
   (x, y) => (((x + y) % 2) + ((x * y) % 3)) % 2 === 0,
 ];
 
-function build(ver, words, mask) {
+function build(ver, words, mask, nivel) {
   const size = 17 + 4 * ver;
   const m = Array.from({ length: size }, () => new Array(size).fill(false));
   const fn = Array.from({ length: size }, () => new Array(size).fill(false));
@@ -99,8 +104,8 @@ function build(ver, words, mask) {
     if ((i === 0 && j === 0) || (i === 0 && j === pos.length - 1) || (i === pos.length - 1 && j === 0)) continue;
     for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) set(pos[i] + dx, pos[j] + dy, Math.max(Math.abs(dx), Math.abs(dy)) !== 1);
   }
-  // la información de formato (corrección M = 00, y la máscara), con su BCH, en sus dos copias
-  const data = mask;
+  // la información de formato (el nivel de corrección y la máscara), con su BCH, en sus dos copias
+  const data = (nivel.bits << 3) | mask;
   let rem = data;
   for (let i = 0; i < 10; i++) rem = (rem << 1) ^ ((rem >>> 9) * 0x537);
   const f = ((data << 10) | rem) ^ 0x5412;
@@ -148,24 +153,37 @@ function penalty(m) {
   return p + Math.floor(Math.abs(dark * 20 - n * n * 10) / (n * n)) * 10;
 }
 
-// La matriz del QR para un texto: true = módulo oscuro
-export function qrMatrix(text) {
-  const bytes = [...new TextEncoder().encode(text)];
-  const ver = [1, 2, 3, 4, 5, 6].find((v) => RAW[v] - ECC[v] * BLOCKS[v] - 2 >= bytes.length);
-  if (!ver) throw new Error('QR: el enlace es demasiado largo');
-  const words = codewords(bytes, ver);
+// La matriz del QR para un texto (true = módulo oscuro), o null si no cabe con ese nivel
+export function qrMatrix(text, ec = 'M') {
+  const nivel = NIVELES[ec], bytes = [...new TextEncoder().encode(text)];
+  const ver = [1, 2, 3, 4, 5, 6].find((v) => datos(v, nivel) - 2 >= bytes.length);
+  if (!ver) {
+    if (ec === 'M') throw new Error('QR: el enlace es demasiado largo');
+    return null;
+  }
+  const words = codewords(bytes, ver, nivel);
   let best = null, bestP = Infinity;
   for (let mask = 0; mask < 8; mask++) {
-    const m = build(ver, words, mask), p = penalty(m);
+    const m = build(ver, words, mask, nivel), p = penalty(m);
     if (p < bestP) { bestP = p; best = m; }
   }
   return best;
 }
 
-// El QR como SVG de un color, con su margen (4 módulos, lo que pide la norma)
-export function qrSvg(text, color = '#000') {
-  const m = qrMatrix(text), n = m.length, q = 4;
+// El QR como SVG de un color, con su margen (4 módulos, lo que pide la norma).
+// centro: el dibujo (cuadro de -32 a 32) que va en un hueco en el centro; para eso el QR se
+// hace con corrección H y el hueco no pasa de un 7 % de los módulos. Si el enlace no cabe con H,
+// sale sin dibujo.
+export function qrSvg(text, color = '#000', { centro = null } = {}) {
+  const mH = centro ? qrMatrix(text, 'H') : null, m = mH || qrMatrix(text), n = m.length, q = 4;
+  let k = 0;
+  if (mH) { k = Math.round(n * .26); if (k % 2 === 0) k++; }
+  const h0 = (n - k) / 2;
   let d = '';
-  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (m[y][x]) d += `M${x + q} ${y + q}h1v1h-1z`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${n + 2 * q} ${n + 2 * q}" shape-rendering="crispEdges" role="img"><path fill="${color}" d="${d}"/></svg>`;
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    if (k && x >= h0 && x < h0 + k && y >= h0 && y < h0 + k) continue;
+    if (m[y][x]) d += `M${x + q} ${y + q}h1v1h-1z`;
+  }
+  const dibujo = k ? `<svg x="${h0 + q + .5}" y="${h0 + q + .5}" width="${k - 1}" height="${k - 1}" viewBox="-32 -32 64 64" overflow="hidden"><g fill="${color}" color="${color}">${centro}</g></svg>` : '';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${n + 2 * q} ${n + 2 * q}" role="img"><path fill="${color}" shape-rendering="crispEdges" d="${d}"/>${dibujo}</svg>`;
 }

@@ -29,13 +29,14 @@ html, body {
   user-select: none;
 }
 
-/* ---------- Carga: silueta del servilletero hasta que llega el modelo 3D ---------- */
+/* ---------- Carga: la pared se llena y el logo se monta (carga.js) ---------- */
+/* Mientras llega el servilletero, una franja de tres filas de azulejos (con el fondo de la
+   servilleta y muy tenues) se va llenando de uno en uno; en el hueco del centro, el logo aparece
+   y desaparece. En la página de un bar no hay hueco: su logo ya está arriba. */
 #scene { transition: opacity .6s ease; }
 .loading #scene { opacity: 0; }
 
-.skeleton {
-  /* misma escala que la cámara de main.js: el alto de la escena es 2,1 × el servilletero */
-  --s: min(100vh / 25.3, 100vw / 19.8);
+.carga {
   position: fixed;
   inset: 0;
   z-index: 1;
@@ -44,39 +45,22 @@ html, body {
   pointer-events: none;
   transition: opacity .5s ease;
 }
-@supports (height: 100dvh) { .skeleton { --s: min(100dvh / 25.3, 100vw / 19.8); } }
-body:not(.loading) .skeleton { opacity: 0; }
-
-.skeleton-box {
-  position: relative;
-  width: calc(var(--s) * 12);
-  height: calc(var(--s) * 12.8);
-  border-radius: calc(var(--s) * .35);
-  background: rgba(255, 255, 255, .14);
-  overflow: hidden;
-}
-.skeleton-side {
-  position: absolute;
-  inset: 0 74% 0 0;
-  background: rgba(12, 14, 46, .1);
-}
-.skeleton-napkin {
-  position: absolute;
-  top: 7%; bottom: 5%; left: 39%; right: 3%;
-  border-radius: calc(var(--s) * .12);
-  background: rgba(255, 255, 255, .2);
-}
-.skeleton-box::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, .22) 50%, transparent 70%);
-  transform: translateX(-100%);
-  animation: skeleton-shine 1.6s ease-in-out infinite;
-}
-@keyframes skeleton-shine { to { transform: translateX(100%); } }
+body:not(.loading) .carga { opacity: 0; }
+.carga-franja { position: relative; width: 100%; }
+.carga-franja > svg { display: block; width: 100%; }
+.carga .az { opacity: 0; transition: opacity .7s ease; }
+.carga .az.on { opacity: .28; }
+.carga-franja.vacia .az { opacity: 0; transition-duration: .9s; }
+.carga-logo { position: absolute; left: 50%; top: 50%; translate: -50% -50%; height: clamp(30px, 5.4vw, 44px); color: #F7F3EA; }
+.carga-logo svg { display: block; height: 100%; width: auto; }
+/* el aspa va en su propio grupo: la animación no pisa la posición del dibujo */
+.carga-logo .aspa { transform-box: fill-box; transform-origin: center; animation: carga-aspa 3.2s cubic-bezier(.2, .8, .2, 1) infinite both; }
+.carga-logo svg > path { animation: carga-palabra 3.2s cubic-bezier(.2, .8, .2, 1) .18s infinite both; }
+@keyframes carga-aspa { 0% { opacity: 0; transform: rotate(-90deg) scale(.6); } 22%, 72% { opacity: 1; transform: none; } 92%, 100% { opacity: 0; transform: scale(.96); } }
+@keyframes carga-palabra { 0%, 6% { opacity: 0; } 26%, 70% { opacity: 1; } 90%, 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
-  .skeleton-box::after { animation: none; display: none; }
+  .carga-logo .aspa, .carga-logo svg > path { animation: none; }
+  .carga .az { opacity: .28; transition: none; }
 }
 
 .top {

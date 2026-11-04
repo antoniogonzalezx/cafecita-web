@@ -4,7 +4,8 @@
 // OCU tiene que seguir existiendo aunque haya QR. Se imprime o se guarda en PDF desde el navegador.
 // Cada QR lleva ?o= para saber de dónde viene la visita (mesa, barra o carta).
 import { loadBar, isPro, logoOf, logoImage, renderCarta, DEFAULT_COLOR, LETRAS } from './bar.js?v=8';
-import { qrSvg } from './qr.js?v=1';
+import { qrSvg } from './qr.js?v=2';
+import { ASPA, AZUL, mosaico } from './marca.js?v=1';
 
 const $ = (id) => document.getElementById(id);
 const ID = document.body.dataset.bar;
@@ -27,7 +28,7 @@ const ALERGIAS = 'Alérgenos: en la carta o pregunta al personal';
 
 // el logo del bar con Pro; sin Pro, CAFECITA y su nombre
 const logo = pro ? await logoOf(bar).catch(() => null) : null;
-const cafecita = { svg: await fetch('logo.svg').then((r) => r.text()) };
+const cafecita = { svg: await fetch('logo.svg?v=2').then((r) => r.text()) };
 const marca = async (tinta, cls) => {
   const box = document.createElement('div');
   box.className = `p-marca ${cls}`;
@@ -47,9 +48,10 @@ const html = (tag, cls, text) => {
   if (text != null) e.textContent = text;
   return e;
 };
-const qr = (o, tinta) => {
+// el QR, en el azul de Cafecita y con el aspa en el centro
+const qr = (o) => {
   const box = html('div', 'p-qr');
-  box.innerHTML = qrSvg(url(o), tinta); // SVG generado aquí mismo (qr.js), sin datos de fuera
+  box.innerHTML = qrSvg(url(o), AZUL, { centro: ASPA }); // SVG generado aquí mismo (qr.js), sin datos de fuera
   box.firstChild.setAttribute('aria-label', `QR a ${short}`);
   return box;
 };
@@ -68,12 +70,21 @@ function sheet(cls, label) {
 async function mesas() {
   const [hojaEl, hoja] = sheet('mesas', 'Pegatinas para las mesas');
   const ink = getComputedStyle(document.documentElement).getPropertyValue('--brand').trim();
+  // con Basic, un marco de azulejos alrededor; con Pro, si el bar no lo ha quitado
+  const conMarco = !pro || bar.marca.marcoQr !== false;
   for (let i = 0; i < 6; i++) {
-    const p = html('article', 'pegatina');
-    p.append(await marca(ink, 'p-marca-peq'), qr('qr-mesa', '#16171C'),
+    const p = html('article', `pegatina${conMarco ? ' con-marco' : ''}`);
+    if (conMarco) {
+      const m = html('div', 'p-marco');
+      m.innerHTML = mosaico({ cols: 13, filas: 13, semilla: 5 + i, celdas: (x, y) => x === 0 || y === 0 || x === 12 || y === 12 });
+      p.append(m);
+    }
+    const dentro = html('div', 'p-in');
+    dentro.append(await marca(ink, 'p-marca-peq'), qr('qr-mesa'),
       html('p', 'p-titulo', 'La carta y lo de hoy'),
       html('p', 'p-sub', 'Escanea con la cámara del móvil'),
       html('p', 'p-legal', ALERGIAS));
+    p.append(dentro);
     hoja.append(p);
   }
   return [hojaEl];
@@ -82,7 +93,7 @@ async function mesas() {
 async function barra() {
   const [hojaEl, hoja] = sheet('barra', 'Cartel para la barra');
   const serv = html('div', 'p-servilleta');
-  serv.append(html('p', 'p-kicker', 'Saca una servilleta'), qr('qr-barra', '#16171C'), html('p', 'p-url', short));
+  serv.append(html('p', 'p-kicker', 'Saca una servilleta'), qr('qr-barra'), html('p', 'p-url', short));
   hoja.append(await marca('#F7F3EA', 'p-marca-grande'),
     html('h1', 'p-cartel', 'Lo de hoy, en una servilleta'),
     html('p', 'p-cartel-sub', 'La sugerencia del día, lo de fuera de carta y la carta entera, en tu móvil.'),
@@ -102,7 +113,7 @@ async function carta() {
   txt.append(html('p', null, 'Si tienes alguna alergia o intolerancia alimentaria, díselo al personal antes de pedir.'),
     html('p', null, 'Informamos de los 14 alérgenos del Reglamento (UE) 1169/2011.'),
     html('p', 'pc-digital', `Carta digital y lo de hoy: ${short}`));
-  foot.append(txt, qr('qr-carta', '#16171C'));
+  foot.append(txt, qr('qr-carta'));
   hoja.append(head, body, foot);
   return [hojaEl];
 }

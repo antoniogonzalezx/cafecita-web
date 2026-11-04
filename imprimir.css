@@ -96,6 +96,19 @@ button { font: inherit; }
   background: var(--papel) var(--grano);
   text-align: center;
 }
+.pegatina { position: relative; overflow: hidden; }
+.p-in { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; }
+/* el marco de azulejos (Basic, o Pro si no lo quita): una fila de 13 alrededor */
+.p-marco { position: absolute; inset: 0; }
+.p-marco svg { display: block; width: 100%; height: 100%; }
+.con-marco { padding: 0; }
+.con-marco .p-in { width: calc(100% - 6.24cqw); height: calc(100% - 6.24cqw); margin: 3.12cqw; border-radius: .6cqw; background: var(--papel); padding: .8cqw 1cqw; }
+.con-marco .p-qr { width: 14.5cqw; margin: .7cqw 0 .6cqw; padding: .4cqw; }
+.con-marco .p-marca-peq img { height: 3.2cqw; }
+.con-marco .p-marca-peq .p-nombre { font-size: 2cqw; }
+.con-marco .p-titulo { font-size: 2.5cqw; }
+.con-marco .p-sub { margin-top: .3cqw; font-size: 1.35cqw; }
+.con-marco .p-legal { margin-top: .5cqw; font-size: 1.1cqw; }
 .p-marca-peq img { height: 4.6cqw; }
 .p-marca-peq .p-nombre { font-size: 2.4cqw; color: var(--brand-ink); }
 .pegatina .p-qr { width: 21cqw; margin: 1.6cqw 0 1.2cqw; padding: .6cqw; border-radius: 1.2cqw; background: #fff; }

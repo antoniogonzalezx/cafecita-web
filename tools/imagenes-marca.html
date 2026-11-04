@@ -1,0 +1,38 @@
+<!doctype html>
+<!-- Genera og.jpg (1200×630) y apple-touch-icon.png (180×180) con la marca nueva.
+     Con el servidor de desarrollo en marcha (puerto 5174):
+       "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless --hide-scrollbars \
+         --window-size=1200,630 --screenshot=og.png "http://localhost:5174/tools/imagenes-marca.html?que=og"
+       … --window-size=180,180 --screenshot=icono.png "…/tools/imagenes-marca.html?que=icono"
+     y luego: sips -s format jpeg -s formatOptions 88 og.png --out og.jpg -->
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<base href="/" />
+<link rel="stylesheet" href="fonts/fonts.css?v=4" />
+<style>
+  html, body { margin: 0; overflow: hidden; }
+  .og { position: relative; width: 1200px; height: 630px; background: #F7F3EA; }
+  .og > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .card { position: absolute; left: 50%; top: 50%; translate: -50% -50%; width: 760px; height: 330px; border-radius: 28px; background: #F7F3EA; display: grid; place-items: center; align-content: center; gap: 30px; color: #3F48F4; box-shadow: 0 30px 60px -28px rgba(12, 14, 46, .55); }
+  .card .logo { height: 104px; }
+  .card .logo svg { height: 100%; width: auto; display: block; }
+  .card p { margin: 0; font: italic 400 46px/1 'Fraunces', Georgia, serif; color: #3F48F4; }
+  .icono { width: 180px; height: 180px; background: #3F48F4; display: grid; place-items: center; color: #F7F3EA; }
+  .icono svg { width: 112px; height: 112px; }
+</style>
+</head>
+<body>
+<script type="module">
+  import { mosaico, ASPA } from './marca.js?v=1';
+  const que = new URLSearchParams(location.search).get('que');
+  if (que === 'icono') {
+    document.body.innerHTML = `<div class="icono"><svg viewBox="-32 -32 64 64"><g fill="currentColor">${ASPA}</g></svg></div>`;
+  } else {
+    const logo = await fetch('logo.svg?v=2').then((r) => r.text());
+    document.body.innerHTML = `<div class="og">${mosaico({ cols: 15, filas: 8, l: 80, semilla: 3 })}<div class="card"><div class="logo">${logo}</div><p>Gracias por su visita</p></div></div>`;
+    await document.fonts.ready;
+  }
+</script>
+</body>
+</html>
