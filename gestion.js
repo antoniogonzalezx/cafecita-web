@@ -167,7 +167,7 @@ async function paintPreview() {
   if (!c) return;
   const seq = ++previewSeq;
   const pro = isPro(bar);
-  const src = pro && logo ? logo : { svg: await fetch('logo.svg').then((r) => r.text()) };
+  const src = pro && logo ? logo : { svg: await fetch('logo.svg?v=2').then((r) => r.text()) };
   const img = await logoImage(src, INK);
   const letra = letraDe(bar);
   await document.fonts.load(letraCss(LETRAS[letra], 60)).catch(() => {});
@@ -463,7 +463,11 @@ function imprimirCard() {
     el('div', { class: 'g-prints' },
       link('mesas', 'Pegatinas para las mesas', 'Seis QR por hoja, con el aviso de alérgenos'),
       link('barra', 'Cartel para la barra', 'A4 a todo color'),
-      link('carta', 'Carta en papel', 'Con los alérgenos de cada plato')));
+      link('carta', 'Carta en papel', 'Con los alérgenos de cada plato')),
+    // con Basic las pegatinas llevan el marco de azulejos de Cafecita; con Pro se puede quitar
+    isPro(bar) && el('label', { class: 'g-toggle g-marco' },
+      el('input', { type: 'checkbox', checked: bar.marca.marcoQr !== false, onchange: (e) => { bar.marca.marcoQr = e.target.checked; changed(); } }),
+      el('span', {}, 'Marco de azulejos en las pegatinas')));
 }
 
 function datosCard() {

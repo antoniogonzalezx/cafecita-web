@@ -254,6 +254,8 @@ button, input, select { font: inherit; color: inherit; }
 .g-item.out .g-row .grow { text-decoration: line-through; color: var(--suave); }
 .g-toggle { flex: none; display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; user-select: none; }
 .g-toggle input { width: 18px; height: 18px; accent-color: #B3261E; }
+.g-toggle.g-marco { margin-top: 14px; font-size: 14px; }
+.g-toggle.g-marco input { accent-color: var(--brand); }
 .g-al-btn {
   margin: 6px 0 0 4px;
   padding: 2px 0;
