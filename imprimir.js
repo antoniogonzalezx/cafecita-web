@@ -81,7 +81,7 @@ async function mesas() {
     }
     const dentro = html('div', 'p-in');
     dentro.append(await marca(ink, 'p-marca-peq'), qr('qr-mesa'),
-      html('p', 'p-titulo', 'La carta y lo de hoy'),
+      html('p', 'p-titulo', 'La carta y el plato del día'),
       html('p', 'p-sub', 'Escanea con la cámara del móvil'),
       html('p', 'p-legal', ALERGIAS));
     p.append(dentro);
@@ -95,7 +95,7 @@ async function barra() {
   const serv = html('div', 'p-servilleta');
   serv.append(html('p', 'p-kicker', 'Saca una servilleta'), qr('qr-barra'), html('p', 'p-url', short));
   hoja.append(await marca('#F7F3EA', 'p-marca-grande'),
-    html('h1', 'p-cartel', 'Lo de hoy, en una servilleta'),
+    html('h1', 'p-cartel', 'Tu carta, diferente'),
     html('p', 'p-cartel-sub', 'La sugerencia del día, lo de fuera de carta y la carta entera, en tu móvil.'),
     serv,
     html('p', 'p-legal p-legal-claro', `${ALERGIAS}.`));
@@ -112,7 +112,7 @@ async function carta() {
   const txt = html('div');
   txt.append(html('p', null, 'Si tienes alguna alergia o intolerancia alimentaria, díselo al personal antes de pedir.'),
     html('p', null, 'Informamos de los 14 alérgenos del Reglamento (UE) 1169/2011.'),
-    html('p', 'pc-digital', `Carta digital y lo de hoy: ${short}`));
+    html('p', 'pc-digital', `Carta digital y plato del día: ${short}`));
   foot.append(txt, qr('qr-carta'));
   hoja.append(head, body, foot);
   return [hojaEl];
