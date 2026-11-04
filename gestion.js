@@ -4,7 +4,7 @@
 // acceso y lo que cambia se guarda en el servidor; en la demo (Bar Manolo), en este navegador.
 // La vista previa de la derecha es su página de verdad, que se recarga al guardar.
 import { loadBar, saveBar, resetBar, entrar, guardarRemoto, isPro, logoOf, logoImage, servilletas, titulo, precio, ALERGENOS, COLORES, ACABADOS, TIPOS, DEFAULT_COLOR, LETRAS, letraCss, fotoUrl, prepararFoto, subirFoto } from './bar.js?v=8';
-import { paintNapkin, BAR_INK } from './napkin.js?v=23';
+import { paintNapkin, tintaDe } from './napkin.js?v=24';
 import { medir } from './medir.js?v=14';
 
 const ID = document.body.dataset.bar;
@@ -18,7 +18,6 @@ function syncFrame() {
 }
 WIDE.addEventListener('change', syncFrame);
 syncFrame();
-const INK = BAR_INK; // la misma tinta que la servilleta de verdad
 let bar = await loadBar(ID);
 const DEMO = !bar.remoto;
 const letraDe = (b) => (isPro(b) && LETRAS[b.marca.letra] ? b.marca.letra : 'clasica');
@@ -169,7 +168,9 @@ async function paintPreview() {
   const seq = ++previewSeq;
   const pro = isPro(bar);
   const src = pro && logo ? logo : { svg: await fetch('logo.svg?v=2').then((r) => r.text()) };
-  const img = await logoImage(src, INK);
+  // la misma tinta que la servilleta de verdad: el color del bar (sin Pro, el de cafecita)
+  const ink = tintaDe(pro ? bar.marca.color : DEFAULT_COLOR);
+  const img = await logoImage(src, ink);
   const letra = letraDe(bar);
   await document.fonts.load(letraCss(LETRAS[letra], 60)).catch(() => {});
   // la que esté elegida en las pestañas de encima (o la primera que haya)
@@ -178,7 +179,7 @@ async function paintPreview() {
     || { tipo: 'sugerencia', title: titulo('sugerencia'), lines: ['- Hoy, lo de siempre'] };
   drawTabs(list, n.tipo);
   const tmp = document.createElement('canvas');
-  await paintNapkin(tmp, { kind: 'bar', id: `${n.tipo}-gestion`, title: n.title, lines: n.lines }, { logo: img, ink: INK, letra });
+  await paintNapkin(tmp, { kind: 'bar', id: `${n.tipo}-gestion`, title: n.title, lines: n.lines }, { logo: img, ink, letra });
   if (seq !== previewSeq) return;
   c.width = tmp.width;
   c.height = tmp.height;

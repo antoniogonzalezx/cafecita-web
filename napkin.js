@@ -8,7 +8,7 @@ const SCALE = 1.5;                 // más resolución que la foto para que la l
 const QUOTE = '#537393';           // los mismos azules que las servilletas de las citas
 const AUTHOR = '#415F7A';
 const SERIF = (s) => `italic 400 ${s}px Fraunces, Georgia, serif`;
-const SANS = (s, w = 700) => `${w} ${s}px 'Bricolage Grotesque', system-ui, sans-serif`;
+const SANS = (s, w = 700) => `${w} ${s}px 'Rethink Sans', system-ui, sans-serif`;
 
 const loadImg = (src) => new Promise((resolve, reject) => {
   const img = new Image();
@@ -156,6 +156,18 @@ export async function paintNapkin(canvas, item, { logo, ink = BAR_INK, letra = '
 const THANKS = 'Gracias por su visita';
 // la tinta de las servilletas de un bar: lo que escribe, la frase y su logo, todo del mismo boli
 export const BAR_INK = '#2F4C82';
+// La tinta es el color del bar. Si es muy claro (un amarillo, un rosa), se oscurece lo justo
+// para que se lea sobre el papel (contraste 4,5:1 con la servilleta, #F7F3EA).
+export function tintaDe(color) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(color || '');
+  if (!m) return BAR_INK;
+  let rgb = [0, 2, 4].map((i) => parseInt(m[1].slice(i, i + 2), 16));
+  const lum = (c) => c.map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; })
+    .reduce((s, v, i) => s + v * [0.2126, 0.7152, 0.0722][i], 0);
+  const PAPEL = lum([247, 243, 234]);
+  for (let k = 0; k < 40 && (PAPEL + 0.05) / (lum(rgb) + 0.05) < 4.5; k++) rgb = rgb.map((v) => v * 0.94);
+  return `#${rgb.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('')}`;
+}
 
 // La solapa de un bar: «Gracias por su visita» y, debajo, su logo (o CAFECITA, sin Pro).
 // Se mide lo que ocupa de verdad la frase, y entre ella y el logo siempre queda el mismo hueco:

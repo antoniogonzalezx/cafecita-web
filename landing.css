@@ -3,7 +3,7 @@
 :root {
   --azul: #3F48F4;
   --blanco: #FFFFFF;
-  --sans: 'Bricolage Grotesque', system-ui, sans-serif;
+  --sans: 'Rethink Sans', system-ui, sans-serif;
   --ancho: 1120px;
   --lado: max(24px, env(safe-area-inset-left), calc((100vw - var(--ancho)) / 2));
 }

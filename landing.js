@@ -2,7 +2,7 @@
 // La página para vender Cafecita a los bares: azul y blanco, poco texto y los azulejos como detalle.
 // La servilleta no es una foto: se pinta con el mismo código que el servilletero (napkin.js).
 // El QR de su esquina lleva a la demo.
-import { paintNapkin, BAR_INK } from './napkin.js?v=23';
+import { paintNapkin, tintaDe } from './napkin.js?v=24';
 import { logoImage, LETRAS, letraCss } from './bar.js?v=8';
 import { qrSvg } from './qr.js?v=2';
 import { medir } from './medir.js?v=14';
@@ -29,7 +29,9 @@ for (const a of document.querySelectorAll('[data-medir]')) a.addEventListener('c
 // ---------- Las servilletas ----------
 const svg = (src) => fetch(src).then((r) => r.text()).then((t) => ({ svg: t }));
 // en la solapa, el logo de cafecita
-const logo = await svg('logo.svg?v=2').then((l) => logoImage(l, BAR_INK)).catch(() => null);
+// la servilleta de cafecita, con la tinta de cafecita
+const TINTA = tintaDe(AZUL);
+const logo = await svg('logo.svg?v=2').then((l) => logoImage(l, TINTA)).catch(() => null);
 await document.fonts.load(letraCss(LETRAS.clasica, 60)).catch(() => {});
 
 // id: elige la plantilla (la misma servilleta fotografiada cada vez)
@@ -42,7 +44,7 @@ const pintar = async (c) => {
   const s = SERVILLETAS[c.dataset.servilleta];
   if (!s || c.dataset.pintada) return;
   c.dataset.pintada = '1';
-  await paintNapkin(c, { kind: 'bar', id: s.id, title: s.title, lines: s.lines }, { logo: s.logo, ink: BAR_INK });
+  await paintNapkin(c, { kind: 'bar', id: s.id, title: s.title, lines: s.lines }, { logo: s.logo, ink: TINTA });
   c.classList.add('lista');
 };
 const lazy = new IntersectionObserver((entries) => {
