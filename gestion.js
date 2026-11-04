@@ -3,7 +3,7 @@
 // su logo, su color y el acabado del servilletero. Un bar dado de alta entra con su código de
 // acceso y lo que cambia se guarda en el servidor; en la demo (Bar Manolo), en este navegador.
 // La vista previa de la derecha es su página de verdad, que se recarga al guardar.
-import { loadBar, saveBar, resetBar, entrar, guardarRemoto, isPro, logoOf, logoImage, servilletas, titulo, precio, ALERGENOS, COLORES, ACABADOS, TIPOS, DEFAULT_COLOR, LETRAS, letraCss } from './bar.js?v=7';
+import { loadBar, saveBar, resetBar, entrar, guardarRemoto, isPro, logoOf, logoImage, servilletas, titulo, precio, ALERGENOS, COLORES, ACABADOS, TIPOS, DEFAULT_COLOR, LETRAS, letraCss, fotoUrl, prepararFoto, subirFoto } from './bar.js?v=8';
 import { paintNapkin, BAR_INK } from './napkin.js?v=21';
 
 const ID = document.body.dataset.bar;
@@ -115,7 +115,7 @@ function changed({ redraw = false, napkin = false, brand = false } = {}) {
       ok = await guardar();
       if (ok) $('gSaved').textContent = 'Guardado';
     } catch {
-      $('gSaved').textContent = 'No se ha podido guardar (¿logo muy grande?)';
+      $('gSaved').textContent = DEMO ? 'No se ha podido guardar: en la demo caben pocas fotos' : 'No se ha podido guardar (¿logo muy grande?)';
     }
     if (!ok) return;
     clearTimeout(frameTimer);
@@ -316,7 +316,8 @@ function cartaCard() {
   return card('La carta', 'Lo agotado se ve tachado, y los alérgenos siempre a la vista. Si no los marcas, la carta dice «pregunta al personal».',
     wrap, el('button', { type: 'button', class: 'g-btn g-btn-add', onclick: () => {
       bar.carta.push({ seccion: 'Nueva sección', platos: [] }); draw(); changed();
-    } }, '+ Añadir sección'));
+    } }, '+ Añadir sección'),
+    isPro(bar) && el('p', { class: 'g-note' }, 'Las fotos quedan mejor con luz natural y el plato en el centro. Que sean tuyas: las de internet tienen dueño.'));
 }
 
 // Los 14 alérgenos de un plato (o de lo de hoy): un resumen que se despliega en botones.
@@ -364,8 +365,76 @@ function itemRow(p, remove) {
         el('input', { type: 'checkbox', checked: !!p.agotado, onchange: (e) => { p.agotado = e.target.checked; row.classList.toggle('out', p.agotado); changed({ napkin: true }); } }),
         el('span', {}, 'Agotado')),
       removeBtn('Quitar el plato', remove)),
-    ...alergenosUI(p));
+    ...pieDePlato(p));
   return row;
+}
+
+// Debajo del plato: su foto (con Pro) y sus alérgenos, que se despliegan debajo
+function pieDePlato(p) {
+  const [summary, al] = alergenosUI(p);
+  return [el('div', { class: 'g-item-foot' }, fotoUI(p), summary), al];
+}
+
+// La foto del plato: se recorta y se comprime aquí mismo, en el móvil, y se sube al momento
+// (en la demo se queda en este navegador). Sin Pro se ve, pero apagada.
+const CAMARA = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 8h3l1.6-2.2h6.8L17 8h3v11H4z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="13.2" r="3.4" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>';
+function fotoUI(p) {
+  const box = el('div', { class: 'g-foto' });
+  const icono = () => Object.assign(el('span', { class: 'g-foto-ico' }), { innerHTML: CAMARA });
+  const input = el('input', { type: 'file', accept: 'image/*', class: 'g-foto-file', tabindex: -1, 'aria-hidden': 'true', onchange: (e) => {
+    const f = e.target.files?.[0];
+    e.target.value = '';
+    if (f) subir(f);
+  } });
+  const elegir = () => input.click();
+  const draw = (estado) => {
+    if (!isPro(bar)) {
+      const nota = el('span', { class: 'g-foto-msg', hidden: true }, DEMO ? 'Cámbiate a Pro en «Tu plan» para probarlo.' : 'Las fotos de los platos van con Pro.');
+      box.replaceChildren(el('button', { type: 'button', class: 'g-foto-add g-foto-lock', onclick: () => { nota.hidden = false; } },
+        icono(), 'Foto', el('b', {}, 'Pro')), nota);
+      return;
+    }
+    if (estado === 'subiendo') {
+      box.replaceChildren(el('span', { class: 'g-foto-msg', role: 'status' }, 'Subiendo la foto…'));
+      return;
+    }
+    // replaceChildren no se salta los null: sin error, una cadena vacía
+    const error = estado ? el('span', { class: 'g-foto-msg g-foto-err', role: 'alert' }, estado) : '';
+    if (!p.foto) {
+      box.replaceChildren(input, el('button', { type: 'button', class: 'g-foto-add', onclick: elegir }, icono(), 'Añadir foto'), error);
+      return;
+    }
+    box.replaceChildren(input,
+      el('button', { type: 'button', class: 'g-foto-thumb', 'aria-label': 'Cambiar la foto', title: 'Cambiar la foto', onclick: elegir },
+        el('img', { src: fotoUrl(bar, p.foto), alt: '', width: 72, height: 72 })),
+      el('button', { type: 'button', class: 'g-link', onclick: () => undoable('Foto quitada', () => { delete p.foto; }) }, 'Quitar'),
+      error);
+  };
+  async function subir(f) {
+    draw('subiendo');
+    let msg = 'No se ha podido subir. Prueba otra vez.';
+    try {
+      const blob = await prepararFoto(f).catch(() => { msg = 'Esa imagen no se puede abrir. Prueba con otra foto.'; throw 0; });
+      if (DEMO) {
+        p.foto = await new Promise((res, rej) => Object.assign(new FileReader(), { onload: (e) => res(e.target.result), onerror: rej }).readAsDataURL(blob));
+      } else {
+        const r = await subirFoto(ID, codigo, blob).catch(() => 0);
+        if (r === 401) { salir(); return; }
+        if (typeof r !== 'string') {
+          if (r === 403) msg = 'Las fotos de los platos van con Pro.';
+          if (r === 409) msg = 'Ya tienes 150 fotos: quita alguna antes.';
+          throw 0;
+        }
+        p.foto = r;
+      }
+      draw();
+      changed();
+    } catch {
+      draw(msg);
+    }
+  }
+  draw();
+  return box;
 }
 
 function priceInput(o, onChange) {
