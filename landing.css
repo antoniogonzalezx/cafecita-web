@@ -57,7 +57,7 @@ a { color: inherit; }
 .l-hero-art { position: relative; margin: 0; justify-self: center; width: min(360px, 100%); }
 .l-napkin { display: block; width: 100%; height: auto; rotate: -3deg; filter: drop-shadow(0 30px 40px rgba(8, 10, 60, .35)); opacity: 0; transition: opacity .6s ease; }
 .l-napkin.lista { opacity: 1; }
-.l-qr { position: absolute; right: -6%; bottom: 4%; width: 34%; padding: 8px; border-radius: 12px; background: var(--blanco); rotate: 5deg; box-shadow: 0 16px 30px -12px rgba(8, 10, 60, .45); }
+.l-qr { position: absolute; right: -14%; bottom: -7%; width: 31%; padding: 8px; border-radius: 12px; background: var(--blanco); rotate: 5deg; box-shadow: 0 16px 30px -12px rgba(8, 10, 60, .45); }
 .l-qr svg { display: block; width: 100%; height: auto; }
 
 /* ---------- En blanco: cómo funciona y precios ---------- */

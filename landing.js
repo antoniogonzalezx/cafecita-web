@@ -1,7 +1,7 @@
 // ---------- Cafecita para bares (bares/) ----------
 // La página para vender Cafecita a los bares: azul y blanco, poco texto y los azulejos como detalle.
 // La servilleta no es una foto: se pinta con el mismo código que el servilletero (napkin.js).
-// El QR de su esquina lleva a la demo de Bar Manolo.
+// El QR de su esquina lleva a la demo.
 import { paintNapkin, BAR_INK } from './napkin.js?v=21';
 import { logoImage, LETRAS, letraCss } from './bar.js?v=8';
 import { qrSvg } from './qr.js?v=2';
@@ -28,12 +28,13 @@ for (const a of document.querySelectorAll('[data-medir]')) a.addEventListener('c
 
 // ---------- Las servilletas ----------
 const svg = (src) => fetch(src).then((r) => r.text()).then((t) => ({ svg: t }));
-const manolo = await svg('bares/barmanolo/logo.svg').then((l) => logoImage(l, BAR_INK)).catch(() => null);
+// en la solapa, el logo de cafecita
+const logo = await svg('logo.svg?v=2').then((l) => logoImage(l, BAR_INK)).catch(() => null);
 await document.fonts.load(letraCss(LETRAS.clasica, 60)).catch(() => {});
 
 // id: elige la plantilla (la misma servilleta fotografiada cada vez)
 const SERVILLETAS = {
-  hero: { id: 'landing-hero', title: 'Sugerencia del día', lines: ['- Bocata de calamares 6€'], logo: manolo },
+  hero: { id: 'landing-hero', title: 'Plato del día', lines: ['- Carrillada de carne', '13,50€'], logo },
 };
 
 // se pintan cuando se van a ver, la primera la del principio
