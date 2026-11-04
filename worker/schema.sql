@@ -68,3 +68,15 @@ create table if not exists bares (
   codigo      text not null check (length(codigo) = 64),
   actualizado text not null
 ) without rowid;
+
+-- Las fotos de los platos de la carta (solo Pro). Llegan comprimidas desde el móvil; el id es
+-- su SHA-256 (32 caracteres), así que no cambian y se sirven con caché de un año.
+-- Las que ningún plato usa se borran al guardar la ficha, pasado un día.
+create table if not exists fotos (
+  bar    text not null,
+  id     text not null check (length(id) = 32),
+  tipo   text not null check (tipo in ('image/webp', 'image/jpeg')),
+  datos  blob not null check (length(datos) <= 200000),
+  creada text not null,
+  primary key (bar, id)
+);

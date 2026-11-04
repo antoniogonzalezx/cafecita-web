@@ -3,7 +3,7 @@
 // las mesas (con el aviso de alérgenos), un cartel para la barra y la carta en papel, que según la
 // OCU tiene que seguir existiendo aunque haya QR. Se imprime o se guarda en PDF desde el navegador.
 // Cada QR lleva ?o= para saber de dónde viene la visita (mesa, barra o carta).
-import { loadBar, isPro, logoOf, logoImage, renderCarta, DEFAULT_COLOR, LETRAS } from './bar.js?v=7';
+import { loadBar, isPro, logoOf, logoImage, renderCarta, DEFAULT_COLOR, LETRAS } from './bar.js?v=8';
 import { qrSvg } from './qr.js?v=1';
 
 const $ = (id) => document.getElementById(id);

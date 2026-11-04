@@ -254,6 +254,7 @@ function limpiarBar(d, id) {
       seccion: txt(sec?.seccion, 60),
       platos: (Array.isArray(sec?.platos) ? sec.platos : []).slice(0, 80).map((p) => ({
         nombre: txt(p?.nombre, 80), precio: precio(p?.precio), alergenos: alergenos(p?.alergenos), agotado: p?.agotado === true, destacado: p?.destacado === true,
+        ...(FOTO_ID.test(p?.foto ?? '') ? { foto: p.foto } : {}),
       })),
     })),
   };
@@ -280,8 +281,53 @@ async function guardarBar(db, request, id) {
   try { d = JSON.parse(text); } catch { return json({ ok: false }, 400); }
   const datos = limpiarBar(d, id);
   const now = new Date().toISOString();
-  await db.prepare('update bares set datos = ?, actualizado = ? where id = ?').bind(JSON.stringify(datos), now, id).run();
+  // las fotos que ya no lleva ningún plato se borran, pero con un día de margen: una recién
+  // subida aún no está en la ficha, y quitar una foto se puede deshacer
+  const usadas = datos.carta.flatMap((sec) => sec.platos).map((p) => p.foto).filter(Boolean);
+  await db.batch([
+    db.prepare('update bares set datos = ?, actualizado = ? where id = ?').bind(JSON.stringify(datos), now, id),
+    db.prepare('delete from fotos where bar = ? and creada < ? and id not in (select value from json_each(?))')
+      .bind(id, new Date(Date.now() - 864e5).toISOString(), JSON.stringify(usadas)),
+  ]);
   return json({ ok: true, actualizado: now });
+}
+
+// ---------- Fotos de la carta (solo Pro) ----------
+// Llegan ya recortadas y comprimidas desde el móvil (WebP o JPEG, de menos de 200 KB) y se
+// guardan en D1 con su SHA-256 por nombre: una foto no cambia nunca, así que se puede guardar
+// un año en el navegador. Cuando no quepan en D1 (5 GB), a R2.
+const FOTO_ID = /^[0-9a-f]{32}$/;
+const FOTO_MAX = 200e3;
+const FOTOS_POR_BAR = 150;
+const ascii = (b, i, n) => String.fromCharCode(...b.subarray(i, i + n));
+// lo que dicen sus primeros bytes, no lo que diga la petición
+const tipoFoto = (b) => (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff ? 'image/jpeg'
+  : ascii(b, 0, 4) === 'RIFF' && ascii(b, 8, 4) === 'WEBP' ? 'image/webp' : null);
+
+async function subirFoto(db, request, id) {
+  const row = await barDe(db, id);
+  const codigo = (request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  if (!(await autorizado(row, codigo))) return json({ ok: false, error: 'código no válido' }, 401);
+  if (row.plan !== 'pro') return json({ ok: false, error: 'las fotos son de Pro' }, 403);
+  if (+(request.headers.get('Content-Length') || 0) > FOTO_MAX) return json({ ok: false, error: 'demasiado grande' }, 413);
+  const b = new Uint8Array(await request.arrayBuffer());
+  if (!b.length || b.length > FOTO_MAX) return json({ ok: false, error: 'demasiado grande' }, 413);
+  const tipo = tipoFoto(b);
+  if (!tipo) return json({ ok: false, error: 'tiene que ser WebP o JPEG' }, 415);
+  const { n } = await db.prepare('select count(*) as n from fotos where bar = ?').bind(id).first();
+  if (n >= FOTOS_POR_BAR) return json({ ok: false, error: 'demasiadas fotos' }, 409);
+  const foto = [...new Uint8Array(await crypto.subtle.digest('SHA-256', b))].map((x) => x.toString(16).padStart(2, '0')).join('').slice(0, 32);
+  await db.prepare('insert or ignore into fotos (bar, id, tipo, datos, creada) values (?, ?, ?, ?, ?)')
+    .bind(id, foto, tipo, b, new Date().toISOString()).run();
+  return json({ ok: true, foto });
+}
+async function verFoto(db, bar, id) {
+  if (!BAR_ID.test(bar || '') || !FOTO_ID.test(id || '')) return json({ ok: false, error: 'no existe' }, 404);
+  const row = await db.prepare('select tipo, datos from fotos where bar = ? and id = ?').bind(bar, id).first();
+  if (!row) return json({ ok: false, error: 'no existe' }, 404);
+  return new Response(new Uint8Array(row.datos), {
+    headers: { ...CORS, 'Content-Type': row.tipo, 'Cache-Control': 'public, max-age=31536000, immutable', 'X-Content-Type-Options': 'nosniff' },
+  });
 }
 
 export default {
@@ -297,6 +343,8 @@ export default {
     if (m === 'GET' && pathname === '/bar') return leerBar(env.DB, searchParams.get('id'));
     if (m === 'POST' && pathname === '/bar/entrar') return entrarBar(env.DB, request);
     if (m === 'PUT' && pathname === '/bar') return guardarBar(env.DB, request, searchParams.get('id'));
+    if (m === 'POST' && pathname === '/bar/foto') return subirFoto(env.DB, request, searchParams.get('id'));
+    if (m === 'GET' && pathname === '/foto') return verFoto(env.DB, searchParams.get('bar'), searchParams.get('id'));
     if (m === 'POST' && pathname === '/refrescar') {
       const last = await env.DB.prepare('select actualizado from portada where id = 1').first();
       const since = last ? (Date.now() - Date.parse(last.actualizado)) / 60000 : Infinity;

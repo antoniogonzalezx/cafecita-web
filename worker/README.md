@@ -10,6 +10,10 @@ D1 llamada `cafecita`. Plan gratuito: 100.000 peticiones al día, 5 GB, 5 M de f
   `cafecita.app/?s=<id>` siga abriendo la noticia compartida días después.
 - **`POST /registrar`**: eventos de analítica de `medir.js`, en tandas de como mucho 25. La web
   los manda como texto plano para que el navegador no haga antes una petición OPTIONS.
+- **`GET /bar?id=…`**, **`POST /bar/entrar`** y **`PUT /bar?id=…`**: la ficha de cada bar; cambiarla pide su código.
+- **`POST /bar/foto?id=…`**: sube la foto de un plato (solo bares Pro, con su código): WebP o JPEG de menos
+  de 200 KB, hasta 150 por bar. Devuelve su id. **`GET /foto?bar=…&id=…`** la sirve con caché de un año.
+  Viven en la tabla `fotos` de D1; si un día no caben, se pasan a R2.
 - **Cron `7,37 * * * *`**: lee los RSS (`FEEDS` en `src/index.js`), quita duplicados, alterna
   periódicos y rehace la portada. `POST /refrescar` hace lo mismo a mano, como mucho una vez cada 10 min.
 

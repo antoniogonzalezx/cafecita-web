@@ -5,7 +5,7 @@
   <!-- la página vive en /barmanolo/ pero usa los mismos ficheros que la web (modelo, plantillas, fuentes) -->
   <base href="/" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-XXII1TwAN2TrTrsiI2NAXH44vp64aSYdt4qoJm5hg0k='; style-src 'self'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self' data: blob: https://cafecita-api.cafecita-api.workers.dev http://localhost:8787; object-src 'none'; base-uri 'self'; form-action 'none'" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-XXII1TwAN2TrTrsiI2NAXH44vp64aSYdt4qoJm5hg0k='; style-src 'self'; font-src 'self'; img-src 'self' data: blob: https://cafecita-api.cafecita-api.workers.dev http://localhost:8787; connect-src 'self' data: blob: https://cafecita-api.cafecita-api.workers.dev http://localhost:8787; object-src 'none'; base-uri 'self'; form-action 'none'" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <title>Bar Manolo · Carta y sugerencias</title>
   <meta name="description" content="Las sugerencias del día y la carta de Bar Manolo. Gracias por su visita." />
@@ -25,7 +25,7 @@
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="stylesheet" href="fonts/fonts.css?v=4" />
   <!-- ?v= obliga a recargar CSS y JS tras un despliegue (GitHub Pages cachea 10 min): súbelo al cambiarlos -->
-  <link rel="stylesheet" href="style.css?v=20" />
+  <link rel="stylesheet" href="style.css?v=21" />
   <script type="importmap">
     {
       "imports": {
@@ -102,7 +102,7 @@
   </div>
 
   <!-- primero la marca y la carta (sin 3D); luego el servilletero -->
-  <script type="module" src="carta.js?v=4"></script>
+  <script type="module" src="carta.js?v=5"></script>
   <script type="module" src="main.js?v=25"></script>
 </body>
 </html>

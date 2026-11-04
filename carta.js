@@ -3,7 +3,7 @@
 // del bar (sin un instante del azul de Cafecita) y la carta ya funciona, también con la Wi-Fi
 // lenta de un bar: el cliente viene a ver qué hay. El servilletero llega después (main.js),
 // que abre la carta desde la servilleta con el evento «carta:abrir».
-import { loadBar, isPro, logoOf, logoImage, renderCarta, DEFAULT_COLOR, LETRAS, ALERGENOS } from './bar.js?v=7';
+import { loadBar, isPro, logoOf, logoImage, renderCarta, DEFAULT_COLOR, LETRAS, ALERGENOS } from './bar.js?v=8';
 import { medir } from './medir.js?v=14';
 
 const $ = (id) => document.getElementById(id);
@@ -88,7 +88,7 @@ function aplicar() {
 function open() {
   if (carta.classList.contains('open')) return;
   if (!drawn) {
-    renderCarta($('cartaBody'), bar);
+    renderCarta($('cartaBody'), bar, { fotos: true });
     $('cartaBody').before(filtro());
     drawn = true;
   }
@@ -101,16 +101,63 @@ function open() {
 }
 function close() {
   if (!carta.classList.contains('open')) return;
+  cerrarFoto();
   carta.classList.remove('open');
   hideTimer = setTimeout(() => { carta.hidden = true; }, 380);
   if (location.hash === '#carta') history.replaceState(null, '', location.pathname + location.search);
 }
+// ---------- La foto de un plato, en grande ----------
+// La polaroid crece sobre la carta, con el plato, el precio y los alérgenos escritos debajo.
+// Se cierra tocando en cualquier sitio o con Escape (que no cierra la carta).
+let foto = null;
+function verFoto(btn) {
+  const li = btn.closest('.carta-item');
+  const pie = (cls, sel) => Object.assign(document.createElement('p'), { className: cls, textContent: li.querySelector(sel)?.textContent || '' });
+  const big = document.createElement('img');
+  big.src = btn.querySelector('img').src;
+  big.alt = li.querySelector('.carta-name').textContent;
+  const card = document.createElement('figure');
+  card.className = 'foto-card';
+  const cap = document.createElement('figcaption');
+  cap.append(pie('foto-name', '.carta-name'), pie('foto-price', '.carta-price'));
+  const al = li.querySelector('.carta-al').cloneNode(true);
+  al.classList.add('foto-al');
+  card.append(big, cap, al);
+  foto = document.createElement('div');
+  foto.className = 'foto-grande';
+  foto.setAttribute('role', 'dialog');
+  foto.setAttribute('aria-modal', 'true');
+  foto.setAttribute('aria-label', big.alt);
+  foto.tabIndex = -1;
+  foto.append(card);
+  foto.addEventListener('click', cerrarFoto);
+  carta.append(foto);
+  requestAnimationFrame(() => requestAnimationFrame(() => foto?.classList.add('open')));
+  foto.focus({ preventScroll: true });
+  foto.dataset.desde = String([...$('cartaBody').querySelectorAll('.carta-foto')].indexOf(btn));
+  medir('enlace', { a: `foto:${ID}` });
+}
+function cerrarFoto() {
+  if (!foto) return;
+  const f = foto, i = +f.dataset.desde;
+  foto = null;
+  f.classList.remove('open');
+  setTimeout(() => f.remove(), 260);
+  $('cartaBody').querySelectorAll('.carta-foto')[i]?.focus({ preventScroll: true });
+}
+$('cartaBody').addEventListener('click', (e) => {
+  const b = e.target.closest('.carta-foto');
+  if (b) verFoto(b);
+});
+
 $('cartaBtn').addEventListener('click', open);
 $('cartaClose').addEventListener('click', close);
 carta.querySelector('.carta-veil').addEventListener('click', close);
 document.addEventListener('carta:abrir', open);
 window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && carta.classList.contains('open')) { e.stopImmediatePropagation(); close(); }
+  if (e.key !== 'Escape' || !carta.classList.contains('open')) return;
+  e.stopImmediatePropagation();
+  if (foto) cerrarFoto(); else close();
 }, { capture: true });
 // un QR que lleve a cafecita.app/<bar>/#carta abre directamente la carta
 if (location.hash === '#carta') open();

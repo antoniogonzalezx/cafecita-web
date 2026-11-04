@@ -3,7 +3,7 @@
 // código que el servilletero (napkin.js), así que salen igual que las verá el cliente del bar.
 // El QR del cartel lleva a la demo de Bar Manolo.
 import { paintNapkin, BAR_INK } from './napkin.js?v=21';
-import { logoImage, LETRAS, letraCss } from './bar.js?v=7';
+import { logoImage, LETRAS, letraCss } from './bar.js?v=8';
 import { qrSvg } from './qr.js?v=1';
 import { medir } from './medir.js?v=14';
 

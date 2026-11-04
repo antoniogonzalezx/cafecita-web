@@ -500,6 +500,83 @@ body.bar #scene:focus-visible { outline: none; }
 .carta-chip[aria-pressed="true"] { background: var(--azul); border-color: var(--azul); color: #fff; }
 .carta-item { transition: opacity .25s; }
 .carta-item.filtrado { opacity: .32; }
+
+/* la foto de un plato (Pro): una polaroid pequeña grapada a la comanda, a la derecha */
+.carta-item.con-foto { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 14px; align-items: start; }
+.con-foto .carta-row, .con-foto .carta-al { grid-column: 1; }
+.carta-foto {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  position: relative;
+  width: 64px;
+  height: 64px;
+  margin: 2px 2px 0 0;
+  padding: 3px;
+  border: 0;
+  border-radius: 3px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(12, 14, 46, .14), 0 8px 16px -8px rgba(12, 14, 46, .45);
+  rotate: 2.5deg;
+  cursor: zoom-in;
+  transition: transform .2s ease;
+}
+.carta-item:nth-child(even) .carta-foto { rotate: -2deg; }
+/* la grapa */
+.carta-foto::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  width: 16px;
+  height: 3px;
+  translate: -50% 0;
+  border-radius: 1px;
+  background: linear-gradient(#D9DCE2, #9298A3);
+  box-shadow: 0 1px 1px rgba(12, 14, 46, .3);
+}
+.carta-foto img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 1px; background: #EFE9DC; }
+.carta-foto:hover { transform: scale(1.05); }
+.carta-foto:active { transform: scale(.96); }
+.carta-foto:focus-visible { outline: 2px solid var(--azul); outline-offset: 3px; }
+
+/* la foto en grande, sobre la carta */
+.foto-grande {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(8, 9, 20, .55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  cursor: zoom-out;
+  transition: opacity .25s ease;
+}
+.foto-grande.open { opacity: 1; }
+.foto-grande:focus { outline: none; }
+.foto-card {
+  width: min(86vw, 420px);
+  margin: 0;
+  padding: 12px 12px 18px;
+  border-radius: 4px;
+  background: #fff var(--grano);
+  color: var(--noche);
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, .6);
+  rotate: -1.5deg;
+  transform: scale(.92);
+  transition: transform .32s cubic-bezier(.2, .8, .2, 1);
+}
+.foto-grande.open .foto-card { transform: none; }
+.foto-card img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 2px; background: #EFE9DC; }
+.foto-card figcaption { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; margin-top: 14px; }
+.foto-name { margin: 0; font: 400 24px/1.15 var(--bar-font, 'Fraunces'), Georgia, serif; font-style: var(--bar-style, italic); text-transform: var(--bar-case, none); }
+.foto-price { margin: 0; font: 700 18px/1 var(--sans); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.foto-card .foto-al { margin-top: 8px; }
+@media (prefers-reduced-motion: reduce) {
+  .foto-grande, .foto-card, .carta-foto { transition: none; }
+}
 .carta-item.filtrado .carta-name { text-decoration: line-through; text-decoration-thickness: 1px; }
 .carta-item.dudoso .carta-al { color: #8A5A00; font-weight: 600; }
 .carta-aviso { margin: 16px 0 0; padding: 12px 14px; border-radius: 12px; background: rgba(12, 14, 46, .04); font: 500 13px/1.45 var(--sans); color: rgba(12, 14, 46, .78); }
