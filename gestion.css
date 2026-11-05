@@ -441,3 +441,13 @@ button:focus-visible, a:focus-visible, select:focus-visible { outline: 2px solid
 .g-hoy .g-titulo { order: 2; flex: 1 1 100%; font-weight: 600; }
 .g-hoy .g-titulo ~ .grow { order: 3; }
 .g-hoy .g-titulo ~ .g-price { order: 4; }
+
+/* primeros pasos (CAF-54) */
+.g-pasos-card { border: 2px solid var(--brand); }
+.g-pasos { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.g-pasos li { display: flex; align-items: flex-start; gap: 12px; font-size: 15px; }
+.g-pasos a { color: var(--noche); font-weight: 600; text-underline-offset: 3px; }
+.g-paso-check { flex: none; width: 22px; height: 22px; margin-top: -1px; border: 2px solid var(--linea); border-radius: 50%; }
+.g-pasos li.hecho .g-paso-check { border-color: var(--brand); background: var(--brand) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 14px no-repeat; }
+.g-pasos li.hecho > span:nth-child(2) { color: var(--suave); text-decoration: line-through; text-decoration-color: var(--linea); }
+.g-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

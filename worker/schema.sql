@@ -66,7 +66,8 @@ create table if not exists bares (
   datos       text not null check (json_valid(datos) and json_type(datos) = 'object'),
   plan        text not null default 'gratis' check (plan in ('gratis', 'pro')),
   codigo      text not null check (length(codigo) = 64),
-  actualizado text not null
+  actualizado text not null,
+  contacto    text                     -- su WhatsApp, si lo dejó al darse de alta (no es público)
 ) without rowid;
 
 -- Las fotos de los platos de la carta (solo Pro). Llegan comprimidas desde el móvil; el id es

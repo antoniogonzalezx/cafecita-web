@@ -3,7 +3,7 @@
 // del bar (sin un instante del azul de Cafecita) y la carta ya funciona, también con la Wi-Fi
 // lenta de un bar: el cliente viene a ver qué hay. El servilletero llega después (main.js),
 // que abre la carta desde la servilleta con el evento «carta:abrir».
-import { loadBar, isPro, logoOf, logoImage, renderCarta, DEFAULT_COLOR, LETRAS, ALERGENOS } from './bar.js?v=9';
+import { loadBar, isPro, logoOf, logoImage, renderCarta, precio, DEFAULT_COLOR, LETRAS, ALERGENOS } from './bar.js?v=9';
 import { medir } from './medir.js?v=14';
 
 const $ = (id) => document.getElementById(id);
@@ -49,6 +49,17 @@ if (logo) {
   name.textContent = bar.nombre;
   head.after(name);
 }
+// debajo, lo de hoy en una línea: aunque no saque ninguna servilleta, el cliente ve qué hay (CAF-51).
+// Al tocarla se abre la carta.
+const hoy = (bar.sugerencias || []).find((s) => s.texto?.trim());
+if (hoy) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'bar-hoy';
+  b.textContent = `Hoy: ${hoy.texto.trim()}${precio(hoy.precio) ? ` · ${precio(hoy.precio, true)}` : ''}`;
+  b.addEventListener('click', () => document.dispatchEvent(new Event('carta:abrir')));
+  document.querySelector('.top').append(b);
+}
 document.body.classList.add('bar-ready');
 
 // ---------- La carta ----------
@@ -87,11 +98,36 @@ function aplicar() {
   $('cartaBody').classList.toggle('filtrando', sin.size > 0);
 }
 
+// Al final de la carta, una sola pregunta para el piloto (CAF-52): sin registro ni datos
+// personales, es un evento más de la analítica. Se pregunta una vez al día en cada bar.
+function teHaServido() {
+  const KEY = `cafecita.util.${ID}`;
+  const hoy = new Date().toISOString().slice(0, 10);
+  const box = document.createElement('div');
+  box.className = 'carta-util';
+  try { if (localStorage.getItem(KEY) === hoy) return box; } catch {}
+  const q = Object.assign(document.createElement('p'), { textContent: '¿Te ha servido la carta?' });
+  const botones = document.createElement('div');
+  for (const [txt, val] of [['Sí', 'si'], ['No', 'no']]) {
+    const b = Object.assign(document.createElement('button'), { type: 'button', className: 'carta-chip', textContent: txt });
+    b.addEventListener('click', () => {
+      medir('enlace', { a: `carta:util:${val}`, bar: ID });
+      try { localStorage.setItem(KEY, hoy); } catch {}
+      q.textContent = val === 'si' ? 'Gracias. Se lo diremos al bar.' : 'Gracias. Lo mejoraremos con el bar.';
+      botones.remove();
+    });
+    botones.append(b);
+  }
+  box.append(q, botones);
+  return box;
+}
+
 function open() {
   if (carta.classList.contains('open')) return;
   if (!drawn) {
     renderCarta($('cartaBody'), bar, { fotos: true });
     $('cartaBody').before(filtro());
+    $('cartaBody').append(teHaServido());
     drawn = true;
   }
   clearTimeout(hideTimer);

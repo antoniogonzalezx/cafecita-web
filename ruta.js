@@ -37,7 +37,7 @@
   if (location.pathname !== canon) history.replaceState(null, '', canon + location.search + location.hash);
   b.dataset.bar = bar;
   // los módulos de la página del bar, en orden (la carta antes que el servilletero)
-  for (const src of ['carta.js?v=7', 'carga.js?v=2', 'main.js?v=31']) {
+  for (const src of ['carta.js?v=8', 'carga.js?v=2', 'main.js?v=32']) {
     const s = document.createElement('script');
     s.type = 'module';
     s.src = src;

@@ -84,7 +84,7 @@ $('aAlta').addEventListener('submit', async (e) => {
   const r = await fetch(`${API}/bar/alta`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ nombre: nombre.value.trim(), id, direccion: $('aDireccion').value.trim(), acepto: true, web: $('aWeb').value }),
+    body: JSON.stringify({ nombre: nombre.value.trim(), id, direccion: $('aDireccion').value.trim(), whatsapp: $('aWhatsapp').value.trim(), acepto: true, web: $('aWeb').value }),
     signal: AbortSignal.timeout(10000),
   }).then((x) => x.json()).catch(() => null);
   crear.disabled = false;
@@ -92,6 +92,7 @@ $('aAlta').addEventListener('submit', async (e) => {
   if (!r) return fallo('No hay conexión. Prueba otra vez en un momento.');
   if (!r.ok) {
     if (/dirección/.test(r.error || '')) { libre = false; estado(r.error, false); }
+    if (/WhatsApp/.test(r.error || '')) return fallo(r.error, $('aWhatsapp'));
     return fallo(r.error || 'No se ha podido dar de alta. Escríbenos a hola@cafecita.es.');
   }
   hecho(r.id, r.codigo);
