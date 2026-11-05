@@ -221,13 +221,13 @@ function planCard() {
   const pro = isPro(bar);
   if (!DEMO && pro && enPiloto()) {
     return card('Tu plan', 'Tienes Cafecita Pro gratis hasta el 31 de enero: tu logo, tu color, tu servilletero y tu letra, sin anuncios.',
-      el('p', { class: 'g-note' }, 'Después, Pro cuesta 9,99 € al mes o 99 € al año. Si no quieres seguir, pasas a Basic, gratis, y no pierdes nada. No te cobramos nada sin que nos lo digas.'),
+      el('p', { class: 'g-note' }, 'Después, Pro cuesta 9,99 € + IVA al mes o 99 € + IVA al año. Si no quieres seguir, pasas a Basic, gratis, y no pierdes nada. No te cobramos nada sin que nos lo digas.'),
       seguirConPro());
   }
   // un bar dado de alta no se cambia el plan: lo pone Cafecita
   if (!DEMO) {
     return card('Tu plan', pro ? 'Tienes Cafecita Pro: tu logo, tu color, tu servilletero y tu letra, sin anuncios.'
-      : 'Tienes Cafecita Basic, gratis. Con Pro, por 9,99 € al mes, tu página lleva tu logo, tu color, tu servilletero y tu letra, sin anuncios.',
+      : 'Tienes Cafecita Basic, gratis. Con Pro, por 9,99 € + IVA al mes, tu página lleva tu logo, tu color, tu servilletero y tu letra, sin anuncios.',
     el('p', { class: 'g-note' }, pro ? 'Para cualquier cambio en tu plan, habla con Cafecita.' : 'Para pasarte a Pro, habla con Cafecita. ',
       !pro && el('a', { href: '/carta/#precios', target: '_blank', rel: 'noopener' }, 'Ver los planes')));
   }
@@ -238,7 +238,7 @@ function planCard() {
   return card('Tu plan', 'En la demo puedes cambiar de plan sin pagar, para ver la diferencia.',
     el('div', { class: 'g-plans' },
       opt('gratis', 'Basic', 'Gratis', 'Tu página, tus sugerencias y tu carta, con el color y el logo de Cafecita.'),
-      opt('pro', 'Pro', '9,99 €/mes', 'Tu logo, tu color, tu servilletero y tu letra. Sin anuncios. O 99 € al año: dos meses gratis.')),
+      opt('pro', 'Pro', '9,99 € + IVA/mes', 'Tu logo, tu color, tu servilletero y tu letra. Sin anuncios. O 99 € + IVA al año: dos meses gratis.')),
     !pro && el('p', { class: 'g-note' }, 'Con Basic, de vez en cuando sale un anuncio de Cafecita en tu servilletero.'),
     enPiloto() && el('p', { class: 'g-note' }, 'Si empiezas antes del 31 de enero, Pro es gratis hasta entonces.'));
 }
