@@ -41,6 +41,8 @@ function el(tag, props = {}, ...kids) {
 const $ = (id) => document.getElementById(id);
 const card = (title, sub, ...kids) => el('section', { class: 'g-card' },
   el('header', { class: 'g-card-head' }, el('h2', {}, title), sub && el('p', { class: 'g-sub' }, sub)), ...kids);
+// los dos servilleteros (main.js): el cubo, el de siempre, y el de mostrador
+const MODELOS = { cubo: 'Cubo', mostrador: 'Mostrador' };
 const field = (label, input, hint) => el('label', { class: 'g-field' }, el('span', { class: 'g-label' }, label), input, hint && el('span', { class: 'g-hint' }, hint));
 const num = (v) => (v === '' ? '' : Math.round(parseFloat(String(v).replace(',', '.')) * 100) / 100);
 
@@ -319,6 +321,14 @@ function marcaCard() {
     type: 'button', class: `g-finish g-finish-${k}${m.servilletero === k ? ' on' : ''}`, 'aria-pressed': String(m.servilletero === k), disabled: !pro,
     onclick: () => { m.servilletero = k; changed({ redraw: true }); },
   }, el('span', { class: 'g-finish-box' }), ACABADOS[k]);
+  // el modelo (CAF-64): el cubo de siempre o el de mostrador, que saca la servilleta por arriba
+  const modelo = (k) => {
+    const on = (m.modelo || 'cubo') === k;
+    return el('button', {
+      type: 'button', class: `g-finish g-modelo g-modelo-${k}${on ? ' on' : ''}`, 'aria-pressed': String(on), disabled: !pro,
+      onclick: () => { m.modelo = k; changed({ redraw: true }); },
+    }, el('span', { class: 'g-modelo-box', 'aria-hidden': 'true' }, el('span', {})), MODELOS[k]);
+  };
   const body = el('div', { class: `g-marca${pro ? '' : ' locked'}`, inert: !pro },
     field('Logo', el('div', { class: 'g-logo-row' }, logoBox,
       el('div', { class: 'g-logo-actions' },
@@ -329,7 +339,10 @@ function marcaCard() {
     field('Color de tu página', el('div', { class: 'g-swatches' }, COLORES.map(swatch),
       el('input', { type: 'color', class: 'g-color', value: m.color, 'aria-label': 'Otro color', disabled: !pro,
         onchange: (e) => { m.color = e.target.value; changed({ redraw: true, brand: true }); } }))),
-    field('Servilletero', el('div', { class: 'g-finishes' }, Object.keys(ACABADOS).map(finish))),
+    field('Servilletero', el('div', { class: 'g-finishes' }, Object.keys(MODELOS).map(modelo)),
+      'El cubo tiene la servilleta de pie en una ventana y se saca hacia abajo; el de mostrador la deja asomar por una ranura arriba.'),
+    field('Acabado', el('div', { class: 'g-finishes' }, Object.keys(ACABADOS).map(finish)),
+      (m.modelo || 'cubo') === 'mostrador' ? 'En el de mostrador es el de la caja: los extremos son siempre negros.' : null),
     field('Letra de lo que escribes', el('div', { class: 'g-letras' }, Object.entries(LETRAS).map(([k, l]) => {
       const on = (m.letra || 'clasica') === k;
       const muestra = el('span', { class: 'g-letra-muestra' }, l.caps ? 'SUGERENCIA DEL DÍA' : 'Sugerencia del día');

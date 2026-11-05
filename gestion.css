@@ -244,6 +244,13 @@ button, input, select { font: inherit; color: inherit; }
 .g-finish-inox .g-finish-box { background: linear-gradient(100deg, #b9bcc2, #eceef1 45%, #a9adb4); }
 .g-finish-blanco .g-finish-box { background: #F2F0EB; border: 1px solid var(--linea); }
 .g-finish-negro .g-finish-box { background: #1B1C20; }
+/* el modelo, dibujado en pequeño: el cubo con su ventana; el de mostrador, bajo, con la ranura y los extremos negros */
+.g-modelo-box { position: relative; width: 38px; height: 34px; display: grid; place-items: center; }
+.g-modelo-box span { display: block; position: relative; border-radius: 3px; background: linear-gradient(100deg, #b9bcc2, #eceef1 45%, #a9adb4); }
+.g-modelo-cubo .g-modelo-box span { width: 26px; height: 30px; }
+.g-modelo-cubo .g-modelo-box span::after { content: ''; position: absolute; inset: 4px 4px 5px; border-radius: 1.5px; background: #FBF9F4; box-shadow: inset 0 0 0 1px rgba(12, 14, 46, .08); }
+.g-modelo-mostrador .g-modelo-box span { width: 38px; height: 15px; margin-top: 10px; box-shadow: inset 6px 0 0 #1B1C20, inset -6px 0 0 #1B1C20; }
+.g-modelo-mostrador .g-modelo-box span::before { content: ''; position: absolute; left: 10px; right: 10px; bottom: 100%; height: 9px; border-radius: 1px 1px 0 0; background: #FBF9F4; box-shadow: 0 0 0 1px rgba(12, 14, 46, .08); }
 
 /* carta */
 .g-carta { display: flex; flex-direction: column; gap: 18px; }

@@ -6,24 +6,6 @@ import * as sound from './sound.js?v=13';
 import { medir, visita, API } from './medir.js?v=14';
 import { loadBar, isPro, logoOf, logoImage, servilletas, titulo, DEFAULT_COLOR, LETRAS, letraCss } from './bar.js?v=9';
 
-// ---------- Medidas (cm, iguales que tools/blender_servilletero.py) ----------
-const W = 9.0;      // ancho
-const H = 11.8;     // alto
-const D = 8.4;      // fondo (entre las dos bocas)
-const T = 0.1;      // grosor de chapa
-const LIFT = 0.25;  // gomas
-const FLANGE = 0.3; // la chapa de la boca se dobla hacia dentro
-const TOP = LIFT + H;
-const WIN = { x: W / 2 - 0.6, bottom: LIFT + 1.0, top: TOP - 1.1 };
-const PLATE_IN = D / 2 - T - FLANGE; // donde acaba la pestaña, por dentro
-const PLATE_OUT = D / 2 + 0.03;    // cara exterior
-const NAPKIN_Z = PLATE_IN - 0.05;  // el muelle aprieta el taco contra la ventana
-// la servilleta cabe entera dentro: el borde de arriba queda escondido bajo el marco
-const N_BOTTOM = LIFT + T + 0.2, N_TOP = TOP - T - 0.25;
-const NW = 2 * WIN.x - 0.2, NH = N_TOP - N_BOTTOM;
-const BASE_ROT = 0.55;
-const PAPER = '#FBF9F4';
-
 // ---------- Bar ----------
 // cafecita.app/<bar>/ es el servilletero de un bar (<body data-bar="<bar>">, ver bar.js): en vez
 // de noticias, sus sugerencias del día escritas a boli, y su carta. Con Pro, además, su logo,
@@ -35,6 +17,45 @@ const BRAND = PRO ? BAR.marca.color : DEFAULT_COLOR;
 const KEY_SUFFIX = BAR_ID ? `.${BAR_ID}` : '';
 // la letra de lo que escribe el bar: la que elija con Pro; si no, la de «Gracias por su visita»
 const LETRA = PRO && LETRAS[BAR.marca.letra] ? BAR.marca.letra : 'clasica';
+
+// ---------- Modelo de servilletero ----------
+// Hay dos (CAF-64): el cubo de siempre, de doble cara, con la servilleta de pie en una ventana que
+// se saca abriendo la solapa y tirando hacia abajo; y el de mostrador, una caja baja y larga con los
+// extremos negros, con la servilleta asomando por una ranura en la tapa, que se saca tirando hacia
+// arriba. Lo elige el bar con Pro (bar.marca.modelo); la portada lleva el cubo. Para probar,
+// ?servilletero=mostrador (o =cubo) en la dirección de cualquier página.
+const MODELO = (() => {
+  const q = new URLSearchParams(location.search).get('servilletero');
+  if (q === 'cubo' || q === 'mostrador') return q;
+  return PRO && BAR.marca.modelo === 'mostrador' ? 'mostrador' : 'cubo';
+})();
+const MOSTRADOR = MODELO === 'mostrador';
+
+// ---------- Medidas (cm, iguales que tools/blender_servilletero.py y tools/blender_mostrador.py) ----------
+// W, D y TOP son la caja del servilletero, la de los dos modelos (cámara, bolas, sombras);
+// lo demás es de cada uno.
+const W = MOSTRADOR ? 22.0 : 9.0;  // ancho (el de mostrador, de extremo a extremo)
+const H = 11.8;     // alto
+const D = MOSTRADOR ? 9.8 : 8.4;   // fondo (entre las dos bocas)
+const T = 0.1;      // grosor de chapa
+const LIFT = 0.25;  // gomas
+const FLANGE = 0.3; // la chapa de la boca se dobla hacia dentro
+const TOP = MOSTRADOR ? 6.9 : LIFT + H; // (el de mostrador: la tapa, donde está la ranura)
+const WIN = { x: W / 2 - 0.6, bottom: LIFT + 1.0, top: TOP - 1.1 };
+const PLATE_IN = D / 2 - T - FLANGE; // donde acaba la pestaña, por dentro
+const PLATE_OUT = D / 2 + 0.03;    // cara exterior
+const NAPKIN_Z = PLATE_IN - 0.05;  // el muelle aprieta el taco contra la ventana
+// la servilleta cabe entera dentro: el borde de arriba queda escondido bajo el marco
+const N_BOTTOM = LIFT + T + 0.2, N_TOP = TOP - T - 0.25;
+// De mostrador: la ranura va a lo largo, en el centro de la tapa. La servilleta es más ancha que
+// la del cubo y solo se ve la tira que asoma; lo demás sigue dentro, pillado en la ranura.
+const SLOT = { x: 15.4 / 2, z: 0.8 / 2 }; // medio largo y medio ancho de la ranura
+const CAP = 2.0, CAP_TOP = 7.3;           // los extremos negros, algo más altos que la tapa
+const ASOMA = 4.2;   // lo que asoma la servilleta por encima de la ranura
+const DENTRO = 2.6;  // lo que queda dentro hasta que se tira de ella
+const NW = MOSTRADOR ? 14.6 : 2 * WIN.x - 0.2, NH = MOSTRADOR ? ASOMA + DENTRO : N_TOP - N_BOTTOM;
+const BASE_ROT = 0.55;
+const PAPER = '#FBF9F4';
 
 // ---------- Estado ----------
 // El servilletero no se acaba: cada dispositivo lleva la cuenta de las que ha sacado
@@ -273,13 +294,16 @@ function studioEnv() {
 scene.environment = pmrem.fromScene(studioEnv(), 0.02).texture;
 
 const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 200);
-const target = new THREE.Vector3(0, TOP * 0.47, 0);
+// (el de mostrador es bajo: se mira a media altura contando la servilleta que asoma)
+const target = new THREE.Vector3(0, MOSTRADOR ? (TOP + ASOMA) * 0.4 : TOP * 0.47, 0);
 
 const key = new THREE.DirectionalLight(0xffffff, 1.5);
 key.position.set(-9, 22, 12);
 key.castShadow = true;
 key.shadow.mapSize.set(2048, 2048);
 Object.assign(key.shadow.camera, { left: -16, right: 16, top: 18, bottom: -14, near: 1, far: 70 });
+// el de mostrador se ve de más lejos: la sombra tiene que llegar a toda la mesa que se ve
+if (MOSTRADOR) Object.assign(key.shadow.camera, { left: -30, right: 30, top: 30, bottom: -26 });
 key.shadow.bias = -0.0004;
 key.shadow.normalBias = 0.02;
 key.shadow.radius = 6;
@@ -384,6 +408,34 @@ function flapTexture() {
   return canvasTexture(c);
 }
 
+// En el de mostrador lo que se ve es el borde de arriba de la servilleta, la tira que asoma por la
+// ranura: el rótulo va ahí. Como el servilletero se puede girar, se ve por las dos caras; la de
+// detrás (flip) lleva el mismo rótulo dado la vuelta, para que se lea igual.
+function slotTexture(flip) {
+  const { c, g } = paperCanvas();
+  const band = TEX_H * ASOMA / NH; // lo que asoma, arriba de la textura
+  if (flip) g.setTransform(-1, 0, 0, 1, TEX_W, 0);
+  g.filter = 'blur(0.4px)';
+  if (BAR) barFlap(g, TEX_W, band * 0.04, band * 0.94, inkLogo, INK);
+  else {
+    const cy = band * 0.4;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillStyle = INK;
+    g.globalAlpha = 0.9;
+    g.font = `italic 400 ${Math.round(TEX_W * 0.066)}px Fraunces, Georgia, serif`;
+    g.fillText('Gracias por su visita', TEX_W / 2, cy);
+    const ly = cy + TEX_W * 0.075, lh = TEX_W * 0.03;
+    const lw = inkLogo ? lh * inkLogo.naturalWidth / inkLogo.naturalHeight : 0;
+    if (inkLogo) g.drawImage(inkLogo, TEX_W / 2 - lw / 2, ly - lh / 2, lw, lh);
+  }
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.filter = 'none';
+  g.globalAlpha = 1;
+  grain(g, TEX_W, TEX_H, 7);
+  return canvasTexture(c);
+}
+
 // Cara de dentro: papel en blanco (el retrato y la frase se ven al revelarla)
 function blankTexture() {
   const { c, g } = paperCanvas();
@@ -438,7 +490,7 @@ function paperNormalMap() {
   }
   g.filter = 'blur(2px)';
   g.fillStyle = 'rgba(210,210,210,0.9)';
-  g.fillRect(0, h * (1 - FOLD_V) - 1.5, w, 3);
+  if (!MOSTRADOR) g.fillRect(0, h * (1 - FOLD_V) - 1.5, w, 3); // (la de mostrador no tiene solapa)
   g.fillStyle = 'rgba(120,120,120,0.5)';
   g.fillRect(w / 2 - 1, 0, 2, h);
   g.filter = 'none';
@@ -485,8 +537,11 @@ const MATERIALS = {
     anisotropy: 0.8, anisotropyRotation: 0,
   }),
   Goma: new THREE.MeshStandardMaterial({ color: '#111114', roughness: 0.6 }),
+  // los extremos del de mostrador: plástico negro mate, con un brillo muy suave en los cantos
+  Tapa: new THREE.MeshPhysicalMaterial({ color: '#141417', roughness: 0.5, envMapIntensity: 0.8, sheen: 0.3, sheenRoughness: 0.6, sheenColor: '#3a3d48' }),
 };
-// el acabado que elige un bar Pro: blanco o negro lacado en vez de inox
+// el acabado que elige un bar Pro: blanco o negro lacado en vez de inox (en el de mostrador, el
+// cuerpo; los extremos siguen negros)
 if (PRO && BAR.marca.servilletero === 'blanco') Object.assign(MATERIALS.Inox, { color: new THREE.Color('#F2F0EB'), map: null, roughnessMap: null, metalness: 0, roughness: 0.32, envMapIntensity: 0.9, anisotropy: 0 });
 if (PRO && BAR.marca.servilletero === 'negro') Object.assign(MATERIALS.Inox, { color: new THREE.Color('#1B1C20'), map: null, roughnessMap: null, metalness: 0.2, roughness: 0.36, envMapIntensity: 1, anisotropy: 0 });
 const paperNormal = paperNormalMap();
@@ -522,7 +577,7 @@ const loaded = () => requestAnimationFrame(() => requestAnimationFrame(() => {
   medir('enlace', { a: 'carga', ds: Math.round(performance.now() / 100), ...(BAR ? { bar: BAR_ID } : {}) });
   gsap.delayedCall(0.6, () => onboard.start());
 }));
-new GLTFLoader().load('models/servilletero.glb', (gltf) => {
+new GLTFLoader().load(MOSTRADOR ? 'models/mostrador.glb' : 'models/servilletero.glb', (gltf) => {
   gltf.scene.traverse((o) => {
     if (!o.isMesh) return;
     o.material = MATERIALS[o.material?.name] ?? MATERIALS.Inox;
@@ -539,7 +594,8 @@ new GLTFLoader().load('models/servilletero.glb', (gltf) => {
 // Rejilla de partículas (verlet) con distancias fijas: el papel se dobla pero no se estira.
 // La parte de arriba queda pillada bajo el marco y solo desliza si se tira hacia abajo;
 // la de abajo (la solapa) se suelta en cuanto se agarra.
-const NX = 13, NY = 19;
+// (la de mostrador es ancha y baja: más puntos a lo ancho y menos a lo alto)
+const NX = MOSTRADOR ? 25 : 13, NY = MOSTRADOR ? 12 : 19;
 const N = NX * NY;
 const DX = NW / (NX - 1), DY = NH / (NY - 1);
 const GRAVITY = -650;   // cm/s², el papel cae "frenado" por el aire
@@ -551,6 +607,7 @@ const FREE = 0, HELD_TOP = 1, HELD_BOTTOM = 2, GRABBED = 3;
 // y por fuera solo se entra por ella. Si un punto acaba metido en la chapa, sale por
 // la cara por la que venía. Devuelve si el punto queda dentro; la posición, en solid.out.
 function solid(x, y, z, inside, px, py, pz) {
+  if (MOSTRADOR) return solidMostrador(x, y, z, px, py, pz);
   const out = solid.out;
   const inWin = Math.abs(x) < WIN.x - 0.06 && y > WIN.bottom + 0.06 && y < WIN.top - 0.06;
   if (inside) {
@@ -579,6 +636,38 @@ function solid(x, y, z, inside, px, py, pz) {
 }
 solid.out = new Float32Array(3);
 
+// El de mostrador también es macizo: una caja (con los extremos algo más altos) en la que el papel
+// solo está dentro por la ranura, y en ella no atraviesa la chapa de los lados. Nada queda «dentro».
+function solidMostrador(x, y, z, px, py, pz) {
+  const out = solid.out;
+  const m = 0.04, bx = W / 2 + m, bf = D / 2 + m;
+  const bt = (Math.abs(x) > W / 2 - CAP ? CAP_TOP : TOP) + m;
+  if (Math.abs(x) < bx && y < bt && Math.abs(z) < bf) {
+    if (Math.abs(x) < SLOT.x - 0.06 && Math.abs(z) < SLOT.z && y > TOP - 2.5) {
+      z = THREE.MathUtils.clamp(z, -SLOT.z + 0.08, SLOT.z - 0.08);
+    } else {
+      const pen = [bx - x, x + bx, bt - y, bf - z, z + bf];
+      const came = [px >= bx, px <= -bx, py >= bt, pz >= bf, pz <= -bf];
+      let best = -1;
+      for (let k = 0; k < 5; k++) if (came[k] && (best < 0 || pen[k] < pen[best])) best = k;
+      if (best < 0) for (let k = 0; k < 5; k++) if (best < 0 || pen[k] < pen[best]) best = k;
+      if (best === 0) x = bx; else if (best === 1) x = -bx; else if (best === 2) y = bt; else if (best === 3) z = bf; else z = -bf;
+    }
+  }
+  out[0] = x; out[1] = y; out[2] = z;
+  return 0;
+}
+
+// De mostrador, la servilleta en reposo: de pie en la ranura y un poco vencida hacia atrás, con una
+// onda suave a lo ancho. s es cuánto queda por encima de la ranura, medido sobre el papel
+// (negativo: lo que sigue dentro). Las distancias de la rejilla se miden con el papel plano.
+function slotRest(ix, iy) {
+  const u = -NW / 2 + ix * DX, s = ASOMA - iy * DY;
+  if (s <= 0) return [u, TOP + s, 0];
+  const R = 9, a = s / R, k = (s / ASOMA) ** 2;
+  return [u, TOP + R * Math.sin(a), -R * (1 - Math.cos(a)) + 0.18 * Math.sin(u * 0.55 + 0.8) * k];
+}
+
 class Sheet {
   constructor() {
     this.pos = new Float32Array(N * 3);
@@ -587,13 +676,19 @@ class Sheet {
     this.mode = new Uint8Array(N);
     this.inside = new Uint8Array(N);   // 1 = dentro del servilletero
     this.offset = new Float32Array(N * 3);
+    this.s = new Float32Array(N);       // de mostrador: lo que queda por encima de la ranura (slotRest)
+    const flat = new Float32Array(N * 2); // de mostrador: la rejilla con el papel plano
     const c = [];
     const idx = (ix, iy) => iy * NX + ix;
     const link = (a, b, k) => c.push(a, b, k);
     for (let iy = 0; iy < NY; iy++) {
       for (let ix = 0; ix < NX; ix++) {
         const i = idx(ix, iy);
-        this.rest.set([-NW / 2 + ix * DX, N_TOP - iy * DY, NAPKIN_Z], i * 3);
+        if (MOSTRADOR) {
+          this.rest.set(slotRest(ix, iy), i * 3);
+          this.s[i] = ASOMA - iy * DY;
+          flat.set([ix * DX, -iy * DY], i * 2);
+        } else this.rest.set([-NW / 2 + ix * DX, N_TOP - iy * DY, NAPKIN_Z], i * 3);
         if (ix < NX - 1) link(i, idx(ix + 1, iy), 1);
         if (iy < NY - 1) link(i, idx(ix, iy + 1), 1);
         if (ix < NX - 1 && iy < NY - 1) { link(i, idx(ix + 1, iy + 1), 0.9); link(idx(ix + 1, iy), idx(ix, iy + 1), 0.9); }
@@ -609,6 +704,11 @@ class Sheet {
     this.stiff = Float32Array.from(c.filter((_, j) => j % 3 === 2));
     this.len = new Float32Array(this.stiff.length);
     for (let k = 0; k < this.len.length; k++) {
+      if (MOSTRADOR) {
+        const a = this.pairs[k * 2] * 2, b = this.pairs[k * 2 + 1] * 2;
+        this.len[k] = Math.hypot(flat[a] - flat[b], flat[a + 1] - flat[b + 1]);
+        continue;
+      }
       const a = this.pairs[k * 2] * 3, b = this.pairs[k * 2 + 1] * 3;
       this.len[k] = Math.hypot(this.rest[a] - this.rest[b], this.rest[a + 1] - this.rest[b + 1]);
     }
@@ -620,8 +720,10 @@ class Sheet {
     this.prev.set(this.rest);
     this.slide = 0;
     this.grabTarget = null;
-    this.inside.fill(1);
+    this.inside.fill(MOSTRADOR ? 0 : 1);
     for (let i = 0; i < N; i++) {
+      // de mostrador, lo que sigue dentro de la ranura está pillado (como lo de arriba en el cubo)
+      if (MOSTRADOR) { this.mode[i] = this.s[i] < -0.05 ? HELD_TOP : FREE; continue; }
       const y = this.rest[i * 3 + 1];
       this.mode[i] = y > WIN.top ? HELD_TOP : y < WIN.bottom ? HELD_BOTTOM : FREE;
     }
@@ -643,13 +745,15 @@ class Sheet {
     }
     const cx = this.pos[best * 3], cy = this.pos[best * 3 + 1], cz = this.pos[best * 3 + 2];
     this.grabRestY = this.rest[best * 3 + 1];
+    this.grabS = this.s[best];
     this.grabbed = [];
     // los dedos pellizcan una línea del papel: el resto puede girar alrededor
+    // (de mostrador se coge con toda la mano: esa fila entera y lo que asoma por encima van juntos)
     const row = (best / NX) | 0;
-    for (let i = row * NX; i < (row + 1) * NX; i++) {
+    for (let i = MOSTRADOR ? 0 : row * NX; i < (row + 1) * NX; i++) {
       if (this.mode[i] !== FREE) continue;
       const ox = this.pos[i * 3] - cx, oy = this.pos[i * 3 + 1] - cy;
-      if (Math.abs(ox) > 1.6) continue;
+      if (!MOSTRADOR && Math.abs(ox) > 1.6) continue;
       this.mode[i] = GRABBED;
       this.offset.set([ox, oy, this.pos[i * 3 + 2] - cz], i * 3);
       this.grabbed.push(i);
@@ -666,6 +770,7 @@ class Sheet {
   // Tirar hacia abajo saca lo que estaba pillado bajo el marco de arriba;
   // hacia arriba solo llega hasta donde da el papel que ya está fuera.
   pull(t) {
+    if (MOSTRADOR) return this.pullUp(t);
     const hinge = new THREE.Vector3(t.x, WIN.top, PLATE_OUT);
     const dist = t.distanceTo(hinge);
     const base = WIN.top - this.grabRestY;
@@ -674,6 +779,17 @@ class Sheet {
     const reach = N_TOP - this.grabRestY - hidden + 0.3;
     if (dist > reach) t.copy(hinge.add(t.clone().sub(hinge).setLength(reach)));
     t.y = Math.max(t.y, 0.3);
+    return t;
+  }
+
+  // De mostrador se tira hacia arriba: en cuanto los dedos suben por encima de la ranura, sale lo
+  // que seguía dentro; hacia abajo o a los lados, solo llega hasta donde da el papel que ya está fuera.
+  pullUp(t) {
+    const hinge = new THREE.Vector3(THREE.MathUtils.clamp(t.x, -SLOT.x, SLOT.x), TOP, 0);
+    const dist = t.distanceTo(hinge);
+    if (t.y > TOP) this.slide = Math.max(this.slide, Math.min(dist * 0.97 - this.grabS, DENTRO + 0.5));
+    const reach = this.grabS + this.slide + 0.3;
+    if (dist > reach) t.copy(hinge.add(t.clone().sub(hinge).setLength(reach)));
     return t;
   }
 
@@ -692,7 +808,10 @@ class Sheet {
         p[j + 2] += vz - (this.inside[i] ? pressure * dt * dt : 0);
       } else {
         q[j] = p[j]; q[j + 1] = p[j + 1]; q[j + 2] = p[j + 2];
-        if (m === HELD_TOP) {
+        if (m === HELD_TOP && MOSTRADOR) {
+          // sube recta por la ranura
+          p[j] = this.rest[j]; p[j + 1] = Math.min(TOP, this.rest[j + 1] + this.slide); p[j + 2] = 0;
+        } else if (m === HELD_TOP) {
           p[j] = this.rest[j]; p[j + 1] = this.rest[j + 1] - this.slide; p[j + 2] = NAPKIN_Z;
         } else if (m === HELD_BOTTOM) {
           p[j] = this.rest[j]; p[j + 1] = this.rest[j + 1]; p[j + 2] = NAPKIN_Z;
@@ -724,7 +843,7 @@ class Sheet {
     }
 
     for (let i = 0; i < N; i++) {
-      if (this.mode[i] === HELD_TOP && this.rest[i * 3 + 1] - this.slide < WIN.top - 0.05) {
+      if (this.mode[i] === HELD_TOP && (MOSTRADOR ? this.s[i] + this.slide > -0.05 : this.rest[i * 3 + 1] - this.slide < WIN.top - 0.05)) {
         this.mode[i] = FREE;
       }
     }
@@ -776,17 +895,23 @@ class Sheet {
 }
 
 // ---------- Caras ----------
+// (el de mostrador tiene una sola, la de la ranura, y su servilleta se ve por las dos caras)
 const faces = {};
-const flapTex = flapTexture(), blankTex = blankTexture();
-const stackGeo = new THREE.BoxGeometry(NW, NH, NAPKIN_Z - 0.06);
-stackGeo.translate(0, N_BOTTOM + NH / 2, (NAPKIN_Z - 0.06) / 2 + 0.03);
+const flapTex = MOSTRADOR ? slotTexture(false) : flapTexture(), blankTex = blankTexture();
+const backTex = MOSTRADOR ? slotTexture(true) : blankTex;
+const stackGeo = MOSTRADOR ? new THREE.BoxGeometry(2 * SLOT.x - 0.3, 0.5, 7) : new THREE.BoxGeometry(NW, NH, NAPKIN_Z - 0.06);
+// de mostrador, el taco va tumbado dentro: por la ranura se ve su cara de arriba
+if (MOSTRADOR) stackGeo.translate(0, TOP - 0.62 - 0.25, 0);
+else stackGeo.translate(0, N_BOTTOM + NH / 2, (NAPKIN_Z - 0.06) / 2 + 0.03);
+const stackMats = MOSTRADOR ? [stackEdge, stackEdge, stackFront, stackFront, stackEdge, stackEdge]
+  : [stackEdge, stackEdge, stackEdge, stackEdge, stackFront, stackFront];
 
-for (const [id, s] of [['A', 1], ['B', -1]]) {
+for (const [id, s] of MOSTRADOR ? [['A', 1]] : [['A', 1], ['B', -1]]) {
   const group = new THREE.Group();
   group.rotation.y = s > 0 ? 0 : Math.PI;
   dispenser.add(group);
 
-  const stack = new THREE.Mesh(stackGeo, [stackEdge, stackEdge, stackEdge, stackEdge, stackFront, stackFront]);
+  const stack = new THREE.Mesh(stackGeo, stackMats);
   stack.receiveShadow = true;
   group.add(stack);
 
@@ -794,7 +919,7 @@ for (const [id, s] of [['A', 1], ['B', -1]]) {
   const geo = new THREE.PlaneGeometry(NW, NH, NX - 1, NY - 1);
   geo.attributes.position.array.set(sheet.pos);
   const front = new THREE.Mesh(geo, paperMaterial(flapTex, THREE.FrontSide));
-  const back = new THREE.Mesh(geo, paperMaterial(blankTex, THREE.BackSide));
+  const back = new THREE.Mesh(geo, paperMaterial(backTex, THREE.BackSide));
   for (const m of [front, back]) { m.castShadow = true; m.receiveShadow = true; group.add(m); }
 
   faces[id] = { id, s, group, stack, sheet, geo, front, back, settled: true };
@@ -813,10 +938,17 @@ function resize() {
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
   const half = THREE.MathUtils.degToRad(camera.fov / 2);
-  const distV = (TOP * 2.1) / 2 / Math.tan(half);
-  const distH = (W * 2.2) / 2 / (Math.tan(half) * camera.aspect);
+  let distV = (TOP * 2.1) / 2 / Math.tan(half);
+  let distH = (W * 2.2) / 2 / (Math.tan(half) * camera.aspect);
+  if (MOSTRADOR) {
+    // bajo y largo, y algo más desde arriba para ver la ranura: en el móvil manda lo que ocupa a lo
+    // ancho (girado, como se ve); en el ordenador, lo alto con la servilleta que asoma
+    const span = W * Math.cos(BASE_ROT) + D * Math.sin(BASE_ROT);
+    distV = ((TOP + ASOMA) * 2.9) / 2 / Math.tan(half);
+    distH = (span * 1.3) / 2 / (Math.tan(half) * camera.aspect);
+  }
   const dist = Math.max(distV, distH);
-  const el = THREE.MathUtils.degToRad(13);
+  const el = THREE.MathUtils.degToRad(MOSTRADOR ? 19 : 13);
   camera.position.set(0, target.y + Math.sin(el) * dist, Math.cos(el) * dist);
   camera.lookAt(target);
   camera.updateProjectionMatrix();
@@ -830,9 +962,16 @@ let rot = BASE_ROT, rotTarget = BASE_ROT, parallax = 0;
 let drag = null, busy = false;
 
 function facingFace() {
+  if (MOSTRADOR) return faces.A;
   const toCam = camera.position.clone().sub(target).setY(0).normalize();
   const nA = new THREE.Vector3(Math.sin(rot), 0, Math.cos(rot));
   return nA.dot(toCam) >= 0 ? faces.A : faces.B;
+}
+
+// el de mostrador se saca hacia arriba (en un bar, carta.js ya lo ha puesto antes de que llegue el 3D)
+if (MOSTRADOR) {
+  $('hint').textContent = 'Toca la servilleta o tira de ella hacia arriba';
+  canvas.setAttribute('aria-label', canvas.getAttribute('aria-label').replace('hacia abajo', 'hacia arriba'));
 }
 
 function updateUI() {
@@ -867,6 +1006,11 @@ function pick(e) {
   const hits = raycaster.intersectObjects([face.front, face.back, face.stack, ...pickables], false);
   const hit = hits[0];
   if (hit && (hit.object === face.front || hit.object === face.back || hit.object === face.stack)) return { face, point: hit.point };
+  // de mostrador la tira que asoma es estrecha: tocar la tapa junto a la ranura también la coge
+  if (MOSTRADOR && hit) {
+    const p = face.group.worldToLocal(hit.point.clone());
+    if (p.y > TOP - 0.1 && Math.abs(p.x) < SLOT.x + 0.5 && Math.abs(p.z) < 2.2) return { face, point: hit.point };
+  }
   return null;
 }
 
@@ -897,6 +1041,8 @@ canvas.addEventListener('pointerdown', (e) => {
     sound.rubStart();
     onboard.grabbed();
     drag = { mode: 'pull', face: hit.face, sx: e.clientX, sy: e.clientY, t0: performance.now(), moved: 0, z0: hit.face.sheet.grabTarget.z, out: 0, last: null, inside: 1 };
+    // de mostrador, al tirar la servilleta viene un poco hacia ti (hacia el lado de la cámara)
+    if (MOSTRADOR) drag.side = hit.face.group.worldToLocal(camera.position.clone()).z > 0 ? 1 : -1;
     canvas.style.cursor = 'grabbing';
   } else if (!busy && pickBall(e)) {
     const ball = pickBall(e);
@@ -955,7 +1101,7 @@ canvas.addEventListener('pointermove', (e) => {
   drag.moved = Math.max(drag.moved, moved);
   drag.out = Math.max(drag.out, Math.min(1, moved / 40));
   setRay(e);
-  const z = drag.z0 + (PLATE_OUT + 1.4 - drag.z0) * drag.out;
+  const z = MOSTRADOR ? drag.z0 + 1.2 * drag.side * drag.out : drag.z0 + (PLATE_OUT + 1.4 - drag.z0) * drag.out;
   const p = pointerOnPlane(drag.face, z);
   const sheet = drag.face.sheet;
   if (p && sheet.grabTarget) {
@@ -1048,6 +1194,15 @@ function extract(face) {
   sound.pull();
   if (navigator.vibrate) navigator.vibrate(18);
   updateUI();
+  // de mostrador, con un toque la servilleta sale de la ranura hacia arriba, como al tirar de ella
+  const sheet = face.sheet;
+  if (MOSTRADOR && sheet.grabTarget && sheet.heldTop) {
+    const g = sheet.grabTarget, o = { y: g.y }, to = new THREE.Vector3();
+    gsap.to(o, {
+      y: TOP + ASOMA + DENTRO + 1.5, duration: 0.4, ease: 'power2.out',
+      onUpdate: () => { if (sheet.grabTarget === g) g.copy(sheet.pull(to.set(g.x, o.y, g.z))); },
+    });
+  }
   // la servilleta cuelga un momento de los dedos y se la lleva la cámara
   gsap.delayedCall(0.45, () => {
     face.sheet.release();
@@ -1274,7 +1429,8 @@ function finishCrumple(paper, opts) {
 const landRay = new THREE.Raycaster(), landNdc = new THREE.Vector2();
 function pickLanding(up) {
   dispenser.updateMatrixWorld();
-  if (Math.random() < (up ? 0.35 : 0.08)) {
+  // (encima del de mostrador no: taparía la servilleta que asoma)
+  if (!MOSTRADOR && Math.random() < (up ? 0.35 : 0.08)) {
     return dispenser.localToWorld(new THREE.Vector3((Math.random() - 0.5) * (W - 3), TOP + BALL_R, (Math.random() - 0.5) * (D - 3)));
   }
   const floor = new THREE.Plane(UP, -BALL_R), out = new THREE.Vector3();
@@ -1282,7 +1438,7 @@ function pickLanding(up) {
     landRay.setFromCamera(landNdc.set((Math.random() * 2 - 1) * 0.82, -0.82 + Math.random() * 0.9), camera);
     if (!landRay.ray.intersectPlane(floor, out)) continue;
     local.copy(out).applyAxisAngle(UP, -dispenser.rotation.y);
-    if (Math.abs(local.x) < W / 2 + 2 && Math.abs(local.z) < D / 2 + 7) continue; // la caja y sus ventanas
+    if (Math.abs(local.x) < W / 2 + 2 && Math.abs(local.z) < D / 2 + (MOSTRADOR ? 2 : 7)) continue; // la caja y sus ventanas
     if (pointHidden(out, BALL_R)) continue;
     return out;
   }
@@ -1414,6 +1570,7 @@ function hitSheets(b) {
 
 // delante de cada ventana no se queda ninguna bola: es por donde sale la servilleta
 function clearWindows(b) {
+  if (MOSTRADOR) return false; // el de mostrador no tiene ventanas: la servilleta sale por arriba
   const ry = dispenser.rotation.y;
   local.copy(b.mesh.position).applyAxisAngle(UP, -ry);
   const front = Math.abs(local.z) > D / 2 && Math.abs(local.z) < D / 2 + 6, ahead = Math.abs(local.x) < W / 2 + b.r;
@@ -1977,13 +2134,17 @@ const onboard = (() => {
 
   // dónde está la solapa de la servilleta que mira a cámara, en píxeles
   function flapOnScreen() {
-    const p = facingFace().group.localToWorld(new THREE.Vector3(0, WIN.bottom + 1.3, PLATE_OUT)).project(camera);
+    // (de mostrador, la tira que asoma por la ranura)
+    const at = MOSTRADOR ? new THREE.Vector3(0, TOP + ASOMA * 0.55, -0.3) : new THREE.Vector3(0, WIN.bottom + 1.3, PLATE_OUT);
+    const p = facingFace().group.localToWorld(at).project(camera);
     return [(p.x + 1) / 2 * window.innerWidth, (1 - p.y) / 2 * window.innerHeight];
   }
   function showPull() {
     step = 'pull';
     demo(() => {
       const [x, y] = flapOnScreen(), u = window.innerHeight / 100;
+      // de mostrador se pellizca y se sube; en el cubo, se abre la solapa y se tira hacia abajo
+      if (MOSTRADOR) return [[x, y], [x, y - 16 * u, 0.8]];
       return [[x, y], [x, y - 9 * u, 0.55], [x, y + 16 * u, 0.7]];
     });
   }
@@ -2101,6 +2262,26 @@ $('share').addEventListener('click', async () => {
   }
 });
 
+// De mostrador, la invitación a tirar: la tira que asoma se mece hacia delante y vuelve. El papel
+// de pie se caería con la física, así que se mueve a mano y acaba justo donde estaba.
+function sway(face) {
+  const sheet = face.sheet, o = { u: 0 };
+  face.sway = gsap.to(o, {
+    u: 1, duration: 1.5, ease: 'sine.inOut',
+    onUpdate: () => {
+      if (!face.settled || sheet.grabTarget) return face.sway.kill();
+      const k = Math.sin(o.u * Math.PI) * 0.55 * (1 - 0.35 * Math.sin(o.u * Math.PI * 3));
+      for (let i = 0; i < N; i++) {
+        const s = sheet.s[i];
+        if (s <= 0) continue;
+        const j = i * 3, f = (s / ASOMA) ** 2;
+        sheet.pos[j + 2] = sheet.rest[j + 2] + k * f;
+        sheet.pos[j + 1] = sheet.rest[j + 1] - 0.5 * k * k * f * f / Math.max(s, 0.5);
+      }
+    },
+  });
+}
+
 // ---------- Bucle ----------
 const clock = new THREE.Clock();
 const SUB = 1 / 120;
@@ -2115,7 +2296,10 @@ function frame(dt) {
   if (face !== lastFacing) { lastFacing = face; updateUI(); }
 
   // invita a tirar: de vez en cuando la solapa de abajo se despega un poco
-  if (!drag && !busy && face.settled && t > nextHint) {
+  if (MOSTRADOR && !drag && !busy && face.settled && t > nextHint) {
+    nextHint = t + 3.2;
+    sway(face);
+  } else if (!drag && !busy && face.settled && t > nextHint) {
     nextHint = t + 3.2;
     face.settled = false;
     const sheet = face.sheet;
@@ -2131,7 +2315,7 @@ function frame(dt) {
     acc -= SUB;
     for (const f of Object.values(faces)) {
       if (f.settled || !f.front.visible || f.tween?.isActive()) continue;
-      f.sheet.step(SUB, f.sheet.grabTarget ? 0 : 160);
+      f.sheet.step(SUB, f.sheet.grabTarget || MOSTRADOR ? 0 : 160);
     }
     stepBalls(SUB);
   }
