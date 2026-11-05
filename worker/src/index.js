@@ -345,6 +345,10 @@ async function altaBar(db, request) {
   const nombre = typeof body?.nombre === 'string' ? body.nombre.trim().slice(0, 60) : '';
   const direccion = typeof body?.direccion === 'string' ? body.direccion.trim().slice(0, 120) : '';
   if (nombre.length < 2) return json({ ok: false, error: 'Escribe el nombre de tu bar.' }, 400);
+  // su WhatsApp, si lo deja (CAF-53): para ayudarle y devolverle el código. No va en la ficha
+  // pública (columna aparte que leerBar no devuelve). Solo cifras y un + delante, de 9 a 15.
+  const tel = String(body?.whatsapp ?? '').replace(/[\s().-]/g, '');
+  if (tel && !/^\+?\d{9,15}$/.test(tel)) return json({ ok: false, error: 'Revisa el número de WhatsApp (o déjalo vacío).' }, 400);
   if (body?.acepto !== true) return json({ ok: false, error: 'Tienes que aceptar el aviso legal y la privacidad.' }, 400);
   const motivo = await libre(db, id);
   if (motivo) return json({ ok: false, error: motivo }, 409);
@@ -363,8 +367,8 @@ async function altaBar(db, request) {
   };
   try {
     await db.batch([
-      db.prepare('insert into bares (id, datos, plan, codigo, actualizado) values (?, ?, ?, ?, ?)')
-        .bind(id, JSON.stringify(datos), Date.now() <= FIN_PILOTO ? 'pro' : 'gratis', await sha256(codigo), now.toISOString()),
+      db.prepare('insert into bares (id, datos, plan, codigo, actualizado, contacto) values (?, ?, ?, ?, ?, ?)')
+        .bind(id, JSON.stringify(datos), Date.now() <= FIN_PILOTO ? 'pro' : 'gratis', await sha256(codigo), now.toISOString(), tel || null),
       db.prepare('insert into altas (dia, ip, bar, creada) values (?, ?, ?, ?)').bind(hoy, ip, id, now.toISOString()),
       db.prepare('delete from altas where creada < ?').bind(new Date(now - 7 * 864e5).toISOString()),
     ]);

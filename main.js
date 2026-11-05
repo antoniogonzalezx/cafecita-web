@@ -518,6 +518,8 @@ const pickables = [];
 // hasta que llega el modelo se ve la silueta (.skeleton); luego entra la escena
 const loaded = () => requestAnimationFrame(() => requestAnimationFrame(() => {
   document.body.classList.remove('loading');
+  // cuánto tarda de verdad en verse el servilletero en los móviles de la gente (CAF-51)
+  medir('enlace', { a: 'carga', ds: Math.round(performance.now() / 100), ...(BAR ? { bar: BAR_ID } : {}) });
   gsap.delayedCall(0.6, () => onboard.start());
 }));
 new GLTFLoader().load('models/servilletero.glb', (gltf) => {
@@ -894,7 +896,7 @@ canvas.addEventListener('pointerdown', (e) => {
     sound.grab();
     sound.rubStart();
     onboard.grabbed();
-    drag = { mode: 'pull', face: hit.face, sx: e.clientX, sy: e.clientY, z0: hit.face.sheet.grabTarget.z, out: 0, last: null, inside: 1 };
+    drag = { mode: 'pull', face: hit.face, sx: e.clientX, sy: e.clientY, t0: performance.now(), moved: 0, z0: hit.face.sheet.grabTarget.z, out: 0, last: null, inside: 1 };
     canvas.style.cursor = 'grabbing';
   } else if (!busy && pickBall(e)) {
     const ball = pickBall(e);
@@ -950,6 +952,7 @@ canvas.addEventListener('pointermove', (e) => {
   }
   // al empezar a tirar, la solapa se despega y viene hacia ti
   const moved = Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy);
+  drag.moved = Math.max(drag.moved, moved);
   drag.out = Math.max(drag.out, Math.min(1, moved / 40));
   setRay(e);
   const z = drag.z0 + (PLATE_OUT + 1.4 - drag.z0) * drag.out;
@@ -984,6 +987,11 @@ function endDrag() {
     }
   } else if (drag.mode === 'rotate') {
     rotTarget = BASE_ROT + Math.round((rot - BASE_ROT) / Math.PI) * Math.PI;
+  } else if (!busy && drag.moved < 10 && performance.now() - drag.t0 < 400) {
+    // un toque en la servilleta la saca entera: el gesto (abrir, subir, tirar) es para quien quiera (CAF-50)
+    sound.rubStop();
+    medir('enlace', { a: 'servilleta:toque', ...(BAR ? { bar: BAR_ID } : {}) });
+    extract(drag.face);
   } else if (!busy) {
     // se suelta a medias: el papel cae y vuelve a meterse en el servilletero
     sound.rubStop();

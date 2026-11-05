@@ -14,6 +14,7 @@ const WIDE = matchMedia('(min-width: 761px)');
 const frame = () => document.getElementById('gFrame');
 frame().dataset.src = `/${ID}/`;
 document.getElementById('gVer')?.setAttribute('href', `/${ID}/`);
+document.getElementById('gVer')?.addEventListener('click', () => marcarPaso('ver'));
 function syncFrame() {
   const f = frame();
   if (WIDE.matches && !f.getAttribute('src')) f.src = f.dataset.src;
@@ -124,7 +125,7 @@ function changed({ redraw = false, napkin = false, brand = false } = {}) {
     frameTimer = setTimeout(() => { if (frame().getAttribute('src')) frame().contentWindow?.location.reload(); }, 500);
   }, DEMO ? 350 : 700);
   // el logo y el color se cargan antes de redibujar, que los usan
-  const after = () => { if (redraw) render(); else if (napkin || brand) paintPreview(); };
+  const after = () => { if (redraw) render(); else if (napkin || brand) paintPreview(); if (!redraw) refrescarPasos(); };
   if (brand) paintBrand().then(after); else after();
 }
 
@@ -502,8 +503,44 @@ function priceInput(o, onChange) {
 const removeBtn = (label, onclick) => el('button', { type: 'button', class: 'g-remove', 'aria-label': label, title: label, onclick }, '×');
 
 // lo que hay que imprimir para empezar: el QR de las mesas, el cartel y la carta en papel
+// ---------- Primeros pasos (CAF-54) ----------
+// La primera vez, tres cosas que hacer; cada una se marca sola al hacerla. Con las tres, la
+// tarjeta dice «Listo» una vez y no vuelve a salir (en este navegador). En la demo no sale.
+const PASOS_KEY = `cafecita.pasos.${ID}`;
+function pasos() { try { return JSON.parse(localStorage.getItem(PASOS_KEY)) || {}; } catch { return {}; } }
+function guardarPasos(p) { try { localStorage.setItem(PASOS_KEY, JSON.stringify(p)); } catch {} }
+function marcarPaso(k) {
+  const p = pasos();
+  if (p[k]) return;
+  guardarPasos({ ...p, [k]: 1 });
+  refrescarPasos();
+}
+function refrescarPasos() {
+  const nueva = pasosCard(), vieja = document.querySelector('.g-pasos-card');
+  if (vieja) vieja.replaceWith(nueva || '');
+  else if (nueva) $('gForm').prepend(nueva);
+}
+function pasosCard() {
+  if (DEMO) return null;
+  const p = pasos();
+  if (p.fin) return null;
+  const hecho = { hoy: (bar.sugerencias || []).some((s) => s.texto?.trim()), qr: !!p.qr, ver: !!p.ver };
+  const listo = hecho.hoy && hecho.qr && hecho.ver;
+  if (listo) guardarPasos({ ...p, fin: 1 }); // se ve esta vez y ya no vuelve
+  const paso = (ok, ...kids) => el('li', { class: ok ? 'hecho' : '' }, el('span', { class: 'g-paso-check', 'aria-hidden': 'true' }), el('span', {}, ...kids),
+    el('span', { class: 'g-visually-hidden' }, ok ? ' (hecho)' : ' (pendiente)'));
+  const a = (href, txt, k) => el('a', { href, target: '_blank', rel: 'noopener', onclick: () => marcarPaso(k) }, txt);
+  return el('section', { class: 'g-card g-pasos-card' },
+    el('header', { class: 'g-card-head' }, el('h2', {}, listo ? 'Listo: tu bar ya está en cafecita' : 'Primeros pasos'),
+      el('p', { class: 'g-sub' }, listo ? 'A partir de ahora, solo cambia lo de hoy cuando cambie.' : 'Tres cosas y tus clientes ya pueden ver tu carta.')),
+    el('ol', { class: 'g-pasos' },
+      paso(hecho.hoy, 'Pon tu plato del día en «Hoy en la barra»'),
+      paso(hecho.qr, a(`/${ID}/imprimir/?que=mesas`, 'Imprime los QR', 'qr'), ' y pégalos en las mesas'),
+      paso(hecho.ver, a(`/${ID}/`, 'Mira tu página', 'ver'), ' como la ven tus clientes')));
+}
+
 function imprimirCard() {
-  const link = (que, title, sub) => el('a', { class: 'g-print', href: `/${ID}/imprimir/?que=${que}`, target: '_blank', rel: 'noopener' },
+  const link = (que, title, sub) => el('a', { class: 'g-print', href: `/${ID}/imprimir/?que=${que}`, target: '_blank', rel: 'noopener', onclick: () => marcarPaso('qr') },
     el('span', { class: 'g-print-t' }, title), el('span', { class: 'g-print-s' }, sub));
   return card('Para imprimir', 'Listo para la impresora o para guardar en PDF.',
     el('div', { class: 'g-prints' },
@@ -527,7 +564,7 @@ function datosCard() {
 
 function render() {
   $('gForm').replaceChildren(
-    hoyCard(), cartaCard(), imprimirCard(), marcaCard(), datosCard(), planCard(),
+    pasosCard() || '', hoyCard(), cartaCard(), imprimirCard(), marcaCard(), datosCard(), planCard(),
     // replaceChildren no se salta los false: pondría «false» en la página
     DEMO ? el('p', { class: 'g-reset' }, el('button', { type: 'button', class: 'g-link', onclick: async (e) => {
       // dos toques: el primero pregunta, sin ventanas del navegador

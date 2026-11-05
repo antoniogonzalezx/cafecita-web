@@ -173,3 +173,4 @@ a { color: inherit; }
 .l-ctas { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; margin-top: 40px; }
 .l-ctas .l-btn { margin-top: 0; }
 .l-btn-azul { background: var(--azul); color: var(--blanco); margin-top: 32px; }
+.a-ayuda { font-size: 14px; line-height: 1.4; opacity: .75; }

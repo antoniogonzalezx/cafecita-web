@@ -40,7 +40,7 @@ las nuevas (por si alguien ocupa el nombre de un bar que no es suyo o lo llena d
 
 ```bash
 npx wrangler d1 execute cafecita --remote --command "select bar, creada from altas order by creada desc"
-npx wrangler d1 execute cafecita --remote --command "select id, plan, json_extract(datos, '$.nombre') as nombre, actualizado from bares order by actualizado desc"
+npx wrangler d1 execute cafecita --remote --command "select id, plan, json_extract(datos, '$.nombre') as nombre, contacto, actualizado from bares order by actualizado desc"
 ```
 
 Para quitar un bar (su ficha y sus fotos; su dirección queda libre otra vez):
