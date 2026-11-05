@@ -19,15 +19,17 @@
   .card .logo svg { height: 100%; width: auto; display: block; }
   .card p { margin: 0; font: italic 400 46px/1 'Fraunces', Georgia, serif; color: #3F48F4; }
   .icono { width: 180px; height: 180px; background: #3F48F4; display: grid; place-items: center; color: #F7F3EA; }
-  .icono svg { width: 112px; height: 112px; }
+  .icono svg { width: 118px; height: 118px; }
 </style>
 </head>
 <body>
 <script type="module">
-  import { mosaico, ASPA } from './marca.js?v=1';
+  import { mosaico } from './marca.js?v=1';
   const que = new URLSearchParams(location.search).get('que');
   if (que === 'icono') {
-    document.body.innerHTML = `<div class="icono"><svg viewBox="-32 -32 64 64"><g fill="currentColor">${ASPA}</g></svg></div>`;
+    // el icono es el aspa sola y más gruesa (sin los medios círculos del logo), que se lee hasta a 16 px (CAF-49)
+    const GRUESA = [45, 135, 225, 315].map((r) => `<path transform="rotate(${r})" d="M0 -2C15 -14 15 -34 0 -46C-15 -34 -15 -14 0 -2Z"/>`).join('');
+    document.body.innerHTML = `<div class="icono"><svg viewBox="-35 -35 70 70"><g fill="currentColor">${GRUESA}</g></svg></div>`;
   } else {
     const logo = await fetch('logo.svg?v=2').then((r) => r.text());
     document.body.innerHTML = `<div class="og">${mosaico({ cols: 15, filas: 8, l: 80, semilla: 3 })}<div class="card"><div class="logo">${logo}</div><p>Gracias por su visita</p></div></div>`;
