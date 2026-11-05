@@ -382,6 +382,8 @@ async function altaBar(db, request) {
 const FOTO_ID = /^[0-9a-f]{32}$/;
 const FOTO_MAX = 200e3;
 const FOTOS_POR_BAR = 150;
+// con el alta abierta, un tope para todos: que nadie llene la base de datos creando bares de prueba
+const FOTOS_DIA = 400;
 const ascii = (b, i, n) => String.fromCharCode(...b.subarray(i, i + n));
 // lo que dicen sus primeros bytes, no lo que diga la petición
 const tipoFoto = (b) => (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff ? 'image/jpeg'
@@ -399,6 +401,8 @@ async function subirFoto(db, request, id) {
   if (!tipo) return json({ ok: false, error: 'tiene que ser WebP o JPEG' }, 415);
   const { n } = await db.prepare('select count(*) as n from fotos where bar = ?').bind(id).first();
   if (n >= FOTOS_POR_BAR) return json({ ok: false, error: 'demasiadas fotos' }, 409);
+  const { hoy } = await db.prepare('select count(*) as hoy from fotos where creada >= ?').bind(new Date(Date.now() - 864e5).toISOString()).first();
+  if (hoy >= FOTOS_DIA) return json({ ok: false, error: 'hoy no se pueden subir más fotos' }, 429);
   const foto = [...new Uint8Array(await crypto.subtle.digest('SHA-256', b))].map((x) => x.toString(16).padStart(2, '0')).join('').slice(0, 32);
   await db.prepare('insert or ignore into fotos (bar, id, tipo, datos, creada) values (?, ?, ?, ?, ?)')
     .bind(id, foto, tipo, b, new Date().toISOString()).run();

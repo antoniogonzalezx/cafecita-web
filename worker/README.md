@@ -33,6 +33,24 @@ npx wrangler tail                        # registros en directo (avisa si el cro
 
 Esquema: `schema.sql` (se puede volver a pasar, no borra nada): `npm run esquema`.
 
+## Altas de bares
+
+Cualquiera puede dar de alta un bar en `cafecita.app/alta/`, así que conviene mirar de vez en cuando
+las nuevas (por si alguien ocupa el nombre de un bar que no es suyo o lo llena de pruebas):
+
+```bash
+npx wrangler d1 execute cafecita --remote --command "select bar, creada from altas order by creada desc"
+npx wrangler d1 execute cafecita --remote --command "select id, plan, json_extract(datos, '$.nombre') as nombre, actualizado from bares order by actualizado desc"
+```
+
+Para quitar un bar (su ficha y sus fotos; su dirección queda libre otra vez):
+
+```bash
+npx wrangler d1 execute cafecita --remote --command "delete from fotos where bar = '<id>'; delete from bares where id = '<id>'"
+```
+
+Si un bar pierde su código: `npm run alta -- <id> --nuevo-codigo`.
+
 ## Métricas
 
 ```bash
