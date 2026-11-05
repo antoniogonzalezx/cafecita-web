@@ -12,6 +12,8 @@ const ID = document.body.dataset.bar;
 // que ya tiene «Ver mi página» y la servilleta de muestra
 const WIDE = matchMedia('(min-width: 761px)');
 const frame = () => document.getElementById('gFrame');
+frame().dataset.src = `/${ID}/`;
+document.getElementById('gVer')?.setAttribute('href', `/${ID}/`);
 function syncFrame() {
   const f = frame();
   if (WIDE.matches && !f.getAttribute('src')) f.src = f.dataset.src;
@@ -69,7 +71,7 @@ function pantallaAcceso(msg, error = false) {
     err.className = 'g-error';
     const ok = await entrar(ID, c).catch(() => null);
     if (ok === null) { err.textContent = 'No hay conexión. Prueba otra vez en un momento.'; err.hidden = false; return; }
-    if (!ok) { err.textContent = 'Ese código no es el de este bar. Revisa el que te dimos.'; err.hidden = false; return; }
+    if (!ok) { err.textContent = 'Ese código no es el de este bar. Revísalo o escríbenos a hola@cafecita.es.'; err.hidden = false; return; }
     codigo = c;
     recordar(c);
     document.body.classList.remove('g-sin-acceso');
@@ -77,7 +79,7 @@ function pantallaAcceso(msg, error = false) {
   };
   $('gForm').replaceChildren(el('section', { class: 'g-card g-acceso' },
     el('header', { class: 'g-card-head' }, el('h2', {}, 'Entra en tu gestión'),
-      el('p', { class: 'g-sub' }, 'Escribe el código de acceso que te dio Cafecita. Lo recordaremos en este dispositivo.')),
+      el('p', { class: 'g-sub' }, 'Escribe tu código de acceso (el que te salió al darte de alta). Lo recordaremos en este dispositivo.')),
     el('form', { class: 'g-acceso-form', onsubmit: go }, input, el('button', { type: 'submit', class: 'g-btn g-btn-brand' }, 'Entrar')),
     err));
   input.focus();

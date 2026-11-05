@@ -80,3 +80,12 @@ create table if not exists fotos (
   creada text not null,
   primary key (bar, id)
 );
+
+-- Las altas de bares desde la web, para limitar cuántas se hacen al día (CAF-37). De la conexión
+-- solo se guarda un resumen (SHA-256 de la IP y el día) y las filas se borran a la semana.
+create table if not exists altas (
+  dia    text not null,                -- AAAA-MM-DD en hora de Madrid
+  ip     text not null check (length(ip) = 64),
+  bar    text not null,
+  creada text not null
+);

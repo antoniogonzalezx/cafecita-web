@@ -1,21 +1,18 @@
-// ---------- Alta de un bar ----------
-// De momento los bares no se registran solos: Cafecita los da de alta y les pasa un enlace con
-// su código de acceso. Este script:
+// ---------- Alta de un bar a mano ----------
+// Los bares se dan de alta solos en cafecita.app/alta/ (CAF-37). Este script es para hacerlo a
+// mano o para darle un código nuevo a uno que ha perdido el suyo:
 //   1. genera el código (12 caracteres sin letras que se confundan) y guarda solo su SHA-256,
-//   2. crea sus páginas (<id>/, <id>/gestion/, <id>/imprimir/) a partir de las de Bar Manolo,
-//   3. mete su ficha en D1 y
-//   4. imprime el enlace que se le da al bar.
+//   2. mete su ficha en D1 y
+//   3. imprime el enlace que se le da al bar.
+// Sus páginas no hay que crearlas: cafecita.app/<id>/ la sirve 404.html (ver ruta.js).
 // Uso (desde servilletero/worker):
 //   npm run alta -- <id> "<Nombre del bar>" [--pro] [--local]
 //   npm run alta -- <id> --nuevo-codigo [--local]     (si pierde el código: le da uno nuevo)
-// Las páginas nuevas hay que publicarlas después (commit y PR a main).
 import { spawnSync } from 'node:child_process';
 import { createHash, randomInt } from 'node:crypto';
-import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const WEB = join(dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
 const flag = (f) => args.includes(f);
 const [id, nombre] = args.filter((a) => !a.startsWith('--'));
@@ -43,14 +40,6 @@ if (flag('--nuevo-codigo')) {
   d1(`update bares set codigo = ${sql(hash)}, actualizado = ${sql(now)} where id = ${sql(id)}`);
 } else {
   if (!nombre?.trim()) { console.error('Falta el nombre del bar.'); process.exit(1); }
-  // sus páginas: las de Bar Manolo con su id y su nombre
-  for (const f of ['index.html', 'gestion/index.html', 'imprimir/index.html']) {
-    const dest = join(WEB, id, f);
-    if (existsSync(dest)) { console.error(`Ya existe ${id}/${f}: ¿el bar ya estaba dado de alta?`); process.exit(1); }
-    const html = readFileSync(join(WEB, 'barmanolo', f), 'utf8').replaceAll('barmanolo', id).replaceAll('Bar Manolo', nombre.trim());
-    mkdirSync(dirname(dest), { recursive: true });
-    writeFileSync(dest, html);
-  }
   const datos = {
     id, nombre: nombre.trim(), direccion: '', horario: '',
     marca: { logo: '', color: '#1F6B45', servilletero: 'inox', letra: 'clasica' },
@@ -67,5 +56,4 @@ ${flag('--nuevo-codigo') ? 'Código nuevo' : 'Alta hecha'}${local ? ' (en local)
   Su código:   ${codigo}
 
 Pásale el enlace de su gestión (lleva el código). El código no se guarda en ningún sitio:
-si lo pierde, npm run alta -- ${id} --nuevo-codigo${local ? ' --local' : ''}
-${flag('--nuevo-codigo') ? '' : `Antes, publica sus páginas: ${id}/ (commit y PR a main).`}`);
+si lo pierde, npm run alta -- ${id} --nuevo-codigo${local ? ' --local' : ''}`);

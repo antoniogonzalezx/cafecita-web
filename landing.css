@@ -107,3 +107,69 @@ a { color: inherit; }
 .l-doc p { margin-top: 14px; text-wrap: pretty; }
 .l-doc a { text-underline-offset: 3px; }
 .l-doc strong { font-weight: 600; }
+
+/* ---------- Alta de un bar (alta/index.html, alta.js) ---------- */
+.a-main { padding: 48px var(--lado) 120px; }
+.a-paso { max-width: 34rem; }
+.a-paso h1 { font: 700 clamp(40px, 6vw, 72px)/.98 var(--sans); letter-spacing: -.035em; outline: none; }
+.a-lead { margin-top: 20px; font-size: 20px; opacity: .86; text-wrap: pretty; }
+.a-form { display: grid; gap: 24px; margin-top: 44px; }
+.a-campo { display: grid; gap: 10px; }
+.a-campo > span, .a-campo > label { font-size: 16px; font-weight: 600; }
+.a-campo em { font-style: normal; font-weight: 400; opacity: .7; }
+.a-input {
+  width: 100%;
+  min-height: 56px;
+  padding: 0 18px;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  background: var(--blanco);
+  color: var(--azul);
+  font: 500 18px/1 var(--sans);
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.a-input::placeholder { color: var(--azul); opacity: .4; }
+.a-input:focus { outline: none; border-color: var(--blanco); box-shadow: 0 0 0 4px rgba(255, 255, 255, .35); }
+/* «cafecita.app/» delante, dentro de la misma caja */
+.a-url { display: flex; align-items: center; min-height: 56px; border-radius: 16px; background: var(--blanco); color: var(--azul); transition: box-shadow .2s ease; }
+.a-url:focus-within { box-shadow: 0 0 0 4px rgba(255, 255, 255, .35); }
+.a-url span { padding-left: 18px; font: 500 18px/1 var(--sans); opacity: .55; white-space: nowrap; }
+.a-url .a-input { min-height: 52px; padding-left: 2px; border: 0; box-shadow: none; background: transparent; }
+.a-libre { min-height: 1.4em; font-size: 15px; opacity: .8; }
+.a-libre.ok { opacity: 1; }
+.a-libre.ok::before { content: '✓ '; }
+.a-libre.mal { opacity: 1; font-weight: 600; }
+.a-trampa { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.a-acepto { display: flex; gap: 12px; align-items: flex-start; font-size: 16px; }
+.a-acepto input { width: 22px; height: 22px; margin: 1px 0 0; flex: none; accent-color: var(--blanco); }
+.a-acepto a { text-underline-offset: 3px; }
+.a-btn { margin-top: 8px; justify-self: start; border: 0; font: 600 18px/1 var(--sans); cursor: pointer; }
+.a-btn:disabled { opacity: .7; cursor: progress; transform: none; }
+.a-error { font-weight: 600; }
+.a-codigo {
+  margin-top: 36px;
+  padding: 28px 24px;
+  border-radius: 20px;
+  background: var(--blanco);
+  color: var(--azul);
+  font: 700 clamp(30px, 7vw, 44px)/1 var(--sans);
+  letter-spacing: .04em;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  user-select: all;
+}
+.a-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; margin-top: 32px; }
+.a-acciones .a-btn { margin-top: 0; }
+.a-copiar { padding: 0; border: 0; background: none; color: inherit; font: 600 17px/1 var(--sans); text-decoration: underline; text-underline-offset: 5px; cursor: pointer; }
+.a-nota { margin-top: 36px; font-size: 16px; opacity: .85; text-wrap: pretty; }
+.a-nota a { text-underline-offset: 3px; }
+@media (max-width: 820px) {
+  .a-main { padding-top: 24px; padding-bottom: 88px; }
+  .a-url span { padding-left: 14px; font-size: 16px; }
+  .a-url .a-input, .a-input { font-size: 17px; }
+}
+
+/* ---------- Llamadas al alta en la página para bares ---------- */
+.l-ctas { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; margin-top: 40px; }
+.l-ctas .l-btn { margin-top: 0; }
+.l-btn-azul { background: var(--azul); color: var(--blanco); margin-top: 32px; }
