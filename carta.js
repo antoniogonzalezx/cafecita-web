@@ -34,6 +34,10 @@ document.title = `${bar.nombre} · Carta y sugerencias`;
 document.body.classList.add('bar');
 // para la carga (carga.js): un bar con Pro tiene su marca, así que mientras carga solo sale el logo de cafecita
 if (pro) document.body.classList.add('bar-pro');
+// su servilletero de mostrador se saca hacia arriba (CAF-64): que la pista lo diga ya, sin esperar al 3D
+// (?servilletero=cubo|mostrador lo cambia para probar, como en main.js)
+const modelo = new URLSearchParams(location.search).get('servilletero') || (pro && bar.marca.modelo);
+if (modelo === 'mostrador') $('hint').textContent = 'Toca la servilleta o tira de ella hacia arriba';
 
 // arriba, su logo (con Pro); si no, CAFECITA y debajo su nombre
 const head = document.querySelector('.logo');
