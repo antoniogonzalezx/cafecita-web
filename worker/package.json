@@ -7,7 +7,7 @@
     "deploy": "wrangler deploy",
     "esquema": "wrangler d1 execute cafecita --remote --file=schema.sql",
     "alta": "node alta-bar.mjs",
-    "migrar": "wrangler d1 execute cafecita --remote --file=migraciones/2026-11-04-fotos.sql"
+    "migrar": "wrangler d1 execute cafecita --remote --file=migraciones/2026-11-05-altas.sql"
   },
   "devDependencies": {
     "wrangler": "^4.156.2"

@@ -20,7 +20,7 @@ css.setProperty('--bar-font', `'${letra.family}'`);
 css.setProperty('--bar-style', letra.style || 'normal');
 css.setProperty('--bar-case', letra.caps ? 'uppercase' : 'none');
 document.title = `Para imprimir · ${bar.nombre}`;
-$('pBack').href = `/${ID}/gestion/`;
+$('pBack').href = document.body.dataset.ruta ? `/gestion/?bar=${ID}` : `/${ID}/gestion/`;
 
 const url = (o) => `${location.origin}/${ID}/?o=${o}`;
 const short = `${location.host}/${ID}`;
@@ -133,7 +133,10 @@ async function show(q) {
   $('pHint').textContent = AYUDA[q];
   document.body.dataset.que = q;
   $('pSheets').replaceChildren(...(await HOJAS[q]()));
-  history.replaceState(null, '', `${location.pathname}?que=${q}`);
+  // en /imprimir/?bar=<bar> el bar se queda en la dirección (ruta.js lo lee de ahí al recargar)
+  const params = new URLSearchParams(location.search);
+  params.set('que', q);
+  history.replaceState(null, '', `${location.pathname}?${params}`);
 }
 for (const t of document.querySelectorAll('.p-tab')) t.addEventListener('click', () => show(t.dataset.que));
 $('pPrint').addEventListener('click', () => window.print());

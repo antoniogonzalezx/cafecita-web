@@ -4,6 +4,8 @@
 //  GET  /hemeroteca?id=…   un titular que ya salió de portada ([] si no está)
 //  POST /registrar         tanda de eventos de analítica (medir.js)
 //  POST /refrescar         rehace la portada a mano (como mucho una vez cada 10 min)
+//  GET  /bar/libre?id=…    ¿está libre cafecita.app/<id>/ para un bar nuevo?
+//  POST /bar/alta          un bar se da de alta solo y recibe su código de acceso (una vez)
 //
 // El cron (wrangler.toml) rehace la portada a los minutos 7 y 37: lee los RSS de los periódicos,
 // quita duplicados entre ellos, alterna fuentes y guarda las nuevas también en la hemeroteca.
@@ -211,7 +213,7 @@ async function refrescar(db) {
 
 // ---------- Bares ----------
 // La ficha de cada bar (lo que cambia en su gestión) vive en D1. Leerla es público; cambiarla
-// pide su código de acceso, que Cafecita da a mano a cada bar (de momento no hay registro).
+// pide su código de acceso, que el bar recibe al darse de alta (o que Cafecita le da a mano).
 // Del código solo se guarda su SHA-256. El plan (gratis o Pro) lo pone Cafecita: el bar no puede tocarlo.
 const BAR_ID = /^[a-z0-9-]{2,40}$/;
 const ALERGENOS = new Set(['gluten', 'crustaceos', 'huevos', 'pescado', 'cacahuetes', 'soja', 'lacteos', 'frutos', 'apio', 'mostaza', 'sesamo', 'sulfitos', 'altramuces', 'moluscos']);
@@ -295,6 +297,84 @@ async function guardarBar(db, request, id) {
   return json({ ok: true, actualizado: now });
 }
 
+// ---------- Alta de un bar (CAF-37) ----------
+// El bar se da de alta solo desde cafecita.app/alta/: elige su dirección, recibe su código de
+// acceso en pantalla (una sola vez: solo se guarda su SHA-256) y entra en su gestión. Su página
+// no necesita carpeta: GitHub Pages sirve 404.html para cualquier cafecita.app/<id>/ (ver ruta.js).
+// Direcciones que no pueden ser de un bar: las carpetas y ficheros de la web y alguna más.
+// (la misma lista está en ruta.js)
+const RESERVADOS = new Set(['404', 'admin', 'alta', 'api', 'app', 'apple-touch-icon', 'assets', 'ayuda', 'bar', 'bares', 'barmanolo',
+  'blog', 'cafecita', 'carta', 'cname', 'demo', 'favicon', 'fonts', 'gestion', 'hola', 'img', 'imprimir', 'index', 'legal',
+  'logo', 'models', 'napkins', 'og', 'precios', 'servilletero', 'static', 'stories', 'templates', 'tienda', 'tools', 'vendor',
+  'worker', 'www']);
+// hasta el 31 de enero de 2027, los bares que se dan de alta tienen Pro gratis (el piloto)
+const FIN_PILOTO = Date.parse('2027-01-31T23:59:59+01:00');
+// contra altas en masa: como mucho 5 al día desde una misma conexión (en datos móviles muchos comparten IP) y 40 al día en total
+const ALTAS_IP_DIA = 5, ALTAS_DIA = 40;
+// 12 caracteres de 31 posibles (sin letras que se confundan), como alta-bar.mjs
+const ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+function nuevoCodigo() {
+  const out = [];
+  while (out.length < 12) {
+    for (const b of crypto.getRandomValues(new Uint8Array(24))) {
+      if (b < 248 && out.length < 12) out.push(ABC[b % 31]); // 248 = 8 × 31: sin sesgo
+    }
+  }
+  return out.join('');
+}
+
+async function libre(db, id) {
+  if (!BAR_ID.test(id || '') || /^-|-$|--/.test(id)) return 'Usa letras, números y guiones (de 2 a 40).';
+  if (RESERVADOS.has(id)) return 'Esa dirección no está disponible.';
+  if (await db.prepare('select 1 from bares where id = ?').bind(id).first()) return 'Ya hay un bar con esa dirección.';
+  return null;
+}
+async function barLibre(db, id) {
+  const motivo = await libre(db, String(id ?? '').toLowerCase());
+  return json(motivo ? { libre: false, motivo } : { libre: true });
+}
+
+async function altaBar(db, request) {
+  const text = await request.text();
+  if (text.length > 4e3) return json({ ok: false }, 413);
+  let body;
+  try { body = JSON.parse(text); } catch { return json({ ok: false }, 400); }
+  // el campo trampa: invisible para una persona, los robots lo rellenan
+  if (body?.web) return json({ ok: false, error: 'No se ha podido dar de alta.' }, 400);
+  const id = String(body?.id ?? '').toLowerCase();
+  const nombre = typeof body?.nombre === 'string' ? body.nombre.trim().slice(0, 60) : '';
+  const direccion = typeof body?.direccion === 'string' ? body.direccion.trim().slice(0, 120) : '';
+  if (nombre.length < 2) return json({ ok: false, error: 'Escribe el nombre de tu bar.' }, 400);
+  if (body?.acepto !== true) return json({ ok: false, error: 'Tienes que aceptar el aviso legal y la privacidad.' }, 400);
+  const motivo = await libre(db, id);
+  if (motivo) return json({ ok: false, error: motivo }, 409);
+
+  // límites: de la conexión solo se guarda un resumen que cambia cada día, y una semana
+  const now = new Date(), hoy = madrid.format(now);
+  const ip = await sha256(`${request.headers.get('CF-Connecting-IP') || 'local'}|${hoy}`);
+  const { porIp, total } = await db.prepare('select count(*) filter (where ip = ?) as porIp, count(*) as total from altas where dia = ?').bind(ip, hoy).first();
+  if (porIp >= ALTAS_IP_DIA || total >= ALTAS_DIA) return json({ ok: false, error: 'Hoy no se pueden dar más altas. Escríbenos a hola@cafecita.es.' }, 429);
+
+  const codigo = nuevoCodigo();
+  const datos = {
+    id, nombre, direccion, horario: '',
+    marca: { logo: '', color: '#1F6B45', servilletero: 'inox', letra: 'clasica' },
+    sugerencias: [], carta: [],
+  };
+  try {
+    await db.batch([
+      db.prepare('insert into bares (id, datos, plan, codigo, actualizado) values (?, ?, ?, ?, ?)')
+        .bind(id, JSON.stringify(datos), Date.now() <= FIN_PILOTO ? 'pro' : 'gratis', await sha256(codigo), now.toISOString()),
+      db.prepare('insert into altas (dia, ip, bar, creada) values (?, ?, ?, ?)').bind(hoy, ip, id, now.toISOString()),
+      db.prepare('delete from altas where creada < ?').bind(new Date(now - 7 * 864e5).toISOString()),
+    ]);
+  } catch {
+    // dos altas a la vez con la misma dirección: la segunda choca con la clave
+    return json({ ok: false, error: 'Ya hay un bar con esa dirección.' }, 409);
+  }
+  return json({ ok: true, id, codigo: codigo.match(/.{4}/g).join('-') });
+}
+
 // ---------- Fotos de la carta (solo Pro) ----------
 // Llegan ya recortadas y comprimidas desde el móvil (WebP o JPEG, de menos de 200 KB) y se
 // guardan en D1 con su SHA-256 por nombre: una foto no cambia nunca, así que se puede guardar
@@ -345,6 +425,8 @@ export default {
     if (m === 'POST' && pathname === '/registrar') return registrar(env.DB, request);
     if (m === 'GET' && pathname === '/bar') return leerBar(env.DB, searchParams.get('id'));
     if (m === 'POST' && pathname === '/bar/entrar') return entrarBar(env.DB, request);
+    if (m === 'GET' && pathname === '/bar/libre') return barLibre(env.DB, searchParams.get('id'));
+    if (m === 'POST' && pathname === '/bar/alta') return altaBar(env.DB, request);
     if (m === 'PUT' && pathname === '/bar') return guardarBar(env.DB, request, searchParams.get('id'));
     if (m === 'POST' && pathname === '/bar/foto') return subirFoto(env.DB, request, searchParams.get('id'));
     if (m === 'GET' && pathname === '/foto') return verFoto(env.DB, searchParams.get('bar'), searchParams.get('id'));

@@ -8,13 +8,13 @@ import { medir } from './medir.js?v=14';
 
 const $ = (id) => document.getElementById(id);
 const ID = document.body.dataset.bar;
-// sin conexión con el servidor no hay ficha que enseñar: se dice y se puede reintentar
+// sin conexión, o si el bar no existe (una dirección mal escrita), no hay ficha: se dice
 const bar = await loadBar(ID).catch(() => null);
 if (!bar) {
   document.body.classList.add('bar-ready');
   const msg = document.createElement('p');
   msg.className = 'bar-name';
-  msg.textContent = 'No se ha podido cargar. Recarga la página.';
+  msg.textContent = 'No encontramos este bar. Revisa la dirección o recarga la página.';
   document.querySelector('.logo').replaceChildren(msg);
   throw new Error(`No se ha podido cargar el bar ${ID}`);
 }
