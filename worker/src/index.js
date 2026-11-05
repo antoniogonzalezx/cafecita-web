@@ -247,6 +247,8 @@ function limpiarBar(d, id) {
       logo,
       color: /^#[0-9a-f]{6}$/i.test(m.color) ? m.color : '#1F6B45',
       servilletero: ['inox', 'blanco', 'negro'].includes(m.servilletero) ? m.servilletero : 'inox',
+      // el modelo (CAF-64): el cubo de siempre o el de mostrador
+      modelo: ['cubo', 'mostrador'].includes(m.modelo) ? m.modelo : 'cubo',
       letra: ['clasica', 'rotulador', 'pizarra', 'pincel'].includes(m.letra) ? m.letra : 'clasica',
       marcoQr: m.marcoQr !== false,
     },
@@ -362,7 +364,7 @@ async function altaBar(db, request) {
   const codigo = nuevoCodigo();
   const datos = {
     id, nombre, direccion, horario: '',
-    marca: { logo: '', color: '#1F6B45', servilletero: 'inox', letra: 'clasica' },
+    marca: { logo: '', color: '#1F6B45', servilletero: 'inox', modelo: 'cubo', letra: 'clasica' },
     sugerencias: [], carta: [],
   };
   try {
